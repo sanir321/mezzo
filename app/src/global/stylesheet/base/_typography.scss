@@ -1,0 +1,103 @@
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.h1,
+.h2,
+.h3,
+.h4,
+.h5,
+.h6,
+.subheading {
+  color: var(--color-dark);
+  font-family: "CommissionerVariable", sans-serif;
+
+  line-height: 1.2;
+  font-weight: 500;
+  margin: 0.3125em 0 1.38rem;
+}
+
+h1,
+.h1 {
+  font-size: 2.488rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+h2,
+.h2 {
+  font-size: 2.174rem;
+  font-weight: 700;
+}
+
+h3,
+.h3 {
+  font-size: 1.728em;
+}
+
+h4,
+.h4 {
+  font-size: 1.44em;
+}
+
+h5,
+.h5 {
+  font-size: 1.2em;
+}
+
+h6,
+.h6 {
+  font-size: 1em;
+}
+
+p {
+  margin: 0 0 var(--sm-spacing);
+  font-size: 1em;
+}
+a.no-style {
+  text-decoration: none;
+  &:focus,
+  &:focus-visible,
+  &:focus-within {
+    outline: none;
+  }
+}
+a:not(.no-style),
+.link:not(.no-style) {
+  $link-color: rgb(245, 245, 245);
+  color: rgb(245, 245, 245);
+
+  text-decoration: none;
+  transition: color 0.2s;
+  display: inline;
+  &.link {
+    font-weight: 500;
+  }
+  &:active,
+  &:focus,
+  &:hover {
+    -webkit-text-decoration: underline 0.001em solid;
+    text-decoration: underline 0.001em solid;
+    text-underline-offset: 0.001em;
+    color: darken($link-color, 15%);
+    outline: none;
+  }
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+strong,
+em,
+small,
+code,
+hr {
+  line-height: 1.25;
+}
+
+.secondary {
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-weight: 400;
+}

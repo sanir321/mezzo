@@ -1,0 +1,236 @@
+@use "../utility/mixins/mixins" as *;
+@use "./variables" as v;
+@use "./css-variables" as *;
+html {
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  font-size: 12px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+html,
+body {
+  background-color: #000000;
+  color: #ffffff;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
+  word-wrap: break-word;
+  -webkit-text-size-adjust: 100%;
+  --base-font-size: 0.75rem;
+
+  /* ===== Scrollbar CSS ===== */
+
+  * {
+    scrollbar-gutter: 0.833333rem;
+    scrollbar-width: thin;
+    scrollbar-color: #c7c7c7 #5e5e5e2f;
+  }
+
+  ::-webkit-scrollbar {
+    width: 0.916667rem;
+    height: 0.916667rem;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #74747e21;
+    border-radius: 0.625rem;
+    height: 0.916667rem;
+    width: 100%;
+    background-clip: content-box;
+    border-radius: 0.833333rem;
+    border: transparent solid 0.0983333rem;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: #e0e0e0a8;
+    border-radius: 0.5625rem;
+    width: 0.5625rem;
+    scrollbar-width: 0.625rem;
+    border: 0.25rem solid #b8b8b800;
+    background-clip: content-box;
+  }
+
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-font-smoothing: -subpixel-antialiased;
+  --player-bar-height: clamp(5rem, 5.6rem, 5.95rem);
+  --top-bar-height: clamp(3.9rem, 4.175rem, 4.625rem);
+  text-rendering: geometricPrecision;
+  font-smooth: auto;
+  @media screen and (min-width: 40em) and (max-width: 115.375em) {
+    --top-bar-height: clamp(3.8rem, 4rem, 4.75rem);
+    --base-font-size: 0.875rem;
+  }
+  @media screen and (min-width: 115.375em) and (max-width: 134em) {
+    --top-bar-height: clamp(3.8rem, 4rem, 4.75rem);
+    --base-font-size: 1rem;
+  }
+  @media screen and (min-width: 134.75em) {
+    --top-bar-height: clamp(3.8rem, 4rem, 4.75rem);
+    --base-font-size: 1.125rem;
+  }
+}
+.tooltip {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+
+  opacity: 0;
+  will-change: opacity, transform;
+  transition: opacity linear 100ms;
+
+  &::before,
+  &::after {
+    transform: rotate(-135deg);
+    width: 8px;
+    height: 8px;
+    bottom: 50%;
+    right: 50%;
+    content: "";
+  }
+  transform: translate(calc(var(--tt-pos-x)), var(--tt-pos-y));
+  transform-origin: center;
+
+  border: 1px solid #323232;
+  box-shadow: 0px 0px 1px #323232;
+  background: #121212;
+  font-size: v.$size-1;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
+  border-radius: 4px;
+  color: #f1f1f1;
+  padding: 0.3rem;
+  font-weight: 500;
+  min-width: 1rem;
+  max-width: 20rem;
+  text-transform: capitalize;
+  width: -webkit-max-content;
+  width: -moz-max-content;
+  width: max-content;
+  position: absolute;
+  display: block;
+  z-index: 500;
+}
+
+body {
+  margin: 0;
+}
+html {
+  font-size: var(--base-font-size);
+}
+#app {
+  height: 100%;
+  width: 100%;
+  line-height: 1.3;
+  max-width: 100%;
+}
+main:not(.spotify-canvas-content) {
+  margin: 0 auto;
+  position: relative;
+  @include v.content-spacing($type: "padding");
+  transform: translateZ(0px);
+  @media screen and (min-width: 640px) {
+    @include v.content-width();
+  }
+}
+.backdrop {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+  overflow: hidden;
+  background-color: #00000063;
+  width: 100%;
+  height: 100%;
+  contain: paint;
+}
+.wrapper {
+  overflow: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: block;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+}
+.app-content-m {
+  margin-block-start: calc(var(--top-bar-height) + 0px);
+  will-change: margin-block;
+  transform: translateZ(0px);
+  isolation: isolate;
+  &[hasplayer="true"] {
+    will-change: unset;
+    margin-block-end: calc(var(--player-bar-height) + 0px);
+  }
+}
+
+.container {
+  max-width: 112rem;
+
+  position: relative;
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  &.row {
+    flex-direction: row;
+  }
+}
+
+.resp-content-width {
+  margin: 0 auto;
+  @include v.content-width(!important);
+}
+.no-scroll {
+  overflow: hidden;
+  overflow-y: hidden;
+}
+
+.hidden {
+  display: none;
+}
+
+
+
+:root .dark * {
+  color: hsl(0, 0%, 95%);
+}
+.player {
+  color: #f3f3f3;
+}

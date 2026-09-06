@@ -1,0 +1,114 @@
+@use "../base/variables" as v;
+@use "sass:color";
+
+$background: hsl(0deg 0% 98%);
+$color: #0d0d0d;
+$focus-background: #aaa;
+$focus-color: #1c1c1c;
+%active {
+  color: $focus-color;
+
+  border-color: $focus-color !important;
+
+  outline: 0;
+  text-decoration: none;
+  cursor: pointer;
+}
+%button-base {
+  display: inline-flex;
+  font-family: inherit;
+  cursor: pointer;
+  gap: 0.25em;
+  font-weight: 600;
+  text-transform: none;
+  white-space: nowrap;
+  user-select: none;
+  padding: 0.6em 1.25em;
+  justify-content: center;
+  align-items: center;
+  vertical-align: middle;
+  border-radius: v.$base-radius;
+  transition: all 120ms ease;
+}
+
+.legacy-button {
+  @extend %button-base;
+}
+
+button.has-icon {
+  display: inline-flex;
+  justify-items: center;
+  justify-content: center;
+  > .text {
+    margin-left: 0.125rem;
+  }
+}
+
+button.outlined {
+  background: #0000 !important;
+  border: $background 0.1em solid !important;
+  color: $background !important;
+  font-weight: 525;
+
+  &:active {
+    border: rgb(158, 158, 158) 0.1rem solid !important;
+    background: rgba(255, 255, 255, 0.027) !important;
+    box-shadow: 0 0 0.1em 0 inset black;
+    color: rgb(236, 236, 236) !important;
+  }
+
+  .button-text {
+    margin-left: 0.2rem;
+    align-self: center;
+    padding-bottom: 0.1rem;
+  }
+  @media (hover: hover) {
+    &:hover {
+      background: rgba(255, 255, 255, 0.034) !important;
+      border-color: rgba(194, 170, 194, 0.667) !important;
+      color: rgb(231, 221, 231) !important;
+    }
+  }
+  &:focus,
+  &:focus-within {
+    background: rgba(255, 255, 255, 0.034) !important;
+    border-color: rgba(194, 170, 194, 0.667) !important;
+    color: rgb(231, 221, 231) !important;
+  }
+  &:active {
+    background: rgba(255, 255, 255, 0.096) !important;
+
+    border-color: rgba(255, 255, 255, 0.667) !important;
+  }
+}
+button.icon-btn {
+  display: flex;
+  flex-wrap: nowrap;
+  position: relative;
+  cursor: pointer;
+
+  place-items: center;
+  place-content: center;
+
+  width: 44px;
+  height: 44px;
+  border: none;
+  background-color: hsl(0deg 0% 0% / 0%);
+  color: var(--color-dark);
+}
+
+button.danger {
+  border-color: #eb2019 !important;
+  color: darken(#ff4949, 3%) !important;
+  background: #5c191718 !important;
+  &:hover {
+    color: lighten(#ff4949, 3%) !important;
+    border-color: #eb2019b2 !important;
+    background: #5c19174d !important;
+  }
+  &:active {
+    color: lighten(#fafafa, 10%) !important;
+    border-color: #eb20195b !important;
+    background: #c013136c !important;
+  }
+}

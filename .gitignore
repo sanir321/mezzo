@@ -1,0 +1,32 @@
+# Node dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# SvelteKit & Cloudflare build outputs
+.svelte-kit/
+build/
+dist/
+.output/
+
+# Cloudflare Wrangler cache & state
+.wrangler/
+.mf/
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+*.pem
+
+# Operating System & Editors
+.DS_Store
+Thumbs.db
+*.local
+.idea/
+
+# Logs & temp files
+*.log
+*.tmp

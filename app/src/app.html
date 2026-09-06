@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en" class="">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover"
+    />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <link rel="icon" type="image/png" sizes="128x128" href="/favicon.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+
+    <title>Mezzo — Your Music, Your Library</title>
+    <meta name="application-name" content="Mezzo" />
+    <meta name="msapplication-TileColor" content="#0e1117" />
+
+    <meta name="og:site_name" content="Mezzo" />
+
+    <!-- Apple Metatags-->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta content="yes" name="apple-touch-fullscreen" />
+    <meta name="apple-mobile-web-app-title" content="Mezzo" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link
+      rel="mask-icon"
+      href="/assets/safari-pinned-tab.svg"
+      color="#5bbad5"
+    />
+    <link rel="preload" type="image/svg+xml" href="/icons.svg" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="apple-mobile-web-app-orientations" content="portrait" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+    <!-- SvelteKit tags -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <script>
+      var parcelRequire;
+
+      // if (!("appearance" in localStorage)) {
+      // 	localStorage.theme = "Dark";
+      // }
+      const hasSettings = localStorage.settings;
+      if (!hasSettings) document.documentElement.classList.add("Dark");
+      else
+        document.documentElement.classList.add(
+          JSON.parse(hasSettings)?.appearance?.Theme ?? "Dark",
+        );
+    </script>
+    %sveltekit.head%
+  </head>
+  <div id="app">%sveltekit.body%</div>
+</html>

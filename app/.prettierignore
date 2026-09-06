@@ -1,0 +1,16 @@
+.svelte/**
+static/**
+node_modules/**
+/build/**
+/functions/**
+.svelte-kit/**
+/public/**
+/dist/**
+/workers-site/**
+.cloudflare/**
+.netlify/**
+.vercel/**
+.vercel_build_output/**
+.vscode/**
+docs/**
+worker-iife.js

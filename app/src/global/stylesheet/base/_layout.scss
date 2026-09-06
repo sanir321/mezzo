@@ -1,0 +1,260 @@
+@use "./mixins";
+@use "sass:math" as math;
+@use "./variables" as v;
+html {
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+html {
+  font-size: 10px;
+  overscroll-behavior: contain;
+}
+
+html,
+body {
+  background-color: #010102;
+  color: var(--color-dark);
+  line-height: 1.75;
+  position: fixed;
+  min-height: 100vh;
+  min-width: 100vw;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overscroll-behavior: contain;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+}
+
+:root {
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
+  word-wrap: break-word;
+  -webkit-text-size-adjust: 100%;
+  --base-font-size: 0.75rem;
+
+  /* ===== Scrollbar CSS ===== */
+
+  * {
+    scrollbar-gutter: 0.833333rem;
+    scrollbar-width: thin;
+    scrollbar-color: #c7c7c7 #5e5e5e2f;
+  }
+
+  ::-webkit-scrollbar {
+    width: 0.916667rem;
+    height: 0.916667rem;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #74747e21;
+    border-radius: 0.625rem;
+    height: 0.916667rem;
+    width: 100%;
+    background-clip: content-box;
+    border-radius: 0.833333rem;
+    border: transparent solid 0.0983333rem;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: #e0e0e0a8;
+    border-radius: 0.5625rem;
+    width: 0.5625rem;
+    scrollbar-width: 0.625rem;
+    border: 0.25rem solid #b8b8b800;
+    background-clip: content-box;
+  }
+
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-font-smoothing: antialiased;
+  --player-bar-height: #{math.round(math.clamp(4.5rem, 5rem, 7rem))};
+  --top-bar-height: #{math.clamp(3.9em, 4.175em, 4.625em)};
+  text-rendering: auto;
+
+  @media screen and (min-width: 40em) and (max-width: 96em) {
+    --top-bar-height: #{math.clamp(3.8rem, 4rem, 4.75rem)};
+    --base-font-size: 0.875rem;
+  }
+  @media screen and (min-width: 96em) and (max-width: 134em) {
+    --top-bar-height: #{math.clamp(3.8rem, 4rem, 4.75rem)};
+    --base-font-size: 1rem;
+  }
+  @media screen and (min-width: 134.75em) {
+    --top-bar-height: #{math.clamp(3.8rem, 4rem, 4.75rem)};
+    --base-font-size: 1.125rem;
+  }
+}
+.tooltip {
+  position: fixed;
+  display: block;
+  pointer-events: none;
+
+  opacity: 0;
+  will-change: opacity, transform;
+  transition: opacity linear 150ms;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
+  transform: translate(calc(var(--tt-pos-x)), var(--tt-pos-y));
+  transform-origin: center;
+
+  border: 1px solid #323232;
+  box-shadow: 0px 0px 1px #323232;
+  background: #121212;
+  font-size: v.$size-1;
+  border-radius: 0.25em;
+  padding: 0.3rem;
+  font-weight: 400;
+  min-width: 1rem;
+  max-width: 20rem;
+  text-transform: capitalize;
+  width: -webkit-max-content;
+  width: -moz-max-content;
+  width: max-content;
+  position: absolute;
+  display: block;
+  z-index: 500;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  position: fixed;
+}
+html {
+  font-size: var(--base-font-size);
+}
+#app {
+  position: fixed;
+  height: 100%;
+  width: 100%;
+  line-height: 1.3;
+  inset: 0;
+
+  max-width: 100%;
+  overscroll-behavior: contain;
+  isolation: isolate;
+  contain: paint;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    -webkit-animation-delay: -1ms !important;
+    animation-delay: -1ms !important;
+    -webkit-animation-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    -webkit-animation-iteration-count: 1 !important;
+    animation-iteration-count: 1 !important;
+    background-attachment: initial !important;
+    scroll-behavior: auto !important;
+    transition-delay: 0s !important;
+    transition-duration: 0s !important;
+  }
+}
+main {
+  margin: 0 auto;
+  position: relative;
+  @include v.content-spacing($type: "padding");
+  overscroll-behavior: contain;
+  @media screen and (min-width: 640px) {
+    @include v.content-width();
+  }
+}
+.backdrop {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+  overflow: hidden;
+  background-color: #00000063;
+  width: 100%;
+  height: 100%;
+  contain: paint;
+}
+.wrapper {
+  overflow: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: block;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+  position: absolute;
+  inset: 0;
+
+  isolation: isolate;
+}
+.app-content-p {
+}
+.app-content-m {
+  margin-block-start: calc(var(--top-bar-height) + 0px);
+  will-change: margin-block-end;
+  &[hasplayer="true"] {
+    will-change: unset;
+    margin-block-end: calc(var(--player-bar-height) + 0px);
+  }
+}
+.hidden {
+  display: none !important;
+  visibility: hidden !important;
+}
+.no-scroll {
+  overflow: hidden !important;
+  overflow-y: hidden !important;
+}
+.soft-no-scroll {
+  overflow: hidden !important;
+  overflow-y: scroll !important;
+}
+
+.container {
+  max-width: 112rem;
+
+  position: relative;
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  &.row {
+    flex-direction: row;
+  }
+}
+
+.resp-content-width {
+  margin: 0 auto;
+  @include v.content-width(!important);
+}

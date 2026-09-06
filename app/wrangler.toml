@@ -1,0 +1,12 @@
+name = "mezzo-music"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".svelte-kit/cloudflare"
+
+
+# D1 database binding (mezzo_db) - SQLite via Cloudflare D1
+[[d1_databases]]
+binding = "DB"
+database_name = "mezzo_db"
+database_id = "afc4ec33-a262-4fbd-95bc-2dd6625ccd99"
+migrations_dir = "migrations"

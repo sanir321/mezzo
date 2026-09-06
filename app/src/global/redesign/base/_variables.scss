@@ -1,0 +1,73 @@
+@use "sass:math" as m;
+
+$size-base: 0.75rem;
+$size-1: 1rem;
+$size-2: 1.2rem;
+$size-3: 1.44rem;
+$size-4: 1.728rem;
+$size-5: 2.074rem;
+
+$base-spacing: 0.75em;
+$sm-spacing: m.div($base-spacing, 2.5);
+$md-spacing: $base-spacing;
+$lg-spacing: calc($base-spacing * 2);
+$xl-spacing: calc($base-spacing * 1.25);
+
+$base-radius: 0.35em;
+$xs-radius: m.div($base-radius, 0.75);
+$sm-radius: m.div($base-radius, 0.675);
+$md-radius: m.div($base-radius, 0.575);
+$lg-radius: m.div($base-radius, 0.5);
+$xl-radius: m.div($base-radius, 0.3125);
+
+$secondary-font-family: "CommissionerVariable", sans-serif;
+
+$line-height: 1.5;
+
+$z-index: (
+  "z-250n": -250,
+  "z-125n": -125,
+  "z-1n": -1,
+  "z-0": 0,
+  "z-125p": 125,
+  "z-250p": 250,
+  "z-500p": 500,
+);
+
+$content-width-mobile: calc(100vw - 2.25em);
+
+$content-width-md: calc(100vw - 0.5625rem - 14rem);
+$content-width-lg: 82rem;
+$content-width-xl: 87.5rem;
+
+@mixin content-spacing($type: "padding") {
+  #{$type}: 1.25em 0 5vh;
+  #{$type}-bottom: 3.3125vh !important;
+  @media only screen and (min-width: 640px) and (max-width: 1079.9px) {
+    #{$type}: 3vh 1rem 0 2rem;
+    #{$type}-bottom: 0.8rem;
+  }
+  @media only screen and (min-width: 1080px) and (max-width: 1366px) {
+    #{$type}: 4vh 2rem 0 2rem;
+    #{$type}-bottom: 0.8rem;
+  }
+  @media only screen and (min-width: 1367px) and (max-width: 1600px) {
+    #{$type}: 5vh 2rem 0 2rem;
+  }
+  @media only screen and (min-width: 1601px) {
+    #{$type}: 3vh 2rem 0 2rem;
+  }
+}
+
+@mixin content-width($important: "") {
+  max-width: $content-width-mobile #{$important};
+  @media only screen and (min-width: 1080px) and (max-width: 1366px) {
+    max-width: $content-width-md #{$important};
+  }
+  @media only screen and (min-width: 1367px) and (max-width: 1600px) {
+    max-width: $content-width-lg #{$important};
+  }
+  @media only screen and (min-width: 1601px) {
+    max-width: $content-width-xl #{$important};
+  }
+}
