@@ -8,13 +8,13 @@
 		toggleShuffle,
 	} from "$lib/stores/player.svelte";
 	import type { Track } from "$lib/stores/player.svelte";
-	import { useSession } from "$lib/auth-client";
+	import { useSharedSession } from "$lib/session.svelte";
 	import { authModal } from "$lib/stores/auth-modal.svelte";
 	import { userPreferences, getArtistMeta } from "$lib/stores/preferences.svelte";
 	import { searchOnlineMusic, getOnlineTrending } from "$lib/api";
 	import TrackRow from "$lib/components/TrackRow.svelte";
 
-	const sessionAtom = useSession();
+	const sessionAtom = useSharedSession();
 	let sessionData = $state<{ data: any; isPending: boolean } | undefined>(undefined);
 
 	$effect(() => {

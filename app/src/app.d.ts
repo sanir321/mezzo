@@ -28,6 +28,9 @@ declare namespace App {
       GOOGLE_CLIENT_SECRET?: string;
       GITHUB_CLIENT_ID?: string;
       GITHUB_CLIENT_SECRET?: string;
+      TIDAL_CLIENT_ID?: string;
+      TIDAL_CLIENT_SECRET?: string;
+      HIFI_API_BASE_URL?: string;
     };
     context: {
       waitUntil(promise: Promise<unknown>): void;

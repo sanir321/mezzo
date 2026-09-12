@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { useSession } from "$lib/auth-client";
+	import { useSharedSession } from "$lib/session.svelte";
 	import { goto } from "$app/navigation";
 	import type { Playlist } from "$lib/stores/player.svelte";
 	import { getPlaylists, getPlaylist, createPlaylist as apiCreatePlaylist, deletePlaylist as apiDeletePlaylist, searchOnlineMusic } from "$lib/api";
@@ -8,7 +8,7 @@
 	import { authModal } from "$lib/stores/auth-modal.svelte";
 	import { FEATURED_PLAYLISTS } from "$lib/featured-playlists";
 
-	const sessionAtom = useSession();
+	const sessionAtom = useSharedSession();
 	let sessionData = $state<{ data: any; isPending: boolean } | undefined>(undefined);
 
 	$effect(() => {

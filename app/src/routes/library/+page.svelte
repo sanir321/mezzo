@@ -1,6 +1,6 @@
 <script lang="ts">
 import { goto } from "$app/navigation";
-import { useSession } from "$lib/auth-client";
+import { useSharedSession } from "$lib/session.svelte";
 import {
 	playTracks,
 	playerCurrentTrack,
@@ -14,7 +14,7 @@ import { authModal } from "$lib/stores/auth-modal.svelte";
 import { getLibrary, deleteTrack as apiDeleteTrack, getOnlineTrending } from "$lib/api";
 import { offlineStore } from "$lib/services/offline.svelte";
 
-	const sessionAtom = useSession();
+	const sessionAtom = useSharedSession();
 	let sessionData = $state<{ data: any; isPending: boolean } | undefined>(undefined);
 
 	$effect(() => {

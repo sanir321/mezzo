@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
-	import { useSession, signIn } from "$lib/auth-client";
+	import { signIn } from "$lib/auth-client";
+	import { useSharedSession } from "$lib/session.svelte";
 
-	const sessionAtom = useSession();
+	const sessionAtom = useSharedSession();
 
 	$effect(() => {
 		return sessionAtom.subscribe((value: any) => {

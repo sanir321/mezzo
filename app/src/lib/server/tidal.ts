@@ -3,10 +3,25 @@ import type { Track } from "$lib/stores/player.svelte";
 import type { SearchArtist, SearchAlbum, SearchPlaylist } from "./music";
 import { searchJioSaavnMusic } from "./music";
 
-const TIDAL_CLIENT_ID = "txNoH4kkV41MfH25";
-const TIDAL_CLIENT_SECRET = "dQjy0MinCEvxi1O4UmxvxWnDjt4cgHBPw8ll6nYBk98=";
+const TIDAL_CLIENT_ID =
+	(import.meta.env.VITE_TIDAL_CLIENT_ID as string | undefined) ??
+	(typeof globalThis !== "undefined" && typeof (globalThis as any).env?.TIDAL_CLIENT_ID !== "undefined"
+		? (globalThis as any).env.TIDAL_CLIENT_ID
+		: "");
+const TIDAL_CLIENT_SECRET =
+	(import.meta.env.VITE_TIDAL_CLIENT_SECRET as string | undefined) ??
+	(typeof globalThis !== "undefined" && typeof (globalThis as any).env?.TIDAL_CLIENT_SECRET !== "undefined"
+		? (globalThis as any).env.TIDAL_CLIENT_SECRET
+		: "");
 const TIDAL_AUTH_URL = "https://auth.tidal.com/v1/oauth2/token";
 const TIDAL_API_BASE = "https://api.tidal.com/v1";
+const HIFI_API_BASE_URL =
+	(import.meta.env.VITE_HIFI_API_BASE_URL as string | undefined) ??
+	(typeof globalThis !== "undefined" && typeof (globalThis as any).env?.HIFI_API_BASE_URL !== "undefined"
+		? (globalThis as any).env.HIFI_API_BASE_URL
+		: import.meta.env.DEV
+			? "http://localhost:8787"
+			: "https://mezzo-hifi-api.zenosayz05.workers.dev");
 
 interface CachedToken {
 	token: string;
@@ -21,6 +36,8 @@ const streamCache = new Map<string, { url: string; expiresAt: number }>();
  * Caches the token in-memory and refreshes before expiration (14400s / 4 hours).
  */
 export async function getTidalAccessToken(): Promise<string | null> {
+	if (!TIDAL_CLIENT_ID || !TIDAL_CLIENT_SECRET) return null;
+
 	const now = Date.now();
 	if (tokenCache && tokenCache.expiresAt > now + 60000) {
 		return tokenCache.token;
@@ -399,6 +416,29 @@ export async function resolveTidalTrackStream(trackId: string | number): Promise
 		} catch (err) {
 			// Continue to next candidate query
 		}
+	}
+
+	// Final fallback to the dedicated mezzo-hifi-api worker using title + artist metadata
+	try {
+		const workerUrl = new URL(`${HIFI_API_BASE_URL}/stream`);
+		workerUrl.searchParams.set("title", title);
+		if (primaryArtist) workerUrl.searchParams.set("artist", primaryArtist);
+		workerUrl.searchParams.set("query", queryCandidates[0] || title);
+		workerUrl.searchParams.set("format", "json");
+
+		const workerRes = await fetch(workerUrl.toString(), { signal: AbortSignal.timeout(8000) });
+		if (workerRes.ok) {
+			const data = (await workerRes.json()) as any;
+			if (data?.url && typeof data.url === "string" && data.url.startsWith("http")) {
+				streamCache.set(key, {
+					url: data.url,
+					expiresAt: now + 3600000,
+				});
+				return data.url;
+			}
+		}
+	} catch (err) {
+		console.warn("Tidal stream worker fallback error:", err);
 	}
 
 	return null;

@@ -1,9 +1,9 @@
 import type { UniversalTrack } from "./saavn";
 
 const PIPED_INSTANCES = [
+  "https://pipedapi.ducks.party",
   "https://api.piped.private.coffee",
   "https://pipedapi.kavin.rocks",
-  "https://piped-api.lunar.icu",
 ];
 
 async function fetchFromPiped(endpoint: string, timeoutMs = 4500): Promise<any> {
@@ -67,18 +67,37 @@ export async function resolveYouTubeStream(videoIdOrQuery: string): Promise<stri
     }
 
     const data = await fetchFromPiped(`/streams/${videoId}`);
-    if (!data || !Array.isArray(data.audioStreams)) return null;
+    if (!data) return null;
 
-    // Filter audio streams and sort by bitrate descending
-    const audioStreams = data.audioStreams.filter(
-      (s: any) => s && typeof s.url === "string" && s.url
-    );
-
+    // Preferred: dedicated audio streams sorted by bitrate descending
+    const audioStreams = Array.isArray(data.audioStreams)
+      ? data.audioStreams.filter((s: any) => s && typeof s.url === "string" && s.url)
+      : [];
     audioStreams.sort((a: any, b: any) => (Number(b.bitrate) || 0) - (Number(a.bitrate) || 0));
 
     if (audioStreams.length > 0) {
       return audioStreams[0].url;
     }
+
+    // Fallback: some Piped instances no longer expose audioStreams;
+    // use a progressive (muxed audio+video) MP4, skipping HLS manifests
+    // and LBRY (odycdn) streams which require auth tokens.
+    if (Array.isArray(data.videoStreams)) {
+      const progressive = data.videoStreams
+        .filter((s: any) => s && typeof s.url === "string" && s.url)
+        .filter(
+          (s: any) =>
+            (s.mimeType || "").includes("mp4") && !(s.format || "").toLowerCase().includes("hls"),
+        );
+      progressive.sort((a: any, b: any) => {
+        const isLbry = (u: string) => u.includes("player.odycdn.com");
+        const aLbry = isLbry(a.url || "") ? 1 : 0;
+        const bLbry = isLbry(b.url || "") ? 1 : 0;
+        return aLbry - bLbry;
+      });
+      if (progressive.length > 0) return progressive[0].url;
+    }
+
     return null;
   } catch {
     return null;

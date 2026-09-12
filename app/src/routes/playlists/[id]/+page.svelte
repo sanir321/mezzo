@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from "$app/stores";
 	import { goto } from "$app/navigation";
-	import { useSession } from "$lib/auth-client";
+	import { useSharedSession } from "$lib/session.svelte";
 	import {
 		playTracks,
 		playerCurrentTrack,
@@ -24,7 +24,7 @@
 	import { getFeaturedPlaylistById } from "$lib/featured-playlists";
 	import { authModal } from "$lib/stores/auth-modal.svelte";
 
-	const sessionAtom = useSession();
+	const sessionAtom = useSharedSession();
 	let sessionData = $state<{ data: any; isPending: boolean } | undefined>(undefined);
 
 	$effect(() => {

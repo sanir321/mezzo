@@ -6,7 +6,7 @@ import type { Handle, HandleServerError } from "@sveltejs/kit";
 const securityHeaders = {
   "X-Frame-Options": "SAMEORIGIN",
   "Referrer-Policy": "no-referrer",
-  "Permissions-Policy": `accelerometer=(), autoplay="*", camera=(), document-domain=(), encrypted-media=(), fullscreen=(), gyroscope=(), interest-cohort=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), sync-xhr=(), usb=(), xr-spatial-tracking=(), geolocation=()`,
+  "Permissions-Policy": `accelerometer=(), autoplay="*", camera=(), encrypted-media=(), fullscreen=(), gyroscope=(), interest-cohort=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), sync-xhr=(), usb=(), xr-spatial-tracking=(), geolocation=()`,
   "X-Content-Type-Options": "nosniff",
 };
 

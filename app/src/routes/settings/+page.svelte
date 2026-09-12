@@ -1,12 +1,13 @@
 <script lang="ts">
-import { useSession, signOut } from "$lib/auth-client";
+import { signOut } from "$lib/auth-client";
+import { useSharedSession } from "$lib/session.svelte";
 import { authModal } from "$lib/stores/auth-modal.svelte";
 import { userPreferences, POPULAR_LANGUAGES, POPULAR_ARTISTS } from "$lib/stores/preferences.svelte";
 import { equalizerStore } from "$lib/stores/equalizer.svelte";
 import { playerCrossfade, playerAutoRadio } from "$lib/stores/player.svelte";
 import { offlineStore } from "$lib/services/offline.svelte";
 
-const sessionAtom = useSession();
+const sessionAtom = useSharedSession();
 let sessionData = $state<{ data: any; isPending: boolean } | undefined>(undefined);
 
 $effect(() => {

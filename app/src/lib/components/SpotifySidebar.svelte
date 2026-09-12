@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from "$app/stores";
 	import { goto } from "$app/navigation";
-	import { useSession } from "$lib/auth-client";
+	import { useSharedSession } from "$lib/session.svelte";
 	import { getPlaylists, createPlaylist } from "$lib/api";
 	import { likedStore } from "$lib/stores/liked.svelte";
 	import { userPreferences, getArtistMeta } from "$lib/stores/preferences.svelte";
@@ -9,7 +9,7 @@
 	import LanguageModal from "$lib/components/LanguageModal.svelte";
 	import { authModal } from "$lib/stores/auth-modal.svelte";
 
-	const sessionAtom = useSession();
+	const sessionAtom = useSharedSession();
 	let sessionData = $state<{ data: any; isPending: boolean } | undefined>(undefined);
 
 	$effect(() => {
@@ -208,8 +208,8 @@
 									alt={artName}
 									class="sidebar-artist-img"
 									loading="lazy"
-									onerror={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80'; }}
-								/>
+								onerror={(e) => { (e.currentTarget as HTMLImageElement).src = getArtistMeta(artName).image; }}
+							/>
 							</div>
 							<div class="item-meta">
 								<span class="item-name">{artName}</span>

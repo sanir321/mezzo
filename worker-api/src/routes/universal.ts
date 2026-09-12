@@ -3,31 +3,62 @@ import type { Bindings } from "../env";
 import { searchSaavn, resolveSaavnTrack, type UniversalTrack } from "../lib/providers/saavn";
 import { searchYouTube, resolveYouTubeStream } from "../lib/providers/youtube";
 import { searchDeezer } from "../lib/providers/deezer";
+import { tidalJsonRequest } from "../lib/tidal/client";
 
 const app = new Hono<{ Bindings: Bindings }>({ strict: false });
 
-export async function resolveAnyStream(params: {
-  id?: string;
-  title?: string;
-  artist?: string;
-  query?: string;
-}): Promise<{ url: string; quality: string; source: string } | null> {
+export async function resolveAnyStream(
+  env: Bindings,
+  params: {
+    id?: string;
+    title?: string;
+    artist?: string;
+    query?: string;
+  },
+): Promise<{ url: string; quality: string; source: string } | null> {
   const { id = "", title = "", artist = "", query = "" } = params;
 
-  // 1. Check ID-specific resolution
   if (id.startsWith("saavn_")) {
     const stream = await resolveSaavnTrack(title || id.replace(/^saavn_/, ""), artist);
     if (stream) return { url: stream, quality: "320kbps CD-Quality", source: "saavn" };
   } else if (id.startsWith("yt_")) {
     const stream = await resolveYouTubeStream(id);
     if (stream) return { url: stream, quality: "Opus 160kbps", source: "youtube" };
+  } else if (id.startsWith("deezer_")) {
+    const deezerId = id.replace(/^deezer_/, "");
+    try {
+      const res = await fetch(`https://api.deezer.com/track/${deezerId}`, {
+        headers: { "User-Agent": "Mezzo/1.0" },
+      });
+      if (res.ok) {
+        const info = (await res.json()) as any;
+        if (info && typeof info.preview === "string" && info.preview) {
+          return { url: info.preview, quality: "AAC 128kbps preview", source: "deezer" };
+        }
+      }
+    } catch {
+      // fall through to universal search
+    }
+  } else if (id.startsWith("tidal_")) {
+    try {
+      const trackId = id.replace(/^tidal_/, "");
+      const { data } = await tidalJsonRequest({
+        env,
+        url: `https://api.tidal.com/v1/tracks/${trackId}/`,
+      });
+      const trackTitle = data?.title ?? title;
+      const trackArtist = data?.artist?.name ?? artist;
+      const searchPhrase = (trackTitle && trackArtist ? `${trackTitle} ${trackArtist}` : query || trackTitle).trim();
+      const stream = await resolveSaavnTrack(trackTitle || searchPhrase, trackArtist);
+      if (stream) return { url: stream, quality: "320kbps CD-Quality", source: "tidal" };
+    } catch (e) {
+      console.warn("Tidal stream resolution failed:", e);
+    }
   }
 
-  // 2. Multi-tier resolution by Title + Artist or Query
   const searchPhrase = (title && artist ? `${title} ${artist}` : query || title).trim();
   if (!searchPhrase) return null;
 
-  // Tier 1: JioSaavn Akamai 320kbps CDN (Ultra fast & CD quality)
   try {
     const saavnUrl = await resolveSaavnTrack(title || searchPhrase, artist);
     if (saavnUrl) {
@@ -35,7 +66,6 @@ export async function resolveAnyStream(params: {
     }
   } catch {}
 
-  // Tier 2: YouTube Audio (Piped/Invidious audio streams)
   try {
     const ytUrl = await resolveYouTubeStream(searchPhrase);
     if (ytUrl) {
@@ -43,7 +73,6 @@ export async function resolveAnyStream(params: {
     }
   } catch {}
 
-  // Tier 3: Deezer 320kbps/preview
   try {
     const deezerTracks = await searchDeezer(searchPhrase, 3);
     if (deezerTracks.length > 0 && deezerTracks[0].streamUrl) {
@@ -54,7 +83,6 @@ export async function resolveAnyStream(params: {
   return null;
 }
 
-// Unified /stream endpoint
 app.get("/stream", async (c) => {
   const searchParams = new URL(c.req.url).searchParams;
   const id = searchParams.get("id") || "";
@@ -63,7 +91,7 @@ app.get("/stream", async (c) => {
   const query = searchParams.get("query") || searchParams.get("q") || "";
   const format = searchParams.get("format") || "redirect";
 
-  const result = await resolveAnyStream({ id, title, artist, query });
+  const result = await resolveAnyStream(c.env, { id, title, artist, query });
   if (!result) {
     return c.json({ ok: false, error: "Track stream not found" }, 404);
   }
@@ -80,7 +108,6 @@ app.get("/stream", async (c) => {
   return c.redirect(result.url, 302);
 });
 
-// Unified /search/universal endpoint
 app.get("/search/universal", async (c) => {
   const searchParams = new URL(c.req.url).searchParams;
   const query = (searchParams.get("q") || searchParams.get("query") || "").trim();
@@ -90,7 +117,6 @@ app.get("/search/universal", async (c) => {
     return c.json({ ok: false, error: "Missing query parameter 'q'" }, 400);
   }
 
-  // Fetch concurrently from Saavn + Deezer + YouTube
   const [saavnRes, deezerRes, ytRes] = await Promise.allSettled([
     searchSaavn(query, limit),
     searchDeezer(query, Math.floor(limit / 2)),
@@ -101,7 +127,6 @@ app.get("/search/universal", async (c) => {
   const deezerTracks = deezerRes.status === "fulfilled" ? deezerRes.value : [];
   const ytTracks = ytRes.status === "fulfilled" ? ytRes.value : [];
 
-  // Merge with title deduping
   const seen = new Set<string>();
   const merged: UniversalTrack[] = [];
 

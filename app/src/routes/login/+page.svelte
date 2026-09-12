@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
-	import { useSession, signIn } from "$lib/auth-client";
+	import { signIn } from "$lib/auth-client";
+	import { useSharedSession } from "$lib/session.svelte";
 
-	const sessionAtom = useSession();
+	const sessionAtom = useSharedSession();
 
 	$effect(() => {
 		return sessionAtom.subscribe((value: any) => {
@@ -66,15 +67,6 @@
 				<p class="auth-subtitle">Welcome back! Sign in to access your saved music & playlists.</p>
 			</div>
 
-			{#if authError}
-				<div class="error-banner">
-					<svg viewBox="0 0 24 24" width="1.1rem" height="1.1rem" fill="none" stroke="currentColor" stroke-width="2">
-						<circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-					</svg>
-					<span>{authError}</span>
-				</div>
-			{/if}
-
 			<div class="social-list">
 				<button type="button" class="google-login-btn" onclick={handleGoogleLogin} disabled={authBusy}>
 					<svg viewBox="0 0 24 24" width="1.3rem" height="1.3rem" class="social-icon">
@@ -94,6 +86,14 @@
 			</div>
 
 			<form onsubmit={handleLogin} class="auth-form">
+				{#if authError}
+					<div class="error-banner">
+						<svg viewBox="0 0 24 24" width="1.1rem" height="1.1rem" fill="none" stroke="currentColor" stroke-width="2">
+							<circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+						</svg>
+						<span>{authError}</span>
+					</div>
+				{/if}
 				<div class="form-group">
 					<label for="login-email">Email address</label>
 					<input

@@ -135,7 +135,7 @@
 		}
 	}
 
-	function handleAudioError() {
+	function applyServerFallback() {
 		const track = playerCurrentTrack.value;
 		if (!audioEl || !track) return;
 		const serverFallback = `/api/tracks/${track.id}/stream`;
@@ -149,9 +149,39 @@
 			}
 			if (playerPlaying.value) {
 				equalizerStore.resumeAudioContext();
-				audioEl.play().catch(() => {});
+				try { audioEl.play(); } catch {}
 			}
 		}
+	}
+
+	function handleAudioError() {
+		applyServerFallback();
+	}
+
+	let stallTimer: ReturnType<typeof setTimeout> | null = null;
+
+	function watchStall() {
+		if (stallTimer) clearTimeout(stallTimer);
+		if (!audioEl) return;
+		const cleaned = () => {
+			if (stallTimer) {
+				clearTimeout(stallTimer);
+				stallTimer = null;
+			}
+		};
+		audioEl.addEventListener("playing", cleaned, { once: true });
+		audioEl.addEventListener("canplay", cleaned, { once: true });
+		audioEl.addEventListener("error", cleaned, { once: true });
+		stallTimer = setTimeout(() => {
+			const track = playerCurrentTrack.value;
+			// Only fall back if we got no playback data at all, not mid-song buffer
+			if (track && !audioEl.src.includes(`/api/tracks/${track.id}/stream`)) {
+				console.warn("Stream stalled without data, forcing server re-resolution");
+				applyServerFallback();
+			} else {
+				stallTimer = null;
+			}
+		}, 12000);
 	}
 
 	let currentLoadedSrc = "";
@@ -206,6 +236,7 @@
 				currentLoadedSrc = targetUrl;
 				audioEl.src = finalSrc;
 				audioEl.load();
+				watchStall();
 
 				const targetTime = untrack(() => playerCurrentTime.value);
 				if (targetTime > 0) {
@@ -246,10 +277,7 @@
 		if (!audioEl) return;
 		audioEl.muted = playerMuted.value;
 		audioEl.volume = playerMuted.value ? 0 : Math.max(0.1, playerVolume.value || 1.0);
-		if (playerPlaying.value) {
-			equalizerStore.resumeAudioContext();
-			audioEl.play().catch(() => {});
-		} else {
+		if (!playerPlaying.value) {
 			audioEl.pause();
 		}
 	});

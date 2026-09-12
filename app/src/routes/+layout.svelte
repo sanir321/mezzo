@@ -14,40 +14,61 @@
 	import { authModal } from "$lib/stores/auth-modal.svelte";
 	import { goto } from "$app/navigation";
 	import { page } from "$app/stores";
-	import { useSession } from "$lib/auth-client";
-	import { prewarmTurnstile, registerDecryptionServiceWorker } from "$lib/flac-stream";
+	import { useSharedSession } from "$lib/session.svelte";
 	import "../global/redesign/main.scss";
 
 	let { children }: { children?: Snippet } = $props();
 
+	const sessionAtom = useSharedSession();
+	let sessionData = $state<{ data: any; isPending: boolean } | undefined>(undefined);
+	let sessionTimedOut = $state(false);
+
+	// Auto-unregister old service workers that no longer exist on the server
 	if (typeof window !== "undefined") {
-		registerDecryptionServiceWorker();
-		prewarmTurnstile();
+		navigator.serviceWorker.getRegistrations().then((registrations) => {
+			for (const reg of registrations) {
+				reg.unregister().catch(() => {});
+			}
+		}).catch(() => {});
+		navigator.serviceWorker.ready.then((registration) => {
+			registration.unregister().catch(() => {});
+		}).catch(() => {});
 	}
 
-	const sessionAtom = useSession();
-	let sessionData = $state<{ data: any; isPending: boolean } | undefined>(undefined);
-
-	$effect(() => {
-		return sessionAtom.subscribe((value: any) => {
-			sessionData = value;
-			const isAuthed = Boolean(value?.data?.user);
-			setPlayerAuth(isAuthed);
-			if (isAuthed) {
-				likedStore.init();
-			}
-		});
+	const unsub = sessionAtom.subscribe((value: any) => {
+		sessionData = value;
+		const isAuthed = Boolean(value?.data?.user);
+		setPlayerAuth(isAuthed);
+		if (isAuthed) {
+			likedStore.init();
+		}
 	});
 
-	const isSessionLoading = $derived(sessionData === undefined || sessionData.isPending);
+	$effect(() => {
+		return () => { unsub(); };
+	});
+
+	// Fail-safe: never leave users stuck on the "Verifying session..." screen.
+	// If the session request hangs (e.g. a stale profile with a broken stored
+	// state), treat it as logged out after a short grace period.
+	$effect(() => {
+		if (typeof window === "undefined" || sessionTimedOut) return;
+		const t = setTimeout(() => {
+			sessionTimedOut = true;
+			sessionData = sessionData ?? { data: null, isPending: false };
+		}, 5000);
+		return () => clearTimeout(t);
+	});
+
+	const isSessionLoading = $derived(
+		!sessionTimedOut && (sessionData === undefined || sessionData.isPending),
+	);
 	const user = $derived(sessionData?.data?.user ?? null);
 	const isLoggedIn = $derived(user != null);
 
 	const pathname = $derived($page.url.pathname);
 	const isAuthPage = $derived(pathname === "/login" || pathname === "/signup");
-	const showLanding = $derived(
-		pathname === "/landing" || (pathname === "/" && !isSessionLoading && !isLoggedIn)
-	);
+	const showLanding = $derived(pathname === "/" && !isLoggedIn);
 
 	// Require account login or sign up to use Mezzo protected pages
 	$effect(() => {

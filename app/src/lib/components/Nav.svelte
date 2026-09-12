@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { page } from "$app/stores";
-	import { useSession, signOut } from "$lib/auth-client";
+	import { signOut } from "$lib/auth-client";
+	import { useSharedSession } from "$lib/session.svelte";
 	import { authModal } from "$lib/stores/auth-modal.svelte";
 
-	const sessionAtom = useSession();
+	const sessionAtom = useSharedSession();
 	let sessionData = $state<{ data: any; isPending: boolean } | undefined>(undefined);
 
 	$effect(() => {

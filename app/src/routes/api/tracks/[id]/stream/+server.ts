@@ -3,6 +3,14 @@ import type { RequestHandler } from "./$types";
 import { resolveTidalTrackStream } from "$lib/server/tidal";
 import { resolveSaavnTrackStream } from "$lib/server/music";
 
+const HIFI_API_BASE_URL =
+	(import.meta.env.VITE_HIFI_API_BASE_URL as string | undefined) ??
+	(typeof globalThis !== "undefined" && typeof (globalThis as any).env?.HIFI_API_BASE_URL !== "undefined"
+		? (globalThis as any).env.HIFI_API_BASE_URL
+		: import.meta.env.DEV
+			? "http://localhost:8787"
+			: "https://mezzo-hifi-api.zenosayz05.workers.dev");
+
 export const GET: RequestHandler = async ({ params, url, request, platform }) => {
 	const trackId = params.id;
 	if (!trackId) throw error(400, "Missing track ID");
@@ -40,9 +48,13 @@ export const GET: RequestHandler = async ({ params, url, request, platform }) =>
 	// 3. Multi-tier fallback to dedicated mezzo-hifi-api worker
 	if (!streamUrl) {
 		try {
-			const workerRes = await fetch(
-				`https://mezzo-hifi-api.zenosayz05.workers.dev/stream?id=${encodeURIComponent(trackId)}&format=json`
-			);
+			const query = trackId.replace(/^tidal_/, "").replace(/^saavn_/, "");
+			const workerUrl = new URL(`${HIFI_API_BASE_URL}/stream`);
+			workerUrl.searchParams.set("id", trackId);
+			workerUrl.searchParams.set("query", query);
+			workerUrl.searchParams.set("format", "json");
+
+			const workerRes = await fetch(workerUrl.toString());
 			if (workerRes.ok) {
 				const data = (await workerRes.json()) as any;
 				if (data && data.url) {

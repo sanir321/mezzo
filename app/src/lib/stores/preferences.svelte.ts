@@ -666,13 +666,21 @@ export function getArtistMeta(name: string): PopularArtist {
 	}
 	const hue = Math.abs(hash % 360);
 	const listenerCount = 5000000 + Math.abs(hash % 45000000);
+	const initials = name
+		.trim()
+		.split(/\s+/)
+		.map((w) => w[0])
+		.join("")
+		.slice(0, 2)
+		.toUpperCase() || "?";
+	const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${hue},75%,55%)"/><stop offset="1" stop-color="hsl(${(hue + 45) % 360},85%,25%)"/></linearGradient></defs><rect width="600" height="600" fill="url(#g)"/><circle cx="300" cy="240" r="130" fill="rgba(255,255,255,0.18)"/><text x="300" y="330" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif" font-size="210" font-weight="700" fill="#ffffff" text-anchor="middle" dominant-baseline="middle">${initials}</text></svg>`;
 	return {
 		name,
 		genre: "Artist",
 		languages: ["English"],
 		color: `hsl(${hue}, 75%, 50%)`,
 		gradient: `linear-gradient(135deg, hsl(${hue}, 75%, 50%) 0%, hsl(${(hue + 45) % 360}, 85%, 20%) 100%)`,
-		image: `https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80`,
+		image: `data:image/svg+xml,${encodeURIComponent(svg)}`,
 		monthlyListeners: listenerCount.toLocaleString(),
 		bio: `Popular global artist with millions of online streams.`
 	};

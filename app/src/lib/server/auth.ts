@@ -18,13 +18,17 @@ function getEnv(): Env {
     GOOGLE_CLIENT_SECRET: import.meta.env.VITE_GOOGLE_CLIENT_SECRET,
     GITHUB_CLIENT_ID: import.meta.env.VITE_GITHUB_CLIENT_ID,
     GITHUB_CLIENT_SECRET: import.meta.env.VITE_GITHUB_CLIENT_SECRET,
-    DB: typeof process !== "undefined" ? (process.env as any).DB : undefined,
-  };
+	DB: typeof process !== "undefined" ? (process.env as any).DB : undefined,
+		// Also try Cloudflare Workers env binding
+		...(typeof globalThis !== "undefined" && typeof (globalThis as any).env !== "undefined" ? { DB: (globalThis as any).env.DB } : {}),
+	};
 }
 
 export function createAuth(platform: { env: Env } | null, url: string) {
-  const platformEnv = platform?.env ?? {};
-  const env = { ...getEnv(), ...platformEnv };
+	const platformEnv = platform?.env ?? {};
+	const env = { ...getEnv(), ...platformEnv };
+	// Get DB binding from platform.env or globalThis.env
+	const dbBinding = platformEnv.DB ?? (typeof globalThis !== "undefined" && typeof (globalThis as any).env !== "undefined" ? (globalThis as any).env.DB : undefined);
 
   const result = betterAuth({
     baseURL: url,
@@ -35,8 +39,8 @@ export function createAuth(platform: { env: Env } | null, url: string) {
       "https://mezzo-61d.pages.dev",
       "https://mezzo.zenosayz05.workers.dev",
     ],
-    secret: env.BETTER_AUTH_SECRET || "mezzo-dev-super-secret-key-32chars-min!",
-    database: platformEnv.DB ?? (undefined as unknown as D1Database),
+secret: env.BETTER_AUTH_SECRET || "mezzo-dev-super-secret-key-32chars-min!",
+	database: dbBinding ?? (undefined as unknown as D1Database),
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: false,

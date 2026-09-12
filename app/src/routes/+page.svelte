@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { useSession } from "$lib/auth-client";
+	import { useSharedSession } from "$lib/session.svelte";
 	import {
 		playTracks,
 		playerCurrentTrack,
@@ -16,7 +16,7 @@
 
 	import { likedStore } from "$lib/stores/liked.svelte";
 
-	const sessionAtom = useSession();
+	const sessionAtom = useSharedSession();
 	let sessionData = $state<{ data: any; isPending: boolean } | undefined>(undefined);
 
 	$effect(() => {

@@ -1,6 +1,5 @@
 <script module lang="ts">
 	import { authModal } from "$lib/stores/auth-modal.svelte";
-	import { resolveFlacStream, prewarmTurnstile } from "$lib/flac-stream";
 
 	export interface Track {
 		id: string;
@@ -101,7 +100,6 @@ export function streamUrl(idOrTrack: string | Track): string {
 
 	// Restore state from localStorage if available
 	if (typeof window !== "undefined") {
-		prewarmTurnstile();
 		const savedCrossfade = localStorage.getItem(STORAGE_KEY_CROSSFADE);
 		if (savedCrossfade !== null) {
 			const cf = parseInt(savedCrossfade, 10);
@@ -136,7 +134,13 @@ export function streamUrl(idOrTrack: string | Track): string {
 			if (savedQueue) {
 				const parsedQ = JSON.parse(savedQueue);
 				if (Array.isArray(parsedQ) && parsedQ.length > 0) {
-					initialQueue = parsedQ;
+					// Never trust cached external stream URLs from a previous session:
+					// CDN links (Tidal/JioSaavn) can expire, leaving playback spinning
+					// forever on a dead URL. Always re-resolve on load.
+					initialQueue = parsedQ.map((t: Track) => ({
+						...t,
+						stream_url: undefined,
+					}));
 					const p = savedPos ? parseInt(savedPos, 10) : 0;
 					if (!isNaN(p) && p >= 0 && p < initialQueue.length) {
 						initialPosition = p;
@@ -417,28 +421,16 @@ export function streamUrl(idOrTrack: string | Track): string {
 	function preloadNextTrack(nextIndex: number) {
 		if (nextIndex >= 0 && nextIndex < queue.length && typeof window !== "undefined") {
 			const nextTrack = queue[nextIndex];
-			if (nextTrack) {
-				if (!nextTrack.stream_url || nextTrack.stream_url.startsWith("/api/tracks/")) {
-					fetch(`/api/tracks/${encodeURIComponent(nextTrack.id)}/stream?format=json`)
-						.then((r) => r.json())
-						.then((data: any) => {
-							if (data?.url) {
-								nextTrack.stream_url = data.url;
-								savePlayerState();
-							}
-						})
-						.catch(() => {});
-				}
-				if (!nextTrack.stream_url) {
-					resolveFlacStream(nextTrack, 6000)
-						.then((res) => {
-							if (res) {
-								nextTrack.stream_url = res.url;
-								nextTrack.format = res.format;
-							}
-						})
-						.catch(() => {});
-				}
+			if (nextTrack && (!nextTrack.stream_url || nextTrack.stream_url.startsWith("/api/tracks/"))) {
+				fetch(`/api/tracks/${encodeURIComponent(nextTrack.id)}/stream?format=json`)
+					.then((r) => r.json())
+					.then((data: any) => {
+						if (data?.url) {
+							nextTrack.stream_url = data.url;
+							savePlayerState();
+						}
+					})
+					.catch(() => {});
 			}
 		}
 	}
@@ -462,20 +454,7 @@ export function streamUrl(idOrTrack: string | Track): string {
 		recordRecentlyPlayed(queue[position]);
 		savePlayerState();
 
-		// If current track doesn't have FLAC resolved yet, resolve and cache it for replay
-		if (targetTrack && !targetTrack.stream_url && typeof window !== "undefined") {
-			resolveFlacStream(targetTrack)
-				.then((flacRes) => {
-					if (flacRes) {
-						targetTrack.stream_url = flacRes.url;
-						targetTrack.format = flacRes.format;
-						savePlayerState();
-					}
-				})
-				.catch(() => {});
-		}
-
-		// Preload next track in queue so subsequent songs are 100% FLAC HD with zero delay
+		// Preload next track in queue so subsequent songs start with zero delay
 		preloadNextTrack(i + 1);
 	}
 
