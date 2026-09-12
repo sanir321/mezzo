@@ -111,12 +111,15 @@ async function refreshAccessToken(entry: CredentialEntry): Promise<string> {
   if (!entry.refreshPromise) {
     const cred = entry.credential
     entry.refreshPromise = (async () => {
+      const isClientCredentials = !cred.refreshToken
       const body = new URLSearchParams({
+        grant_type: isClientCredentials ? 'client_credentials' : 'refresh_token',
         client_id: cred.clientId,
-        grant_type: 'refresh_token',
-        refresh_token: cred.refreshToken,
-        scope: 'r_usr+w_usr+w_sub',
       })
+      if (!isClientCredentials) {
+        body.set('refresh_token', cred.refreshToken)
+        body.set('scope', 'r_usr+w_usr+w_sub')
+      }
 
       const response = await fetchWithTimeout(
         'https://auth.tidal.com/v1/oauth2/token',

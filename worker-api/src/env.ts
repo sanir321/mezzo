@@ -58,8 +58,14 @@ export function loadCredentials(env: Bindings): TidalCredential[] {
   }
 
   if (credentials.length === 0 && clientIdDefault && clientSecretDefault) {
-    for (const rt of (env.REFRESH_TOKEN ?? '').split(',').map((s) => s.trim()).filter(Boolean)) {
-      credentials.push({ clientId: clientIdDefault, clientSecret: clientSecretDefault, refreshToken: rt, userId: userIdDefault || undefined })
+    const refreshTokens = (env.REFRESH_TOKEN ?? '').split(',').map((s) => s.trim()).filter(Boolean)
+
+    if (refreshTokens.length > 0) {
+      for (const rt of refreshTokens) {
+        credentials.push({ clientId: clientIdDefault, clientSecret: clientSecretDefault, refreshToken: rt, userId: userIdDefault || undefined })
+      }
+    } else {
+      credentials.push({ clientId: clientIdDefault, clientSecret: clientSecretDefault, refreshToken: '', userId: userIdDefault || undefined })
     }
   }
 
