@@ -186,6 +186,19 @@
 
 	let currentLoadedSrc = "";
 
+	let playRequestWasFired = false;
+
+	$effect(() => {
+		if (!audioEl) return;
+		const shouldPlay = playerPlaying.value;
+		if (shouldPlay && !playRequestWasFired && currentLoadedSrc) {
+			audioEl.muted = playerMuted.value;
+			audioEl.volume = playerMuted.value ? 0 : Math.max(0.1, playerVolume.value || 1.0);
+			audioEl.play().catch(() => {});
+		}
+		playRequestWasFired = shouldPlay;
+	});
+
 	$effect(() => {
 		if (!audioEl) return;
 		const track = playerCurrentTrack.value;
