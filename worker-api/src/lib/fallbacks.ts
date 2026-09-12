@@ -159,9 +159,9 @@ export async function deezerChartTracks(limit = 25): Promise<UniversalTrack[]> {
           album: item.album?.title || 'Single',
           duration: Number(item.duration) || 0,
           coverUrl: item.album?.cover_xl || item.album?.cover_big || item.album?.cover_medium || '',
-          streamUrl: item.preview || '',
+          streamUrl: '',
           source: 'deezer',
-          quality: 'AAC 320kbps',
+          quality: 'Metadata only (full stream via Saavn/YouTube)',
         }
       })
       .filter((t: UniversalTrack | null): t is UniversalTrack => Boolean(t && t.title))

@@ -32,8 +32,15 @@ export async function resolveAnyStream(
       });
       if (res.ok) {
         const info = (await res.json()) as any;
-        if (info && typeof info.preview === "string" && info.preview) {
-          return { url: info.preview, quality: "AAC 128kbps preview", source: "deezer" };
+        // Deezer only serves 30s previews; use the track identity to find a
+        // full-length stream from Saavn/YouTube instead of playing a preview.
+        const deezerTitle = info?.title ?? title;
+        const deezerArtist = info?.artist?.name ?? artist;
+        const phrase =
+          (deezerTitle && deezerArtist ? `${deezerTitle} ${deezerArtist}` : query || deezerTitle).trim();
+        if (phrase) {
+          const full = await resolveFromGenericCascade(phrase);
+          if (full) return full;
         }
       }
     } catch {
@@ -85,13 +92,7 @@ async function resolveFromGenericCascade(
     }
   } catch {}
 
-  try {
-    const deezerTracks = await searchDeezer(searchPhrase, 3);
-    if (deezerTracks.length > 0 && deezerTracks[0].streamUrl) {
-      return { url: deezerTracks[0].streamUrl, quality: "AAC 320kbps", source: "deezer" };
-    }
-  } catch {}
-
+  // No full-length stream found. Never serve a 30-second preview.
   return null;
 }
 

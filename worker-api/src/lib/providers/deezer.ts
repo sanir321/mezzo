@@ -1,5 +1,8 @@
 import type { UniversalTrack } from "./saavn";
 
+// Deezer's public API only exposes 30-second preview URLs, never full
+// streams. We keep Deezer for metadata only (search/feeds) and never hand
+// out preview URLs — full playback comes from Saavn/YouTube instead.
 export async function searchDeezer(query: string, limit = 15): Promise<UniversalTrack[]> {
   try {
     const url = `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=${limit}`;
@@ -19,9 +22,9 @@ export async function searchDeezer(query: string, limit = 15): Promise<Universal
           album: item.album?.title || "Single",
           duration: Number(item.duration) || 0,
           coverUrl: item.album?.cover_xl || item.album?.cover_big || item.album?.cover_medium || "",
-          streamUrl: item.preview || "",
+          streamUrl: "",
           source: "deezer",
-          quality: "AAC 320kbps",
+          quality: "Metadata only (full stream via Saavn/YouTube)",
         };
       })
       .filter((t: UniversalTrack | null): t is UniversalTrack => Boolean(t && t.title));
