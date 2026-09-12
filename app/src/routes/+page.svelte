@@ -52,6 +52,8 @@
 			if (isDone || hasExistingData) {
 				userPreferences.completeOnboarding(userKey);
 				userPreferences.showOnboarding = false;
+			} else if (userKey) {
+				userPreferences.openOnboarding();
 			}
 		});
 	});

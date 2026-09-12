@@ -152,8 +152,11 @@
 	}
 
 	function handleToggleArtist(artist: PopularArtist) {
-		userPreferences.addCustomArtist(artist);
-		userPreferences.toggleArtist(artist.name);
+		if (userPreferences.hasArtist(artist.name)) {
+			userPreferences.toggleArtist(artist.name);
+		} else {
+			userPreferences.addCustomArtist(artist);
+		}
 	}
 
 	function handleRemoveSelectedArtist(artistName: string) {
@@ -178,6 +181,7 @@
 	}
 
 	function handleFinish() {
+		if (!canFinish) return;
 		userPreferences.completeOnboarding();
 		open = false;
 		oncompleted?.();
