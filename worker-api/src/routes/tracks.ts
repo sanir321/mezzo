@@ -5,6 +5,12 @@ import { getCountryCode } from '../env'
 import { ApiError } from '../lib/errors'
 import { getBoolean, getInt, getRequiredString, getString, getStringArray } from '../lib/query'
 import { makeVersionedGet, tidalJsonRequest, tidalProxyRequest } from '../lib/tidal/client'
+import {
+  lyricsFromLrclib,
+  providerTrackFeed,
+  resolveProviderStream,
+  tidalTrackMeta,
+} from '../lib/fallbacks'
 
 const app = new Hono<{ Bindings: Bindings }>({ strict: false })
 
@@ -27,18 +33,39 @@ app.get('/track', async (c) => {
   const quality = getString(searchParams, 'quality') ?? 'HI_RES_LOSSLESS'
   const immersiveAudio = getBoolean(searchParams, 'immersiveaudio', false)
 
-  return c.json(
-    await makeVersionedGet({
-      env: c.env,
-      url: `https://api.tidal.com/v1/tracks/${id}/playbackinfo`,
-      params: {
-        audioquality: quality,
-        playbackmode: 'STREAM',
-        assetpresentation: 'FULL',
-        immersiveaudio: immersiveAudio,
+  try {
+    return c.json(
+      await makeVersionedGet({
+        env: c.env,
+        url: `https://api.tidal.com/v1/tracks/${id}/playbackinfo`,
+        params: {
+          audioquality: quality,
+          playbackmode: 'STREAM',
+          assetpresentation: 'FULL',
+          immersiveaudio: immersiveAudio,
+        },
+      }),
+    )
+  } catch (error) {
+    if (!(error instanceof ApiError)) throw error
+
+    const meta = await tidalTrackMeta(c.env, id)
+    const stream = meta ? await resolveProviderStream(c.env, meta.title, meta.artist) : null
+
+    return c.json({
+      version: API_VERSION,
+      data: {
+        trackId: id,
+        title: meta?.title ?? '',
+        artist: meta?.artist ?? '',
+        album: meta?.album ?? '',
+        assetPresentation: stream ? 'FULL' : 'PREVIEW',
+        audioQuality: stream?.quality ?? quality,
+        streamUrl: stream?.url ?? null,
+        source: stream?.source ?? null,
       },
-    }),
-  )
+    })
+  }
 })
 
 app.get('/trackManifests', async (c) => {
@@ -108,39 +135,80 @@ app.get('/recommendations', async (c) => {
   const searchParams = new URL(c.req.url).searchParams
   const id = getInt(searchParams, 'id', { required: true })
 
-  return c.json(
-    await makeVersionedGet({
-      env: c.env,
-      url: `https://api.tidal.com/v1/tracks/${id}/recommendations`,
-      params: {
-        limit: 20,
-        countryCode: getCountryCode(c.env),
+  try {
+    return c.json(
+      await makeVersionedGet({
+        env: c.env,
+        url: `https://api.tidal.com/v1/tracks/${id}/recommendations`,
+        params: {
+          limit: 20,
+          countryCode: getCountryCode(c.env),
+        },
+      }),
+    )
+  } catch (error) {
+    if (!(error instanceof ApiError)) throw error
+
+    const meta = await tidalTrackMeta(c.env, id)
+    const query = meta ? `${meta.title} ${meta.artist}`.trim() : ''
+    const tracks = await providerTrackFeed(query, 20)
+
+    return c.json({
+      version: API_VERSION,
+      data: {
+        items: tracks,
+        source: 'providers',
+        seededBy: query || null,
       },
-    }),
-  )
+    })
+  }
 })
 
 app.get('/lyrics', async (c) => {
   const searchParams = new URL(c.req.url).searchParams
   const id = getInt(searchParams, 'id', { required: true })
-  const { data } = await tidalJsonRequest({
-    env: c.env,
-    url: `https://api.tidal.com/v1/tracks/${id}/lyrics`,
-    params: {
-      countryCode: getCountryCode(c.env),
-      locale: 'en_US',
-      deviceType: 'BROWSER',
-    },
-  })
 
-  if (!data) {
-    throw new ApiError(404, 'Lyrics not found')
+  try {
+    const { data } = await tidalJsonRequest({
+      env: c.env,
+      url: `https://api.tidal.com/v1/tracks/${id}/lyrics`,
+      params: {
+        countryCode: getCountryCode(c.env),
+        locale: 'en_US',
+        deviceType: 'BROWSER',
+      },
+    })
+
+    if (!data) {
+      throw new ApiError(404, 'Lyrics not found')
+    }
+
+    return c.json({
+      version: API_VERSION,
+      lyrics: data,
+      source: 'tidal',
+    })
+  } catch (error) {
+    if (!(error instanceof ApiError)) throw error
+
+    const meta = await tidalTrackMeta(c.env, id)
+    if (meta && meta.title) {
+      const lrclib = await lyricsFromLrclib(meta.title, meta.artist)
+      if (lrclib) {
+        return c.json({
+          version: API_VERSION,
+          lyrics: lrclib,
+          source: 'lrclib',
+        })
+      }
+    }
+
+    return c.json({
+      version: API_VERSION,
+      lyrics: null,
+      source: 'lrclib',
+    })
   }
-
-  return c.json({
-    version: API_VERSION,
-    lyrics: data,
-  })
 })
 
 export default app

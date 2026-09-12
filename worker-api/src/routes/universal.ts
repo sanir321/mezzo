@@ -45,12 +45,17 @@ export async function resolveAnyStream(
       const { data } = await tidalJsonRequest({
         env,
         url: `https://api.tidal.com/v1/tracks/${trackId}/`,
+        params: { countryCode: "US" },
       });
       const trackTitle = data?.title ?? title;
       const trackArtist = data?.artist?.name ?? artist;
       const searchPhrase = (trackTitle && trackArtist ? `${trackTitle} ${trackArtist}` : query || trackTitle).trim();
       const stream = await resolveSaavnTrack(trackTitle || searchPhrase, trackArtist);
       if (stream) return { url: stream, quality: "320kbps CD-Quality", source: "tidal" };
+      if (searchPhrase) {
+        const fallback = await resolveFromGenericCascade(searchPhrase);
+        if (fallback) return fallback;
+      }
     } catch (e) {
       console.warn("Tidal stream resolution failed:", e);
     }
@@ -59,8 +64,15 @@ export async function resolveAnyStream(
   const searchPhrase = (title && artist ? `${title} ${artist}` : query || title).trim();
   if (!searchPhrase) return null;
 
+  const fallback = await resolveFromGenericCascade(searchPhrase);
+  return fallback;
+}
+
+async function resolveFromGenericCascade(
+  searchPhrase: string,
+): Promise<{ url: string; quality: string; source: string } | null> {
   try {
-    const saavnUrl = await resolveSaavnTrack(title || searchPhrase, artist);
+    const saavnUrl = await resolveSaavnTrack(searchPhrase, "");
     if (saavnUrl) {
       return { url: saavnUrl, quality: "320kbps CD-Quality", source: "saavn" };
     }

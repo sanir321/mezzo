@@ -6,6 +6,11 @@ const PIPED_INSTANCES = [
   "https://pipedapi.kavin.rocks",
 ];
 
+const PIPED_TRENDING_PARAMS = new URLSearchParams({
+  region: "IN",
+  filter: "music",
+}).toString();
+
 async function fetchFromPiped(endpoint: string, timeoutMs = 4500): Promise<any> {
   for (const base of PIPED_INSTANCES) {
     const controller = new AbortController();
@@ -25,6 +30,35 @@ async function fetchFromPiped(endpoint: string, timeoutMs = 4500): Promise<any> 
     }
   }
   return null;
+}
+
+export async function searchYouTubeTrending(limit = 24): Promise<UniversalTrack[]> {
+  try {
+    const data = await fetchFromPiped(`/trending?${PIPED_TRENDING_PARAMS}`);
+    const items = Array.isArray(data) ? data : [];
+
+    return items
+      .filter((item: any) => item?.url && (item.type === "stream" || item.type === "video" || item.type === undefined))
+      .slice(0, limit)
+      .map((item: any): UniversalTrack | null => {
+        const videoId = String(item.url || "").replace(/^\/watch\?v=/, "");
+        if (!videoId) return null;
+        return {
+          id: `yt_${videoId}`,
+          title: item.title || "",
+          artist: item.uploaderName || "Unknown Artist",
+          album: "YouTube Music",
+          duration: Number(item.duration) || 0,
+          coverUrl: item.thumbnail || "",
+          streamUrl: "",
+          source: "youtube",
+          quality: "High Quality Opus 160kbps",
+        };
+      })
+      .filter((t: UniversalTrack | null): t is UniversalTrack => Boolean(t && t.title));
+  } catch {
+    return [];
+  }
 }
 
 export async function searchYouTube(query: string, limit = 15): Promise<UniversalTrack[]> {

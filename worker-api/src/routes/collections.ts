@@ -11,6 +11,7 @@ import {
 } from "../lib/query";
 import { tidalJsonRequest } from "../lib/tidal/client";
 import { buildImageUrl } from "../lib/tidal/helpers";
+import { deezerChartTracks } from "../lib/fallbacks";
 
 const app = new Hono<{ Bindings: Bindings }>({ strict: false });
 
@@ -70,15 +71,33 @@ app.get("/album", async (c) => {
 app.get("/mix", async (c) => {
   const searchParams = new URL(c.req.url).searchParams;
   const id = getRequiredString(searchParams, "id");
-  const { data } = await tidalJsonRequest({
-    env: c.env,
-    url: "https://api.tidal.com/v1/pages/mix",
-    params: {
-      mixId: id,
-      countryCode: getCountryCode(c.env),
-      deviceType: "BROWSER",
-    },
-  });
+
+  let data: any;
+  try {
+    ({ data } = await tidalJsonRequest({
+      env: c.env,
+      url: "https://api.tidal.com/v1/pages/mix",
+      params: {
+        mixId: id,
+        countryCode: getCountryCode(c.env),
+        deviceType: "BROWSER",
+      },
+    }));
+  } catch (error) {
+    if (!(error instanceof ApiError)) throw error;
+
+    const tracks = await deezerChartTracks(25);
+    return c.json({
+      version: API_VERSION,
+      mix: {
+        title: "Top Chart",
+        type: "MIX",
+        source: "deezer",
+      },
+      items: tracks,
+      source: "deezer",
+    });
+  }
 
   let mix: Record<string, unknown> = {};
   let items: any[] = [];
@@ -91,6 +110,16 @@ app.get("/mix", async (c) => {
         items = module?.pagedList?.items ?? [];
       }
     }
+  }
+
+  if (items.length === 0) {
+    const tracks = await deezerChartTracks(25);
+    return c.json({
+      version: API_VERSION,
+      mix,
+      items: tracks,
+      source: "deezer",
+    });
   }
 
   return c.json({
