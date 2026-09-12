@@ -36,25 +36,24 @@
 	let userPlaylists = $state<Playlist[]>([]);
 	let loading = $state(true);
 	$effect(() => {
-		if (sessionData !== undefined && !sessionData.isPending) {
-			const userKey = user?.email || user?.id;
+		if (sessionData === undefined || sessionData.isPending) return;
+		const userKey = untrack(() => user?.email || user?.id);
+		untrack(() => {
 			if (userKey) {
 				userPreferences.loadFromStorage(userKey);
 			}
 
 			const isDone = userPreferences.isUserOnboarded(userKey);
-			const hasExistingData = untrack(
-				() =>
-					likedStore.tracks.length > 0 ||
-					userPlaylists.length > 0 ||
-					playerRecentlyPlayed.value.length > 0,
-			);
+			const hasExistingData =
+				likedStore.tracks.length > 0 ||
+				userPlaylists.length > 0 ||
+				playerRecentlyPlayed.value.length > 0;
 
 			if (isDone || hasExistingData) {
 				userPreferences.completeOnboarding(userKey);
 				userPreferences.showOnboarding = false;
 			}
-		}
+		});
 	});
 
 	// Dynamic time-based greeting

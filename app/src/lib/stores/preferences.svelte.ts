@@ -532,7 +532,11 @@ class UserPreferencesStore {
 					this._favoriteArtists = parsed.favoriteArtists;
 				}
 				if (parsed.customArtists && typeof parsed.customArtists === "object") {
-					this._customArtists = parsed.customArtists;
+					const curKeys = Object.keys(this._customArtists || {}).sort();
+					const newKeys = Object.keys(parsed.customArtists).sort();
+					if (curKeys.length !== newKeys.length || curKeys.some((k, i) => k !== newKeys[i])) {
+						this._customArtists = parsed.customArtists;
+					}
 				}
 				if (typeof parsed.onboardingCompleted === "boolean") {
 					this._onboardingCompleted = this._onboardingCompleted || parsed.onboardingCompleted;
