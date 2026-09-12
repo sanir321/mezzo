@@ -1,9 +1,0 @@
-node_modules
-/.svelte
-/.svelte-kit
-/build
-/.vercel
-/.netlify
-/functions
-/dist
-/workers-site
