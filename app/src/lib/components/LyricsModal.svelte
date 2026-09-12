@@ -95,20 +95,51 @@
 		activeLineIndex = idx;
 	});
 
-	// Auto-scroll active line into vertical center
+	let scrollAnim: number | null = null;
+	let hasPositionedLyrics = false;
+	const FOLLOW_DURATION = 450;
+
+	function scrollToLyricLine(index: number) {
+		if (!scrollContainer) return;
+		const activeEl = scrollContainer.querySelector(`[data-line-index="${index}"]`) as HTMLElement | null;
+		if (!activeEl) return;
+		const paneRect = scrollContainer.getBoundingClientRect();
+		const elRect = activeEl.getBoundingClientRect();
+		const target = Math.max(
+			0,
+			scrollContainer.scrollTop + elRect.top - paneRect.top - paneRect.height / 2 + elRect.height / 2
+		);
+
+		if (!hasPositionedLyrics) {
+			scrollContainer.scrollTop = target;
+			hasPositionedLyrics = true;
+			return;
+		}
+
+		if (Math.abs(scrollContainer.scrollTop - target) < 2) return;
+
+		if (scrollAnim !== null) cancelAnimationFrame(scrollAnim);
+		const from = scrollContainer.scrollTop;
+		const dist = target - from;
+		const start = performance.now();
+		const step = (now: number) => {
+			if (!scrollContainer) return;
+			const t = Math.min(1, (now - start) / FOLLOW_DURATION);
+			const eased = 1 - Math.pow(1 - t, 3);
+			scrollContainer.scrollTop = from + dist * eased;
+			if (t < 1) {
+				scrollAnim = requestAnimationFrame(step);
+			} else {
+				scrollAnim = null;
+			}
+		};
+		scrollAnim = requestAnimationFrame(step);
+	}
+
+	// Auto-scroll active line into vertical center (Spotify-style continuous follow)
 	$effect(() => {
 		if (activeLineIndex >= 0 && scrollContainer && !userScrolled) {
-			const activeEl = scrollContainer.querySelector(`[data-line-index="${activeLineIndex}"]`) as HTMLElement | null;
-			if (activeEl) {
-				const containerHeight = scrollContainer.clientHeight;
-				const elTop = activeEl.offsetTop;
-				const elHeight = activeEl.offsetHeight;
-				const targetScroll = elTop - containerHeight / 2 + elHeight / 2;
-				scrollContainer.scrollTo({
-					top: Math.max(0, targetScroll),
-					behavior: "smooth",
-				});
-			}
+			scrollToLyricLine(activeLineIndex);
 		}
 	});
 
@@ -1508,7 +1539,6 @@
 		touch-action: pan-y !important;
 		overscroll-behavior-y: auto;
 		padding: 6rem 1rem 12rem 2.5rem;
-		scroll-behavior: smooth;
 		scrollbar-width: none;
 		-ms-overflow-style: none;
 
