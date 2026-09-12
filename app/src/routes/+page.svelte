@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from "svelte";
 	import { useSharedSession } from "$lib/session.svelte";
 	import {
 		playTracks,
@@ -42,10 +43,12 @@
 			}
 
 			const isDone = userPreferences.isUserOnboarded(userKey);
-			const hasExistingData =
-				likedStore.tracks.length > 0 ||
-				userPlaylists.length > 0 ||
-				playerRecentlyPlayed.value.length > 0;
+			const hasExistingData = untrack(
+				() =>
+					likedStore.tracks.length > 0 ||
+					userPlaylists.length > 0 ||
+					playerRecentlyPlayed.value.length > 0,
+			);
 
 			if (isDone || hasExistingData) {
 				userPreferences.completeOnboarding(userKey);
@@ -222,7 +225,14 @@
 		} catch {}
 	}
 
+	let homeContentLoading = false;
+	let homeContentQueued = false;
 	async function loadHomeContent() {
+		if (homeContentLoading) {
+			homeContentQueued = true;
+			return;
+		}
+		homeContentLoading = true;
 		loading = true;
 		try {
 			// 1. Fetch Global Trending tracks
@@ -298,6 +308,11 @@
 			// ignore
 		} finally {
 			loading = false;
+			homeContentLoading = false;
+			if (homeContentQueued) {
+				homeContentQueued = false;
+				queueMicrotask(() => void loadHomeContent());
+			}
 		}
 	}
 

@@ -17,6 +17,14 @@ export interface LanguageOption {
 	category: "South Asian" | "International";
 }
 
+function arraysEqual(a: string[], b: string[]): boolean {
+	if (a.length !== b.length) return false;
+	for (let i = 0; i < a.length; i++) {
+		if (a[i] !== b[i]) return false;
+	}
+	return true;
+}
+
 export const POPULAR_LANGUAGES: LanguageOption[] = [
 	{ code: "hi", name: "Hindi", native: "हिन्दी", emoji: "🇮🇳", category: "South Asian" },
 	{ code: "en", name: "English", native: "English", emoji: "🌐", category: "International" },
@@ -513,8 +521,16 @@ class UserPreferencesStore {
 			const saved = localStorage.getItem(PREF_STORAGE_KEY);
 			if (saved) {
 				const parsed = JSON.parse(saved);
-				if (Array.isArray(parsed.languages) && parsed.languages.length > 0) this._languages = parsed.languages;
-				if (Array.isArray(parsed.favoriteArtists)) this._favoriteArtists = parsed.favoriteArtists;
+				if (
+					Array.isArray(parsed.languages) &&
+					parsed.languages.length > 0 &&
+					!arraysEqual(parsed.languages, this._languages)
+				) {
+					this._languages = parsed.languages;
+				}
+				if (Array.isArray(parsed.favoriteArtists) && !arraysEqual(parsed.favoriteArtists, this._favoriteArtists)) {
+					this._favoriteArtists = parsed.favoriteArtists;
+				}
 				if (parsed.customArtists && typeof parsed.customArtists === "object") {
 					this._customArtists = parsed.customArtists;
 				}
