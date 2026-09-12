@@ -19,7 +19,7 @@
 - 📋 **Playlists & Favorites** — Create playlists, like tracks, and organize your library.
 - 🎨 **Equalizer** — 5-band biquad filter with 8 presets (Flat, Bass Boost, Vocal Booster, Electronic, Rock, Acoustic, Lo-Fi, Classical), limiter, and analyser.
 - 🔍 **Full-Text Search** — SQLite FTS5-powered search across titles and artists.
-- 📝 **Lyrics** — Fetched from lrclib.net with LRC parsing and synced display.
+- 📝 **Lyrics** — Fetched from lrclib.net with LRC parsing, synced display, and Spotify-style smooth auto-scroll that follows the active line and pauses on user scroll.
 - 📴 **Offline Mode** — Cache-based offline downloads via the Cache Storage API.
 - 🔒 **Secure Auth** — Better Auth with email/password and OAuth (Google, GitHub).
 - 🎨 **Dark/Light Theme** — Auto-detect and persistent theme preference.
@@ -256,6 +256,8 @@ Music playback would hang/freeze on Chrome Android when installed as a PWA short
 - **`preload as="image"`** added to `app.html`
 - **`mobile-web-app-capable`** replaces deprecated `apple-mobile-web-app-capable`
 - **`error-banner`** moved inside `auth-form` in `login/+page.svelte`
+- **Playback not resuming** on a restored queue: `togglePlay()` only reassigns the audio source when `!src`, so a restored (paused) queue never started playing. Added a `$effect` in `PlayerBar.svelte` that calls `audioEl.play()` when the play state flips to true with a source loaded.
+- **Janky lyric scrolling**: per-line `scrollTo({ behavior: "smooth" })` fights CSS `scroll-behavior: smooth` and stutters on rapid line changes. Replaced with a persistent rAF-eased follower that smoothly redirects mid-flight and centers the active line using viewport geometry (immune to asymmetric padding).
 
 ---
 
