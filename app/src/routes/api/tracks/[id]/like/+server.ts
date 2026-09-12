@@ -2,7 +2,11 @@ import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { createAuth } from "$lib/server/auth";
 import { toggleLikeTrack, getLikedTrackIds } from "$lib/server/db";
-import { getTidalTrack, getTidalImageUrl, resolveTidalTrackStream } from "$lib/server/tidal";
+import {
+  getTidalTrack,
+  getTidalImageUrl,
+  resolveTidalTrackStream,
+} from "$lib/server/tidal";
 
 export const POST: RequestHandler = async ({
   request,
@@ -47,7 +51,10 @@ export const POST: RequestHandler = async ({
   }
 
   // Ensure bodyTrack has direct stream URL if it only had relative stream endpoint
-  if (bodyTrack && (!bodyTrack.stream_url || !bodyTrack.stream_url.startsWith("http"))) {
+  if (
+    bodyTrack &&
+    (!bodyTrack.stream_url || !bodyTrack.stream_url.startsWith("http"))
+  ) {
     if (params.id.startsWith("tidal_")) {
       try {
         const directUrl = await resolveTidalTrackStream(params.id);
@@ -62,7 +69,7 @@ export const POST: RequestHandler = async ({
     platform.env.DB,
     session.user.id,
     params.id,
-    bodyTrack
+    bodyTrack,
   );
   return json(res);
 };

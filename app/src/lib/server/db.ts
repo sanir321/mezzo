@@ -52,8 +52,12 @@ export async function listTracks(
     .all();
   return (results as unknown as TrackRow[]).map((t: any) => ({
     ...t,
-    stream_url: t.object_key?.startsWith("http") ? t.object_key : `/api/tracks/${t.id}/stream`,
-    cover_url: t.cover_key?.startsWith("http") ? t.cover_key : `/api/tracks/${t.id}/cover`,
+    stream_url: t.object_key?.startsWith("http")
+      ? t.object_key
+      : `/api/tracks/${t.id}/stream`,
+    cover_url: t.cover_key?.startsWith("http")
+      ? t.cover_key
+      : `/api/tracks/${t.id}/cover`,
   }));
 }
 
@@ -71,8 +75,12 @@ export async function listTracksByArtist(
     .all();
   return (results as unknown as TrackRow[]).map((t: any) => ({
     ...t,
-    stream_url: t.object_key?.startsWith("http") ? t.object_key : `/api/tracks/${t.id}/stream`,
-    cover_url: t.cover_key?.startsWith("http") ? t.cover_key : `/api/tracks/${t.id}/cover`,
+    stream_url: t.object_key?.startsWith("http")
+      ? t.object_key
+      : `/api/tracks/${t.id}/stream`,
+    cover_url: t.cover_key?.startsWith("http")
+      ? t.cover_key
+      : `/api/tracks/${t.id}/cover`,
   }));
 }
 
@@ -160,13 +168,17 @@ export async function toggleLikeTrack(
 ): Promise<{ liked: boolean }> {
   try {
     const existing = await db
-      .prepare("SELECT 1 FROM liked_tracks WHERE user_id = ?1 AND track_id = ?2")
+      .prepare(
+        "SELECT 1 FROM liked_tracks WHERE user_id = ?1 AND track_id = ?2",
+      )
       .bind(userId, trackId)
       .first();
 
     if (existing) {
       await db
-        .prepare("DELETE FROM liked_tracks WHERE user_id = ?1 AND track_id = ?2")
+        .prepare(
+          "DELETE FROM liked_tracks WHERE user_id = ?1 AND track_id = ?2",
+        )
         .bind(userId, trackId)
         .run();
       return { liked: false };
@@ -176,7 +188,7 @@ export async function toggleLikeTrack(
           .prepare(
             `INSERT OR IGNORE INTO tracks (
               id, user_id, title, artist, album, genre, year, track_number, duration, format, size, object_key, cover_key, date_added, play_count
-            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, 0)`
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, 0)`,
           )
           .bind(
             trackId,
@@ -192,12 +204,14 @@ export async function toggleLikeTrack(
             trackData.size || 0,
             trackData.stream_url || trackData.object_key || "",
             trackData.cover_url || trackData.cover_key || null,
-            Math.floor(Date.now() / 1000)
+            Math.floor(Date.now() / 1000),
           )
           .run();
       }
       await db
-        .prepare("INSERT OR REPLACE INTO liked_tracks (user_id, track_id) VALUES (?1, ?2)")
+        .prepare(
+          "INSERT OR REPLACE INTO liked_tracks (user_id, track_id) VALUES (?1, ?2)",
+        )
         .bind(userId, trackId)
         .run();
       return { liked: true };
@@ -213,7 +227,9 @@ export async function getLikedTrackIds(
   userId: string,
 ): Promise<string[]> {
   const { results } = await db
-    .prepare("SELECT track_id FROM liked_tracks WHERE user_id = ?1 ORDER BY createdAt DESC")
+    .prepare(
+      "SELECT track_id FROM liked_tracks WHERE user_id = ?1 ORDER BY createdAt DESC",
+    )
     .bind(userId)
     .all();
   return (results as unknown as { track_id: string }[]).map((r) => r.track_id);
@@ -228,7 +244,7 @@ export async function listLikedTracks(
       `SELECT t.*, lt.track_id as liked_track_id FROM liked_tracks lt
        LEFT JOIN tracks t ON t.id = lt.track_id
        WHERE lt.user_id = ?1
-       ORDER BY lt.createdAt DESC`
+       ORDER BY lt.createdAt DESC`,
     )
     .bind(userId)
     .all();
@@ -252,7 +268,9 @@ export async function listLikedTracks(
       cover_key: t.cover_key || null,
       date_added: t.date_added || Math.floor(Date.now() / 1000),
       play_count: t.play_count || 0,
-      stream_url: t.object_key?.startsWith("http") ? t.object_key : `/api/tracks/${id}/stream`,
+      stream_url: t.object_key?.startsWith("http")
+        ? t.object_key
+        : `/api/tracks/${id}/stream`,
       cover_url: t.cover_key?.startsWith("http") ? t.cover_key : undefined,
     };
   });
@@ -268,7 +286,7 @@ export async function updateTrackMetadata(
     album?: string | null;
     genre?: string | null;
     year?: number | null;
-  }
+  },
 ): Promise<boolean> {
   const fields: string[] = [];
   const bindings: any[] = [];
@@ -299,7 +317,9 @@ export async function updateTrackMetadata(
 
   bindings.push(id, userId);
   const query = `UPDATE tracks SET ${fields.join(", ")} WHERE id = ?${idx++} AND user_id = ?${idx++}`;
-  const res = await db.prepare(query).bind(...bindings).run();
+  const res = await db
+    .prepare(query)
+    .bind(...bindings)
+    .run();
   return (res.meta.changes ?? 0) > 0;
 }
-

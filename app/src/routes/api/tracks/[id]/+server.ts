@@ -35,13 +35,18 @@ export const PATCH: RequestHandler = async ({
   const { title, artist, album, genre, year } = body;
 
   const { updateTrackMetadata } = await import("$lib/server/db");
-  const success = await updateTrackMetadata(platform.env.DB, session.user.id, params.id, {
-    title,
-    artist,
-    album,
-    genre,
-    year,
-  });
+  const success = await updateTrackMetadata(
+    platform.env.DB,
+    session.user.id,
+    params.id,
+    {
+      title,
+      artist,
+      album,
+      genre,
+      year,
+    },
+  );
 
   if (!success) throw error(404, "Track not found or no changes made");
   return json({ ok: true });

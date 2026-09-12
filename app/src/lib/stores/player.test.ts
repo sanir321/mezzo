@@ -19,11 +19,21 @@ describe("player store helpers", () => {
     expect(streamUrl("t-123")).toBe("");
   });
   it("streamUrl returns stream_url for tracks with it", () => {
-    expect(streamUrl({ id: "t-123", stream_url: "https://example.com/audio.mp3" } as any)).toBe("https://example.com/audio.mp3");
+    expect(
+      streamUrl({
+        id: "t-123",
+        stream_url: "https://example.com/audio.mp3",
+      } as any),
+    ).toBe("https://example.com/audio.mp3");
   });
 
   it("coverUrl returns cover_url for tracks with it", () => {
-    expect(coverUrl({ id: "t-123", cover_url: "https://example.com/cover.jpg" } as any)).toBe("https://example.com/cover.jpg");
+    expect(
+      coverUrl({
+        id: "t-123",
+        cover_url: "https://example.com/cover.jpg",
+      } as any),
+    ).toBe("https://example.com/cover.jpg");
   });
   it("coverUrl returns endpoint for tracks without cover_url", () => {
     expect(coverUrl("t-123")).toBe("/api/tracks/t-123/cover");
@@ -42,13 +52,15 @@ describe("likedStore", () => {
       format: "flac",
       size: 1024,
       date_added: Date.now(),
-      play_count: 0
+      play_count: 0,
     };
 
     expect(likedStore.isLiked("track-persistent-test")).toBe(false);
     await likedStore.toggle(testTrack as any);
     expect(likedStore.isLiked("track-persistent-test")).toBe(true);
-    expect(likedStore.tracks.some((t) => t.id === "track-persistent-test")).toBe(true);
+    expect(
+      likedStore.tracks.some((t) => t.id === "track-persistent-test"),
+    ).toBe(true);
 
     // Toggle off
     await likedStore.toggle(testTrack as any);

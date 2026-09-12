@@ -11,14 +11,14 @@ let sharedSession: ReturnType<typeof authClient.useSession> | null = null;
  * exactly one session fetch happens per page load.
  */
 export function useSharedSession() {
-	if (typeof window === "undefined") {
-		return {
-			subscribe: () => () => {},
-			get: () => null,
-		} as unknown as ReturnType<typeof authClient.useSession>;
-	}
-	if (!sharedSession) {
-		sharedSession = authClient.useSession();
-	}
-	return sharedSession;
+  if (typeof window === "undefined") {
+    return {
+      subscribe: () => () => {},
+      get: () => null,
+    } as unknown as ReturnType<typeof authClient.useSession>;
+  }
+  if (!sharedSession) {
+    sharedSession = authClient.useSession();
+  }
+  return sharedSession;
 }

@@ -178,7 +178,14 @@ export async function searchOnlineMusic(
   limit = 30,
 ): Promise<OnlineSearchResultClient> {
   const trimmed = query.trim();
-  if (!trimmed) return { tracks: [], artists: [], playlists: [], albums: [], isFallback: false };
+  if (!trimmed)
+    return {
+      tracks: [],
+      artists: [],
+      playlists: [],
+      albums: [],
+      isFallback: false,
+    };
 
   // 1. Server search (resolves full-length 320kbps JioSaavn tracks, artists, playlists, and albums)
   try {
@@ -200,14 +207,22 @@ export async function searchOnlineMusic(
   } catch {}
 
   // 2. No matches found
-  return { tracks: [], artists: [], playlists: [], albums: [], isFallback: false };
+  return {
+    tracks: [],
+    artists: [],
+    playlists: [],
+    albums: [],
+    isFallback: false,
+  };
 }
 
 export async function getSearchSuggestions(query: string): Promise<string[]> {
   const trimmed = query.trim();
   if (!trimmed) return [];
   try {
-    const res = await fetch(`/api/online/suggestions?q=${encodeURIComponent(trimmed)}`);
+    const res = await fetch(
+      `/api/online/suggestions?q=${encodeURIComponent(trimmed)}`,
+    );
     if (res.ok) {
       const data = (await res.json()) as { suggestions?: string[] };
       return Array.isArray(data.suggestions) ? data.suggestions : [];

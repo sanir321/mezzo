@@ -40,7 +40,7 @@ export const POST: RequestHandler = async ({
       .prepare(
         `INSERT OR IGNORE INTO tracks (
           id, user_id, title, artist, album, genre, year, track_number, duration, format, size, object_key, cover_key, date_added, play_count
-        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, 0)`
+        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, 0)`,
       )
       .bind(
         trackId,
@@ -56,7 +56,7 @@ export const POST: RequestHandler = async ({
         t.size || 0,
         t.stream_url || t.object_key || "",
         t.cover_url || t.cover_key || null,
-        Math.floor(Date.now() / 1000)
+        Math.floor(Date.now() / 1000),
       )
       .run();
   } else if (!existingTrack) {

@@ -14,7 +14,7 @@ interface D1PreparedStatement {
   bind(...values: unknown[]): D1PreparedStatement;
   first<T = unknown>(colName?: string): Promise<T | null>;
   first<T = unknown>(): Promise<T | null>;
-  run<T = unknown>(): Promise<D1Response>;
+  run<_T = unknown>(): Promise<D1Response>;
   all<T = unknown>(): Promise<D1Result<T>>;
   raw<T = unknown>(): Promise<T[][]>;
 }
