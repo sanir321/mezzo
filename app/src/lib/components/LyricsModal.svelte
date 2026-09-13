@@ -16,6 +16,7 @@
 		toggleShuffle,
 		toggleRepeat,
 		seek,
+		streamUrl,
 		coverUrl,
 		formatDuration
 	} from "$lib/stores/player.svelte";
@@ -235,14 +236,17 @@
 
 	async function handleDownload() {
 		const track = playerCurrentTrack.value;
-		if (!track || !track.stream_url) return;
+		if (!track) return;
+		const targetUrl = track.stream_url || streamUrl(track);
+		if (!targetUrl) return;
 		isDownloading = true;
 		try {
 			// Save offline into CacheStorage
-			offlineStore.downloadTrack(track).catch(() => {});
+			await offlineStore.downloadTrack(track).catch(() => {});
 
 			// Also trigger browser file download
-			const res = await fetch(track.stream_url);
+			const res = await fetch(targetUrl);
+			if (!res.ok) throw new Error("Blob fetch failed");
 			const blob = await res.blob();
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement("a");
@@ -253,9 +257,17 @@
 			document.body.appendChild(a);
 			a.click();
 			document.body.removeChild(a);
-			setTimeout(() => URL.revokeObjectURL(url), 1500);
+			setTimeout(() => URL.revokeObjectURL(url), 2000);
 		} catch {
-			window.open(track.stream_url, "_blank");
+			const a = document.createElement("a");
+			a.href = targetUrl;
+			a.target = "_blank";
+			const safeArtist = (track.artist || "Unknown").replace(/[/\\?%*:|"<>]/g, "");
+			const safeTitle = (track.title || "Track").replace(/[/\\?%*:|"<>]/g, "");
+			a.download = `${safeArtist} - ${safeTitle}.m4a`;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
 		} finally {
 			isDownloading = false;
 		}
@@ -775,16 +787,26 @@
 						</svg>
 					</button>
 
-					<!-- Edit / Lyrics icon -->
+					<!-- Download / Save Offline button in player -->
 					<button
-						class="media-action-btn"
-						title="Edit Lyrics / Annotations"
-						aria-label="Edit Lyrics"
+						class="media-action-btn download-btn"
+						class:active={playerCurrentTrack.value && offlineStore.isTrackDownloaded(playerCurrentTrack.value.id)}
+						disabled={!playerCurrentTrack.value || isDownloading}
+						onclick={handleDownload}
+						title={isDownloading ? "Downloading..." : (playerCurrentTrack.value && offlineStore.isTrackDownloaded(playerCurrentTrack.value.id) ? "Saved Offline" : "Save Offline / Download")}
+						aria-label="Download Track"
 					>
-						<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-							<path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-							<path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />
-						</svg>
+						{#if isDownloading}
+							<div class="top-spin" style="width: 20px; height: 20px; border-width: 2px;"></div>
+						{:else if playerCurrentTrack.value && offlineStore.isTrackDownloaded(playerCurrentTrack.value.id)}
+							<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1ed760" stroke-width="2.5">
+								<path d="M20 6L9 17l-5-5" />
+							</svg>
+						{:else}
+							<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+								<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+							</svg>
+						{/if}
 					</button>
 
 					<!-- Repeat -->

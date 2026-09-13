@@ -25,6 +25,7 @@
 		toggleShuffle,
 		toggleRepeat,
 		toggleMute,
+		streamUrl,
 		coverUrl,
 		formatDuration,
 		seek,
@@ -510,13 +511,18 @@
 
 	async function handleDownload() {
 		const track = playerCurrentTrack.value;
-		if (!track || !track.stream_url) return;
+		if (!track) return;
+		const targetUrl = track.stream_url || streamUrl(track);
+		if (!targetUrl) return;
 		isDownloading = true;
+		triggerHaptic("medium");
 		try {
 			// Save offline into CacheStorage
-			offlineStore.downloadTrack(track).catch(() => {});
+			await offlineStore.downloadTrack(track).catch(() => {});
 
-			const res = await fetch(track.stream_url);
+			// Try to fetch audio blob
+			const res = await fetch(targetUrl);
+			if (!res.ok) throw new Error("Blob fetch failed");
 			const blob = await res.blob();
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement("a");
@@ -527,9 +533,19 @@
 			document.body.appendChild(a);
 			a.click();
 			document.body.removeChild(a);
-			setTimeout(() => URL.revokeObjectURL(url), 1500);
+			setTimeout(() => URL.revokeObjectURL(url), 2000);
+			triggerHaptic("success");
 		} catch {
-			window.open(track.stream_url, "_blank");
+			// Fallback direct link
+			const a = document.createElement("a");
+			a.href = targetUrl;
+			a.target = "_blank";
+			const safeArtist = (track.artist || "Unknown").replace(/[/\\?%*:|"<>]/g, "");
+			const safeTitle = (track.title || "Track").replace(/[/\\?%*:|"<>]/g, "");
+			a.download = `${safeArtist} - ${safeTitle}.m4a`;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
 		} finally {
 			isDownloading = false;
 		}

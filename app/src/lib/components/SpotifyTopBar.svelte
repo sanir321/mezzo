@@ -544,11 +544,12 @@
 
 	@media screen and (max-width: 1024px) {
 		.spotify-topbar {
-			padding: max(0.4rem, env(safe-area-inset-top)) 0.75rem 0.2rem !important;
+			padding: 0.35rem 0.75rem 0.15rem !important;
 			border-radius: 0;
 			gap: 0.5rem;
 			background: transparent !important;
 			border-bottom: none !important;
+			min-height: unset !important;
 		}
 
 		.mobile-brand {
@@ -563,8 +564,14 @@
 			display: none !important;
 		}
 
+		.user-avatar-btn .user-avatar {
+			width: 1.85rem !important;
+			height: 1.85rem !important;
+			font-size: 0.8rem !important;
+		}
+
 		.topbar-right {
-			gap: 0.75rem;
+			gap: 0.5rem;
 
 			.auth-btn-group {
 				gap: 0.5rem;
@@ -574,8 +581,8 @@
 				}
 
 				.btn-login {
-					padding: 0.45rem 1rem !important;
-					font-size: 0.85rem !important;
+					padding: 0.35rem 0.85rem !important;
+					font-size: 0.8rem !important;
 				}
 			}
 		}

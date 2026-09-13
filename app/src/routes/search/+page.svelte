@@ -511,55 +511,55 @@
 				{/each}
 			</div>
 		{/if}
-	</header>
 
-	<!-- Filter Tabs Bar (Shown whenever a search query is active) -->
-	{#if trimmedQuery}
-		<nav class="filter-tabs-wrapper" aria-label="Search result types">
-			<button
-				type="button"
-				class="filter-pill"
-				class:active={activeTab === "all"}
-				onclick={() => (activeTab = "all")}
-			>
-				All
-			</button>
-			<button
-				type="button"
-				class="filter-pill"
-				class:active={activeTab === "songs"}
-				onclick={() => (activeTab = "songs")}
-			>
-				Songs ({onlineSearchResults.length})
-			</button>
-			<button
-				type="button"
-				class="filter-pill"
-				class:active={activeTab === "artists"}
-				onclick={() => (activeTab = "artists")}
-			>
-				Artists ({matchingArtists.length})
-			</button>
-			<button
-				type="button"
-				class="filter-pill"
-				class:active={activeTab === "playlists"}
-				onclick={() => (activeTab = "playlists")}
-			>
-				Playlists ({matchingPlaylists.length})
-			</button>
-			{#if matchingAlbums.length > 0}
+		<!-- Filter Tabs Bar (Pinned inside sticky header when query active) -->
+		{#if trimmedQuery}
+			<nav class="filter-tabs-wrapper" aria-label="Search result types">
 				<button
 					type="button"
 					class="filter-pill"
-					class:active={activeTab === "albums"}
-					onclick={() => (activeTab = "albums")}
+					class:active={activeTab === "all"}
+					onclick={() => (activeTab = "all")}
 				>
-					Albums ({matchingAlbums.length})
+					All
 				</button>
-			{/if}
-		</nav>
-	{/if}
+				<button
+					type="button"
+					class="filter-pill"
+					class:active={activeTab === "songs"}
+					onclick={() => (activeTab = "songs")}
+				>
+					Songs ({onlineSearchResults.length})
+				</button>
+				<button
+					type="button"
+					class="filter-pill"
+					class:active={activeTab === "artists"}
+					onclick={() => (activeTab = "artists")}
+				>
+					Artists ({matchingArtists.length})
+				</button>
+				<button
+					type="button"
+					class="filter-pill"
+					class:active={activeTab === "playlists"}
+					onclick={() => (activeTab = "playlists")}
+				>
+					Playlists ({matchingPlaylists.length})
+				</button>
+				{#if matchingAlbums.length > 0}
+					<button
+						type="button"
+						class="filter-pill"
+						class:active={activeTab === "albums"}
+						onclick={() => (activeTab = "albums")}
+					>
+						Albums ({matchingAlbums.length})
+					</button>
+				{/if}
+			</nav>
+		{/if}
+	</header>
 
 	<!-- Search Body Content -->
 	{#if loadingOnline}
@@ -1168,12 +1168,12 @@
 	.search-header-panel {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: 0.5rem;
 		position: sticky;
 		top: 0;
 		z-index: 25;
 		background: #121212;
-		padding: 0.75rem 0 1rem;
+		padding: 0.35rem 0 0.5rem;
 	}
 
 	.search-input-wrapper {
@@ -1183,13 +1183,13 @@
 		width: 100% !important;
 		max-width: 100% !important;
 
-		@media screen and (max-width: 768px) {
+		@media screen and (max-width: 1024px) {
 			display: flex !important;
 		}
 
 		.search-svg-icon {
 			position: absolute;
-			left: 1.1rem;
+			left: 1rem;
 			color: #b3b3b3 !important;
 			stroke: #b3b3b3 !important;
 			pointer-events: none;
@@ -1198,18 +1198,18 @@
 
 		.primary-search-input {
 			width: 100% !important;
-			height: 3rem !important;
+			height: 2.65rem !important;
 			background: #242424 !important;
-			border: 1px solid rgba(255, 255, 255, 0.15) !important;
+			border: 1px solid rgba(255, 255, 255, 0.12) !important;
 			border-radius: 9999px !important;
-			padding: 0 2.8rem 0 3rem !important;
+			padding: 0 2.5rem 0 2.8rem !important;
 			color: #ffffff !important;
-			font-size: 1rem !important;
+			font-size: 0.9rem !important;
 			font-weight: 500 !important;
 			outline: none !important;
 			box-sizing: border-box !important;
 			touch-action: manipulation;
-			box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5) !important;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4) !important;
 			transition: all 150ms ease !important;
 
 			&::-webkit-search-decoration,
@@ -1228,7 +1228,7 @@
 
 			&:focus {
 				border-color: #ffffff !important;
-				box-shadow: 0 0 0 2px #ffffff, 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+				box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3), 0 4px 16px rgba(0, 0, 0, 0.6) !important;
 			}
 		}
 
@@ -1401,28 +1401,30 @@
 	.filter-tabs-wrapper {
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
+		gap: 0.4rem;
 		overflow-x: auto;
-		padding-bottom: 0.5rem;
+		padding: 0.15rem 0 0.25rem;
+		scrollbar-width: none;
+		-webkit-overflow-scrolling: touch;
 
 		&::-webkit-scrollbar {
 			display: none;
 		}
 
 		.filter-pill {
-			background: rgba(255, 255, 255, 0.08);
+			background: #282828;
 			border: none;
 			border-radius: 9999px;
 			color: #ffffff;
-			padding: 0.45rem 1.1rem;
-			font-size: 0.88rem;
+			padding: 0.35rem 0.85rem;
+			font-size: 0.78rem;
 			font-weight: 600;
 			cursor: pointer;
 			white-space: nowrap;
 			transition: all 140ms ease;
 
 			&:hover {
-				background: rgba(255, 255, 255, 0.16);
+				background: #333333;
 			}
 
 			&.active {

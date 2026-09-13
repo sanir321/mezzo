@@ -1,4 +1,4 @@
-import type { Track } from "$lib/stores/player.svelte";
+import { streamUrl, type Track } from "$lib/stores/player.svelte";
 
 const CACHE_NAME = "mezzo-offline-v1";
 const STORAGE_KEY_OFFLINE_TRACKS = "mezzo_offline_tracks_meta";
@@ -57,7 +57,7 @@ class OfflineStore {
     if (this.isTrackDownloaded(track.id)) return true;
     if (this.isDownloading(track.id)) return false;
 
-    const audioUrl = track.stream_url;
+    const audioUrl = track.stream_url || streamUrl(track);
     if (!audioUrl) {
       console.warn("Cannot download track without stream_url:", track.title);
       return false;
@@ -69,14 +69,15 @@ class OfflineStore {
       const cache = await caches.open(CACHE_NAME);
 
       // 1. Fetch & cache audio stream
-      const audioReq = new Request(audioUrl, { mode: "no-cors" });
-      const audioRes = await fetch(audioReq);
-      if (!audioRes.ok && audioRes.status !== 0) {
-        throw new Error(
-          `Failed to fetch audio stream: status ${audioRes.status}`,
-        );
+      let audioRes: Response | null = null;
+      try {
+        audioRes = await fetch(audioUrl);
+      } catch {
+        audioRes = await fetch(audioUrl, { mode: "no-cors" });
       }
-      await cache.put(`offline-audio-${track.id}`, audioRes.clone());
+      if (audioRes && (audioRes.ok || audioRes.status === 0 || audioRes.type === "opaque")) {
+        await cache.put(`offline-audio-${track.id}`, audioRes.clone());
+      }
 
       // 2. Fetch & cache cover if present
       if (track.cover_url) {

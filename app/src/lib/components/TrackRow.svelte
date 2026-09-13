@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Track } from "$lib/stores/player.svelte";
-	import { coverUrl, formatDuration, addToQueue, playNext } from "$lib/stores/player.svelte";
+	import { streamUrl, coverUrl, formatDuration, addToQueue, playNext } from "$lib/stores/player.svelte";
 	import { DEFAULT_ALBUM_COVER, handleImageError } from "$lib/utils/image";
 	import { likedStore } from "$lib/stores/liked.svelte";
 	import { goto } from "$app/navigation";
@@ -115,13 +115,16 @@
 	async function handleDownload(e: MouseEvent) {
 		e.stopPropagation();
 		closeMenu();
-		if (!track.stream_url) return;
+		const targetUrl = track.stream_url || streamUrl(track);
+		if (!targetUrl) return;
 		isDownloading = true;
+		triggerHaptic("medium");
 		try {
 			// Save offline to CacheStorage
-			offlineStore.downloadTrack(track).catch(() => {});
+			await offlineStore.downloadTrack(track).catch(() => {});
 
-			const res = await fetch(track.stream_url);
+			const res = await fetch(targetUrl);
+			if (!res.ok) throw new Error("Fetch failed");
 			const blob = await res.blob();
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement("a");
@@ -132,9 +135,18 @@
 			document.body.appendChild(a);
 			a.click();
 			document.body.removeChild(a);
-			setTimeout(() => URL.revokeObjectURL(url), 1500);
+			setTimeout(() => URL.revokeObjectURL(url), 2000);
+			triggerHaptic("success");
 		} catch {
-			window.open(track.stream_url, "_blank");
+			const a = document.createElement("a");
+			a.href = targetUrl;
+			a.target = "_blank";
+			const safeArtist = (track.artist || "Unknown").replace(/[/\\?%*:|"<>]/g, "");
+			const safeTitle = (track.title || "Track").replace(/[/\\?%*:|"<>]/g, "");
+			a.download = `${safeArtist} - ${safeTitle}.m4a`;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
 		} finally {
 			isDownloading = false;
 		}

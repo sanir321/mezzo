@@ -290,7 +290,7 @@
 		}
 
 		@media screen and (max-width: 1024px) {
-			padding: 0.75rem 0.75rem calc(8.5rem + env(safe-area-inset-bottom)) !important;
+			padding: 0.35rem 0.75rem calc(7.5rem + env(safe-area-inset-bottom)) !important;
 			-webkit-overflow-scrolling: touch !important;
 			touch-action: pan-y !important;
 			scrollbar-width: none !important;
