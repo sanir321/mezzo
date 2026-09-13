@@ -40,6 +40,7 @@
 	import QueueDrawer from "$lib/components/QueueDrawer.svelte";
 	import ShortcutsModal from "$lib/components/ShortcutsModal.svelte";
 	import AddToPlaylistModal from "$lib/components/AddToPlaylistModal.svelte";
+	import { initNativeMediaListeners, syncNativeMediaSession } from "$lib/native-media";
 
 	let audioEl: HTMLAudioElement | null = $state(null);
 	let seekInput = $state(playerCurrentTime.value || 0);
@@ -431,6 +432,39 @@
 				// Ignore unsupported action handler in some browsers
 			}
 		}
+	});
+
+	// Native Android media notification & lock screen controls
+	$effect(() => {
+		initNativeMediaListeners({
+			onPlay: () => { playerPlaying.value = true; },
+			onPause: () => { playerPlaying.value = false; },
+			onNext: () => { next(); },
+			onPrevious: () => { previous(); },
+			onSeek: (pos: number) => {
+				if (audioEl) {
+					audioEl.currentTime = pos;
+					playerCurrentTime.value = pos;
+					seekInput = pos;
+				}
+			},
+		});
+	});
+
+	// Sync native media session state whenever track or playback state changes
+	$effect(() => {
+		const tr = playerCurrentTrack.value;
+		if (!tr) return;
+		const artworkUrl = coverUrl(tr);
+		syncNativeMediaSession({
+			title: tr.title,
+			artist: tr.artist ?? "Unknown Artist",
+			album: tr.album ?? "Mezzo Music",
+			artwork: artworkUrl,
+			isPlaying: playerPlaying.value,
+			duration: playerDuration.value || 0,
+			position: playerCurrentTime.value || 0,
+		});
 	});
 
 	function handleSeekInput(e: Event) {
@@ -1100,7 +1134,7 @@
 
 		@media screen and (max-width: 1024px) {
 			position: fixed !important;
-			bottom: calc(3.6rem + env(safe-area-inset-bottom) + 8px) !important;
+			bottom: calc(3.1rem + env(safe-area-inset-bottom) + 6px) !important;
 			left: 10px !important;
 			right: 10px !important;
 			transform: none !important;
@@ -1109,7 +1143,7 @@
 			align-items: center !important;
 			justify-content: space-between !important;
 			padding: 0.4rem 0.75rem !important;
-			height: 3.85rem !important;
+			height: 3.45rem !important;
 			border-radius: 14px !important;
 			background: rgba(22, 23, 29, 0.88) !important;
 			backdrop-filter: blur(32px) saturate(190%) !important;

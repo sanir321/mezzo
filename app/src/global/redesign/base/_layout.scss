@@ -95,6 +95,10 @@ body {
     --top-bar-height: clamp(3.8rem, 4rem, 4.75rem);
     --base-font-size: 1.15rem;
   }
+  @media screen and (max-width: 1024px) {
+    --base-font-size: 0.75rem;
+    --base-spacing: 0.65rem;
+  }
 }
 .tooltip {
   position: absolute;
@@ -153,6 +157,20 @@ body {
 }
 html {
   font-size: var(--base-font-size);
+}
+@media screen and (max-width: 1024px) {
+  html {
+    font-size: 13px !important;
+  }
+  * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+  ::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
 }
 #app {
   height: 100%;

@@ -544,13 +544,15 @@
 
 	@media screen and (max-width: 1024px) {
 		.spotify-topbar {
-			padding: 0.6rem 0.85rem;
+			padding: max(0.4rem, env(safe-area-inset-top)) 0.75rem 0.2rem !important;
 			border-radius: 0;
 			gap: 0.5rem;
+			background: transparent !important;
+			border-bottom: none !important;
 		}
 
 		.mobile-brand {
-			display: flex;
+			display: none !important;
 		}
 
 		.history-controls {
