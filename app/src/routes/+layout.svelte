@@ -8,6 +8,7 @@
 	import EqualizerModal from "$lib/components/EqualizerModal.svelte";
 	import OnboardingModal from "$lib/components/OnboardingModal.svelte";
 	import LandingPage from "$lib/components/LandingPage.svelte";
+	import InstallPrompt from "$lib/components/InstallPrompt.svelte";
 	import { likedStore } from "$lib/stores/liked.svelte";
 	import { setPlayerAuth } from "$lib/stores/player.svelte";
 	import { userPreferences } from "$lib/stores/preferences.svelte";
@@ -16,6 +17,7 @@
 	import { page } from "$app/stores";
 	import { base } from "$app/paths";
 	import { useSharedSession } from "$lib/session.svelte";
+	import { initNativeIntegration } from "$lib/native-integration";
 	import "../global/redesign/main.scss";
 
 	let { children }: { children?: Snippet } = $props();
@@ -38,6 +40,16 @@
 				reg.update().catch(() => {});
 			})
 			.catch(() => {});
+	}
+
+	if (typeof window !== "undefined") {
+		initNativeIntegration({
+			statusBar: {
+				enabled: true,
+				lightIcons: true,
+				backgroundColor: "#000000",
+			},
+		});
 	}
 
 	const unsub = sessionAtom.subscribe((value: any) => {
@@ -173,6 +185,8 @@
 	</div>
 {/if}
 
+<InstallPrompt />
+
 <AuthModal bind:open={authModal.isOpen} />
 <LyricsModal />
 <EqualizerModal />
@@ -241,6 +255,7 @@
 
 		@media screen and (max-width: 1024px) {
 			border-radius: 0;
+			padding-top: env(safe-area-inset-top);
 		}
 	}
 
@@ -251,7 +266,7 @@
 		overflow-x: hidden;
 		-webkit-overflow-scrolling: touch !important;
 		touch-action: pan-y !important;
-		overscroll-behavior-y: auto !important;
+		overscroll-behavior-y: contain !important;
 		transform: none !important;
 		scroll-behavior: smooth;
 		padding: 1.25rem 1.75rem 5rem;

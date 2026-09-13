@@ -8,6 +8,8 @@
 
 	let { onLogin, onSignup }: Props = $props();
 
+	const APK_URL = "https://mezzo-music.pages.dev/apk/Mezzo-1.0.apk";
+
 	function handleLogin() {
 		authModal.open("login");
 		onLogin?.();
@@ -25,7 +27,7 @@
 		activeFaq = activeFaq === index ? null : index;
 	}
 
-	// Curated Showcase Cards (Minimalist Style)
+	// Curated Showcase Cards
 	const SHOWCASE_ITEMS = [
 		{
 			title: "Anirudh Ravichander",
@@ -99,7 +101,7 @@
 	const FAQS = [
 		{
 			q: "What makes Mezzo different from standard streaming apps?",
-			a: "Mezzo is built with a focus-first monochromatic philosophy. It gives you pristine lossless audio streaming, full multi-language discovery, and decentralized music with zero ads and zero interface clutter."
+			a: "Mezzo is built with a focus-first philosophy. It gives you pristine lossless audio streaming, full multi-language discovery, and decentralized music with zero ads and zero interface clutter."
 		},
 		{
 			q: "Is Mezzo free to stream?",
@@ -107,7 +109,7 @@
 		},
 		{
 			q: "Can I stream on mobile and desktop?",
-			a: "Yes. Mezzo is fully responsive and works seamlessly across desktops, laptops, tablets, iOS, and Android mobile browsers."
+			a: "Yes. Mezzo is fully responsive and works seamlessly across desktops, laptops, tablets, iOS, and Android mobile browsers. You can also install the native Android APK for the full app experience."
 		},
 		{
 			q: "What music catalog does Mezzo have access to?",
@@ -122,20 +124,26 @@
 </svelte:head>
 
 <div class="mono-landing">
-	<!-- Minimalist Navigation Bar -->
+	<!-- Navigation Bar -->
 	<header class="mono-header">
 		<div class="header-inner">
 			<a href="/" class="brand-link">
 				<img src="/logo.svg" alt="Mezzo" class="brand-logo" />
-				<span class="brand-name">MEZZO</span>
+				<span class="brand-name">Mezzo</span>
 			</a>
 
 			<nav class="desktop-nav">
 				<a href="#features" class="nav-link">Features</a>
 				<a href="#artists" class="nav-link">Artists</a>
-				<a href="#compare" class="nav-link">Compare</a>
+				<a href="#get" class="nav-link">Get the App</a>
 				<a href="#faq" class="nav-link">FAQ</a>
 				<span class="nav-sep"></span>
+				<a class="nav-download-link" href={APK_URL} target="_blank" rel="noreferrer">
+					<svg viewBox="0 0 24 24" width="1rem" height="1rem" fill="none" stroke="currentColor" stroke-width="2.2">
+						<line x1="12" y1="3" x2="12" y2="15" /><polyline points="6 10 12 16 18 10" /><line x1="4" y1="20" x2="20" y2="20" />
+					</svg>
+					<span>Get the APK</span>
+				</a>
 				<button class="mono-btn-ghost" onclick={handleLogin}>Log in</button>
 				<button class="mono-btn-solid" onclick={handleSignup}>Sign up</button>
 			</nav>
@@ -164,9 +172,15 @@
 			</div>
 			<a href="#features" class="drawer-item" onclick={() => (menuOpen = false)}>Features</a>
 			<a href="#artists" class="drawer-item" onclick={() => (menuOpen = false)}>Artists</a>
-			<a href="#compare" class="drawer-item" onclick={() => (menuOpen = false)}>Compare</a>
+			<a href="#get" class="drawer-item" onclick={() => (menuOpen = false)}>Get the App</a>
 			<a href="#faq" class="drawer-item" onclick={() => (menuOpen = false)}>FAQ</a>
 			<div class="drawer-cta-group">
+				<a class="mono-btn-apk full" href={APK_URL} target="_blank" rel="noreferrer" onclick={() => (menuOpen = false)}>
+					<svg viewBox="0 0 24 24" width="1.05rem" height="1.05rem" fill="none" stroke="currentColor" stroke-width="2.2">
+						<line x1="12" y1="3" x2="12" y2="15" /><polyline points="6 10 12 16 18 10" /><line x1="4" y1="20" x2="20" y2="20" />
+					</svg>
+					<span>Download Android APK</span>
+				</a>
 				<button class="mono-btn-solid full" onclick={() => { menuOpen = false; handleSignup(); }}>Sign up free</button>
 				<button class="mono-btn-ghost full" onclick={() => { menuOpen = false; handleLogin(); }}>Log in</button>
 			</div>
@@ -175,6 +189,7 @@
 
 	<!-- Hero Section -->
 	<section class="mono-hero">
+		<div class="hero-glow"></div>
 		<div class="mono-grid-pattern"></div>
 		<div class="hero-container">
 			<div class="hero-header-box">
@@ -182,24 +197,27 @@
 					<span class="pulse-dot"></span>
 					<span>LOSSLESS HI-FI STREAMING</span>
 				</div>
-				<h1 class="hero-title">Music without the noise.</h1>
+				<h1 class="hero-title">Music without <span class="accent">the noise.</span></h1>
 				<p class="hero-description">
-					A distraction-free, minimalist web player designed for pure sound. Stream lossless audio, explore rich multi-language catalogs, and own your music library.
+					A distraction-free web player designed for pure sound. Stream lossless audio, explore rich multi-language catalogs, and own your music library — or take Mezzo with you as a native Android app.
 				</p>
 				<div class="hero-btn-group">
-					<button class="mono-btn-solid hero-btn" onclick={handleSignup}>
-						<span>Start Listening Free</span>
-						<svg viewBox="0 0 24 24" width="1.1rem" height="1.1rem" fill="none" stroke="currentColor" stroke-width="2.5">
-							<line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+					<button class="mono-btn-solid hero-btn" onclick={handleLogin}>
+						<span>Open Web Player</span>
+						<svg viewBox="0 0 24 24" width="1.1rem" height="1.1rem" fill="#000">
+							<polygon points="6 4 20 12 6 20 6 4" />
 						</svg>
 					</button>
-					<button class="mono-btn-ghost hero-btn" onclick={handleLogin}>
-						<span>Open Web Player</span>
-					</button>
+					<a class="mono-btn-apk hero-btn" href={APK_URL} target="_blank" rel="noreferrer">
+						<svg viewBox="0 0 24 24" width="1.1rem" height="1.1rem" fill="none" stroke="currentColor" stroke-width="2.2">
+							<line x1="12" y1="3" x2="12" y2="15" /><polyline points="6 10 12 16 18 10" /><line x1="4" y1="20" x2="20" y2="20" />
+						</svg>
+						<span>Download APK</span>
+					</a>
 				</div>
 			</div>
 
-			<!-- Sleek Audio Player Mockup Preview -->
+			<!-- Audio Player Mockup Preview -->
 			<div class="player-mockup-card">
 				<div class="mockup-top-bar">
 					<div class="window-dots">
@@ -249,6 +267,49 @@
 						</div>
 						<span class="time-code">3:48</span>
 					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Choose How You Listen -->
+	<section class="mono-section get-section" id="get">
+		<div class="section-container">
+			<div class="section-top-row centered">
+				<span class="mono-kicker">[ GET MEZZO ]</span>
+				<h2 class="mono-headline">Choose how you listen.</h2>
+				<p class="mono-subhead">One account, endless music — in your browser or as a native Android app.</p>
+			</div>
+
+			<div class="get-grid">
+				<div class="get-card">
+					<div class="get-icon">
+						<svg viewBox="0 0 24 24" width="1.6rem" height="1.6rem" fill="none" stroke="currentColor" stroke-width="1.8">
+							<rect x="2" y="4" width="20" height="14" rx="3" />
+							<polygon points="8 8 16 11 8 14 8 8" fill="currentColor" stroke="none" />
+							<line x1="6" y1="20" x2="18" y2="20" />
+						</svg>
+					</div>
+					<h3 class="get-title">Web Player</h3>
+					<p class="get-desc">Instant access, zero install. Stream in any modern browser on desktop, tablet, or phone.</p>
+					<button class="mono-btn-solid get-btn" onclick={handleLogin}>Open Web Player</button>
+				</div>
+
+				<div class="get-card">
+					<div class="get-icon apk">
+						<svg viewBox="0 0 24 24" width="1.6rem" height="1.6rem" fill="none" stroke="currentColor" stroke-width="1.8">
+							<line x1="12" y1="3" x2="12" y2="15" /><polyline points="6 10 12 16 18 10" />
+							<rect x="4" y="17" width="16" height="4" rx="2" />
+						</svg>
+					</div>
+					<h3 class="get-title">Android APK</h3>
+					<p class="get-desc">The full Mezzo experience on your phone. Download the signed APK and install it in one tap.</p>
+					<a class="mono-btn-apk get-btn" href={APK_URL} target="_blank" rel="noreferrer">
+						<svg viewBox="0 0 24 24" width="1.05rem" height="1.05rem" fill="none" stroke="currentColor" stroke-width="2.2">
+							<line x1="12" y1="3" x2="12" y2="15" /><polyline points="6 10 12 16 18 10" /><line x1="4" y1="20" x2="20" y2="20" />
+						</svg>
+						<span>Download APK</span>
+					</a>
 				</div>
 			</div>
 		</div>
@@ -354,12 +415,20 @@
 				<span class="mono-kicker">[ GET STARTED ]</span>
 				<h2 class="cta-title">Begin your lossless journey.</h2>
 				<p class="cta-desc">Instant access to millions of songs, custom mixes, and high-fidelity cloud streaming.</p>
-				<button class="mono-btn-solid cta-btn" onclick={handleSignup}>
-					<span>Create Free Account</span>
-					<svg viewBox="0 0 24 24" width="1.2rem" height="1.2rem" fill="none" stroke="currentColor" stroke-width="2.5">
-						<line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-					</svg>
-				</button>
+				<div class="cta-btn-group">
+					<button class="mono-btn-solid cta-btn" onclick={handleSignup}>
+						<span>Create Free Account</span>
+						<svg viewBox="0 0 24 24" width="1.2rem" height="1.2rem" fill="none" stroke="#000" stroke-width="2.5">
+							<line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+						</svg>
+					</button>
+					<a class="mono-btn-apk cta-btn" href={APK_URL} target="_blank" rel="noreferrer">
+						<svg viewBox="0 0 24 24" width="1.1rem" height="1.1rem" fill="none" stroke="currentColor" stroke-width="2.2">
+							<line x1="12" y1="3" x2="12" y2="15" /><polyline points="6 10 12 16 18 10" /><line x1="4" y1="20" x2="20" y2="20" />
+						</svg>
+						<span>Get the Android APK</span>
+					</a>
+				</div>
 			</div>
 		</div>
 	</section>
@@ -390,15 +459,21 @@
 		</div>
 	</section>
 
-	<!-- Minimalist Footer (Non-Fixed) -->
+	<!-- Footer -->
 	<footer class="mono-footer">
 		<div class="footer-layout">
 			<div class="footer-brand-side">
 				<div class="footer-logo-row">
 					<img src="/logo.svg" alt="Mezzo" class="brand-logo small" />
-					<span class="footer-brand-title">MEZZO</span>
+					<span class="footer-brand-title">Mezzo</span>
 				</div>
 				<p class="footer-subtext">Minimalist, privacy-first, lossless web music player.</p>
+				<a class="mono-btn-apk footer-download" href={APK_URL} target="_blank" rel="noreferrer">
+					<svg viewBox="0 0 24 24" width="0.95rem" height="0.95rem" fill="none" stroke="currentColor" stroke-width="2.2">
+						<line x1="12" y1="3" x2="12" y2="15" /><polyline points="6 10 12 16 18 10" /><line x1="4" y1="20" x2="20" y2="20" />
+					</svg>
+					<span>Download Android APK</span>
+				</a>
 			</div>
 
 			<div class="footer-columns">
@@ -426,7 +501,7 @@
 		<div class="footer-bottom-row">
 			<span class="copyright-text">© 2026 Mezzo. All rights reserved.</span>
 			<div class="footer-social-links">
-				<a href="https://github.com" target="_blank" rel="noreferrer">GitHub</a>
+				<a href="https://github.com/sanir321/mezzo" target="_blank" rel="noreferrer">GitHub</a>
 				<a href="#support">Documentation</a>
 				<a href="#status">System Status</a>
 			</div>
@@ -435,24 +510,24 @@
 </div>
 
 <style lang="scss">
-	/* Minimalist Dark Theme Root */
+	/* App-Matching Dark Theme Root */
 	.mono-landing {
 		min-height: 100vh;
-		background: #000000;
+		background: #121212;
 		color: #ffffff;
-		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+		font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 		overflow-x: hidden;
 		position: relative;
 	}
 
-	/* Minimalist Navigation */
+	/* Navigation */
 	.mono-header {
 		position: sticky;
 		top: 0;
 		left: 0;
 		right: 0;
 		height: 4.25rem;
-		background: rgba(0, 0, 0, 0.9);
+		background: rgba(18, 18, 18, 0.9);
 		backdrop-filter: blur(20px);
 		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 		z-index: 100;
@@ -485,8 +560,8 @@
 
 			.brand-name {
 				font-size: 1.25rem;
-				font-weight: 900;
-				letter-spacing: 0.12em;
+				font-weight: 800;
+				letter-spacing: -0.02em;
 				color: #ffffff;
 			}
 		}
@@ -494,18 +569,18 @@
 		.desktop-nav {
 			display: flex;
 			align-items: center;
-			gap: 1.5rem;
+			gap: 1.4rem;
 
 			@media screen and (max-width: 850px) {
 				display: none;
 			}
 
 			.nav-link {
-				color: #888888;
+				color: #a7a7a7;
 				text-decoration: none;
 				font-size: 0.88rem;
 				font-weight: 600;
-				letter-spacing: 0.04em;
+				letter-spacing: 0.01em;
 				transition: color 140ms ease;
 
 				&:hover {
@@ -517,6 +592,21 @@
 				width: 1px;
 				height: 1.25rem;
 				background: rgba(255, 255, 255, 0.12);
+			}
+
+			.nav-download-link {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.4rem;
+				color: #1ed760;
+				text-decoration: none;
+				font-size: 0.84rem;
+				font-weight: 700;
+				transition: color 140ms ease;
+
+				&:hover {
+					color: #ffffff;
+				}
 			}
 		}
 
@@ -537,7 +627,7 @@
 				width: 1.4rem;
 				height: 2px;
 				background: #ffffff;
-				border-radius: 1px;
+				border-radius: 2px;
 				transition: all 180ms ease;
 			}
 
@@ -546,16 +636,16 @@
 		}
 	}
 
-	/* Buttons (Minimalist Standards) */
+	/* Buttons — App Standard (Green Primary) */
 	.mono-btn-solid {
-		background: #ffffff !important;
+		background: #1ed760 !important;
 		color: #000000 !important;
-		border: 1px solid #ffffff !important;
-		border-radius: 4px !important;
+		border: 1px solid #1ed760 !important;
+		border-radius: 9999px !important;
 		padding: 0.6rem 1.4rem !important;
 		font-size: 0.88rem !important;
 		font-weight: 700 !important;
-		letter-spacing: 0.02em !important;
+		letter-spacing: 0.01em !important;
 		cursor: pointer !important;
 		text-decoration: none !important;
 		display: inline-flex !important;
@@ -563,10 +653,13 @@
 		justify-content: center !important;
 		gap: 0.5rem !important;
 		transition: all 140ms ease !important;
+		box-shadow: 0 4px 16px rgba(30, 215, 96, 0.25);
 
 		&:hover {
-			background: #e5e5e5 !important;
+			background: #22e068 !important;
+			border-color: #22e068 !important;
 			transform: translateY(-1px) !important;
+			box-shadow: 0 6px 22px rgba(30, 215, 96, 0.35) !important;
 		}
 
 		&.hero-btn {
@@ -583,12 +676,12 @@
 	.mono-btn-ghost {
 		background: transparent !important;
 		color: #ffffff !important;
-		border: 1px solid rgba(255, 255, 255, 0.25) !important;
-		border-radius: 4px !important;
+		border: 1px solid rgba(255, 255, 255, 0.3) !important;
+		border-radius: 9999px !important;
 		padding: 0.6rem 1.4rem !important;
 		font-size: 0.88rem !important;
 		font-weight: 700 !important;
-		letter-spacing: 0.02em !important;
+		letter-spacing: 0.01em !important;
 		cursor: pointer !important;
 		text-decoration: none !important;
 		display: inline-flex !important;
@@ -602,11 +695,6 @@
 			transform: translateY(-1px) !important;
 		}
 
-		&.hero-btn {
-			padding: 0.85rem 2rem !important;
-			font-size: 0.95rem !important;
-		}
-
 		&.small {
 			padding: 0.45rem 1rem !important;
 			font-size: 0.82rem !important;
@@ -615,6 +703,46 @@
 		&.full {
 			width: 100% !important;
 			padding: 0.85rem !important;
+		}
+	}
+
+	.mono-btn-apk {
+		background: rgba(30, 215, 96, 0.12) !important;
+		color: #1ed760 !important;
+		border: 1px solid rgba(30, 215, 96, 0.5) !important;
+		border-radius: 9999px !important;
+		padding: 0.6rem 1.4rem !important;
+		font-size: 0.88rem !important;
+		font-weight: 700 !important;
+		letter-spacing: 0.01em !important;
+		cursor: pointer !important;
+		text-decoration: none !important;
+		display: inline-flex !important;
+		align-items: center !important;
+		justify-content: center !important;
+		gap: 0.5rem !important;
+		transition: all 140ms ease !important;
+
+		&:hover {
+			background: #1ed760 !important;
+			color: #000000 !important;
+			transform: translateY(-1px) !important;
+			box-shadow: 0 6px 22px rgba(30, 215, 96, 0.35) !important;
+		}
+
+		&.hero-btn {
+			padding: 0.85rem 2rem !important;
+			font-size: 0.95rem !important;
+		}
+
+		&.full {
+			width: 100% !important;
+			padding: 0.85rem !important;
+		}
+
+		&.get-btn {
+			width: 100% !important;
+			padding: 0.8rem !important;
 		}
 	}
 
@@ -632,7 +760,7 @@
 		right: 0;
 		bottom: 0;
 		width: 18rem;
-		background: #090909;
+		background: #181818;
 		border-left: 1px solid rgba(255, 255, 255, 0.1);
 		z-index: 160;
 		padding: 1.5rem;
@@ -650,8 +778,8 @@
 			.drawer-title {
 				font-size: 0.8rem;
 				font-weight: 800;
-				letter-spacing: 0.1em;
-				color: #888888;
+				letter-spacing: 0.08em;
+				color: #a7a7a7;
 			}
 
 			.drawer-close {
@@ -671,7 +799,7 @@
 			padding: 0.5rem 0;
 
 			&:hover {
-				color: #888888;
+				color: #1ed760;
 			}
 		}
 
@@ -688,7 +816,19 @@
 		position: relative;
 		padding: 6rem 1.5rem 6rem;
 		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-		background: #000000;
+		background: linear-gradient(180deg, #121212 0%, #0c0c0c 100%);
+
+		.hero-glow {
+			position: absolute;
+			top: -10rem;
+			left: 50%;
+			transform: translateX(-50%);
+			width: 60rem;
+			height: 34rem;
+			background: radial-gradient(ellipse at center, rgba(30, 215, 96, 0.14) 0%, transparent 65%);
+			pointer-events: none;
+			z-index: 0;
+		}
 
 		.mono-grid-pattern {
 			position: absolute;
@@ -730,22 +870,22 @@
 				display: inline-flex;
 				align-items: center;
 				gap: 0.6rem;
-				background: rgba(255, 255, 255, 0.06);
-				border: 1px solid rgba(255, 255, 255, 0.15);
+				background: rgba(30, 215, 96, 0.1);
+				border: 1px solid rgba(30, 215, 96, 0.35);
 				border-radius: 9999px;
-				padding: 0.35rem 0.85rem;
+				padding: 0.35rem 0.9rem;
 				font-size: 0.75rem;
 				font-weight: 800;
 				letter-spacing: 0.08em;
-				color: #ffffff;
+				color: #1ed760;
 				width: fit-content;
 
 				.pulse-dot {
 					width: 0.45rem;
 					height: 0.45rem;
 					border-radius: 50%;
-					background: #ffffff;
-					box-shadow: 0 0 6px #ffffff;
+					background: #1ed760;
+					box-shadow: 0 0 8px #1ed760;
 				}
 			}
 
@@ -756,12 +896,16 @@
 				line-height: 1.05;
 				margin: 0;
 				color: #ffffff;
+
+				.accent {
+					color: #1ed760;
+				}
 			}
 
 			.hero-description {
 				font-size: 1.15rem;
 				line-height: 1.6;
-				color: #888888;
+				color: #a7a7a7;
 				margin: 0;
 				max-width: 34rem;
 			}
@@ -781,14 +925,14 @@
 
 		/* Player Mockup Card */
 		.player-mockup-card {
-			background: #090909;
+			background: #181818;
 			border: 1px solid rgba(255, 255, 255, 0.12);
-			border-radius: 8px;
+			border-radius: 16px;
 			overflow: hidden;
 			box-shadow: 0 24px 48px rgba(0, 0, 0, 0.8);
 
 			.mockup-top-bar {
-				background: #111111;
+				background: #1f1f1f;
 				border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 				padding: 0.75rem 1rem;
 				display: flex;
@@ -811,16 +955,16 @@
 					font-size: 0.7rem;
 					font-weight: 800;
 					letter-spacing: 0.08em;
-					color: #888888;
+					color: #a7a7a7;
 				}
 
 				.mockup-bitrate-tag {
 					font-size: 0.65rem;
 					font-weight: 800;
-					background: #ffffff;
+					background: #1ed760;
 					color: #000000;
-					padding: 0.15rem 0.45rem;
-					border-radius: 2px;
+					padding: 0.15rem 0.5rem;
+					border-radius: 9999px;
 				}
 			}
 
@@ -840,7 +984,7 @@
 					position: relative;
 					width: 5rem;
 					height: 5rem;
-					border-radius: 4px;
+					border-radius: 8px;
 					overflow: hidden;
 					flex-shrink: 0;
 
@@ -853,7 +997,7 @@
 					.mockup-play-badge {
 						position: absolute;
 						inset: 0;
-						background: rgba(255, 255, 255, 0.85);
+						background: rgba(30, 215, 96, 0.9);
 						display: flex;
 						align-items: center;
 						justify-content: center;
@@ -878,7 +1022,7 @@
 
 					.mockup-artist-name {
 						font-size: 0.85rem;
-						color: #888888;
+						color: #a7a7a7;
 					}
 
 					.mockup-waveform {
@@ -890,8 +1034,8 @@
 
 						span {
 							width: 3px;
-							background: #ffffff;
-							border-radius: 1px;
+							background: #1ed760;
+							border-radius: 2px;
 							animation: pulseWave 1s infinite alternate ease-in-out;
 
 							&:nth-child(even) { animation-duration: 0.8s; }
@@ -908,7 +1052,7 @@
 
 				.time-code {
 					font-size: 0.75rem;
-					color: #888888;
+					color: #a7a7a7;
 					font-variant-numeric: tabular-nums;
 				}
 
@@ -921,7 +1065,7 @@
 
 					.timeline-fill {
 						height: 100%;
-						background: #ffffff;
+						background: #1ed760;
 					}
 				}
 			}
@@ -933,13 +1077,81 @@
 		100% { opacity: 1; }
 	}
 
+	/* Get Mezzo — Web Player / APK */
+	.get-grid {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 1.5rem;
+		max-width: 52rem;
+		width: 100%;
+		margin: 0 auto;
+
+		@media screen and (max-width: 700px) {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	.get-card {
+		background: #181818;
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 16px;
+		padding: 2.5rem 2rem;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 1rem;
+		text-align: left;
+		transition: all 180ms ease;
+
+		&:hover {
+			border-color: rgba(30, 215, 96, 0.45);
+			transform: translateY(-3px);
+			box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+		}
+
+		.get-icon {
+			width: 3rem;
+			height: 3rem;
+			border-radius: 12px;
+			background: #1ed760;
+			color: #000000;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+
+			&.apk {
+				background: rgba(30, 215, 96, 0.12);
+				color: #1ed760;
+			}
+		}
+
+		.get-title {
+			font-size: 1.5rem;
+			font-weight: 900;
+			letter-spacing: -0.02em;
+			color: #ffffff;
+			margin: 0;
+		}
+
+		.get-desc {
+			font-size: 0.95rem;
+			line-height: 1.6;
+			color: #a7a7a7;
+			margin: 0;
+		}
+
+		.get-btn {
+			margin-top: 0.5rem;
+		}
+	}
+
 	/* Common Section Styles */
 	.mono-section {
 		padding: 5.5rem 1.5rem;
 		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 
 		&.dark-alt {
-			background: #050505;
+			background: #0d0d0d;
 		}
 
 		.section-container {
@@ -972,7 +1184,7 @@
 			font-size: 0.75rem;
 			font-weight: 800;
 			letter-spacing: 0.12em;
-			color: #888888;
+			color: #1ed760;
 			display: block;
 			margin-bottom: 0.35rem;
 		}
@@ -987,7 +1199,7 @@
 
 		.mono-subhead {
 			font-size: 1.05rem;
-			color: #888888;
+			color: #a7a7a7;
 			margin: 0.35rem 0 0;
 			max-width: 32rem;
 		}
@@ -1001,9 +1213,9 @@
 	}
 
 	.mono-card {
-		background: #0a0a0a;
+		background: #181818;
 		border: 1px solid rgba(255, 255, 255, 0.08);
-		border-radius: 6px;
+		border-radius: 12px;
 		padding: 0.85rem;
 		display: flex;
 		flex-direction: column;
@@ -1012,7 +1224,7 @@
 		transition: all 180ms ease;
 
 		&:hover {
-			background: #141414;
+			background: #1f1f1f;
 			border-color: rgba(255, 255, 255, 0.2);
 			transform: translateY(-3px);
 
@@ -1026,7 +1238,7 @@
 			position: relative;
 			width: 100%;
 			aspect-ratio: 1;
-			border-radius: 4px;
+			border-radius: 8px;
 			overflow: hidden;
 
 			.card-cover-image {
@@ -1039,13 +1251,13 @@
 				position: absolute;
 				top: 0.4rem;
 				left: 0.4rem;
-				background: rgba(0, 0, 0, 0.85);
-				border: 1px solid rgba(255, 255, 255, 0.2);
-				color: #ffffff;
+				background: rgba(0, 0, 0, 0.8);
+				border: 1px solid rgba(30, 215, 96, 0.4);
+				color: #1ed760;
 				font-size: 0.65rem;
 				font-weight: 700;
-				padding: 0.15rem 0.4rem;
-				border-radius: 2px;
+				padding: 0.15rem 0.45rem;
+				border-radius: 9999px;
 			}
 
 			.card-play-hover-btn {
@@ -1055,7 +1267,7 @@
 				width: 2.75rem;
 				height: 2.75rem;
 				border-radius: 50%;
-				background: #ffffff;
+				background: #1ed760;
 				display: flex;
 				align-items: center;
 				justify-content: center;
@@ -1066,7 +1278,7 @@
 
 				&:hover {
 					transform: scale(1.08) !important;
-					background: #f0f0f0;
+					background: #22e068;
 				}
 			}
 		}
@@ -1080,7 +1292,7 @@
 				font-size: 0.72rem;
 				font-weight: 700;
 				letter-spacing: 0.05em;
-				color: #888888;
+				color: #a7a7a7;
 				text-transform: uppercase;
 			}
 
@@ -1104,9 +1316,9 @@
 	}
 
 	.pillar-box {
-		background: #090909;
+		background: #181818;
 		border: 1px solid rgba(255, 255, 255, 0.08);
-		border-radius: 6px;
+		border-radius: 12px;
 		padding: 2rem;
 		display: flex;
 		flex-direction: column;
@@ -1114,14 +1326,14 @@
 		transition: border-color 160ms ease;
 
 		&:hover {
-			border-color: rgba(255, 255, 255, 0.25);
+			border-color: rgba(30, 215, 96, 0.4);
 		}
 
 		.pillar-num {
 			font-size: 0.8rem;
 			font-weight: 900;
 			letter-spacing: 0.1em;
-			color: #888888;
+			color: #1ed760;
 		}
 
 		.pillar-title {
@@ -1134,7 +1346,7 @@
 		.pillar-desc {
 			font-size: 0.92rem;
 			line-height: 1.6;
-			color: #888888;
+			color: #a7a7a7;
 			margin: 0;
 		}
 	}
@@ -1142,9 +1354,9 @@
 	/* Comparison Table */
 	.comparison-table-wrap {
 		border: 1px solid rgba(255, 255, 255, 0.1);
-		border-radius: 6px;
+		border-radius: 12px;
 		overflow-x: auto;
-		background: #070707;
+		background: #141414;
 	}
 
 	.mono-table {
@@ -1157,12 +1369,12 @@
 			font-size: 0.75rem;
 			font-weight: 800;
 			letter-spacing: 0.1em;
-			color: #888888;
+			color: #a7a7a7;
 			border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-			background: #0f0f0f;
+			background: #1a1a1a;
 
 			&.col-mezzo {
-				color: #ffffff;
+				color: #1ed760;
 			}
 		}
 
@@ -1181,17 +1393,17 @@
 				font-weight: 600;
 
 				.check-icon {
-					color: #ffffff;
+					color: #1ed760;
 					font-weight: 900;
 					margin-right: 0.5rem;
 				}
 			}
 
 			&.row-others {
-				color: #666666;
+				color: #6a6a6a;
 
 				.cross-icon {
-					color: #666666;
+					color: #6a6a6a;
 					margin-right: 0.5rem;
 				}
 			}
@@ -1205,19 +1417,37 @@
 	/* CTA Section */
 	.mono-cta-section {
 		padding: 4.5rem 1.5rem;
-		background: #000000;
+		background: #0c0c0c;
 		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 
 		.mono-cta-card {
-			background: #090909;
-			border: 1px solid rgba(255, 255, 255, 0.15);
-			border-radius: 8px;
+			position: relative;
+			background: #181818;
+			border: 1px solid rgba(30, 215, 96, 0.35);
+			border-radius: 20px;
 			padding: 4rem 2rem;
 			text-align: center;
 			display: flex;
 			flex-direction: column;
 			align-items: center;
 			gap: 1.25rem;
+			overflow: hidden;
+
+			&::before {
+				content: "";
+				position: absolute;
+				inset: 0;
+				background: radial-gradient(ellipse at 50% 120%, rgba(30, 215, 96, 0.18) 0%, transparent 65%);
+				pointer-events: none;
+			}
+
+			.mono-kicker,
+			.cta-title,
+			.cta-desc,
+			.cta-btn-group {
+				position: relative;
+				z-index: 1;
+			}
 
 			.cta-title {
 				font-size: clamp(2rem, 4vw, 3rem);
@@ -1229,13 +1459,21 @@
 
 			.cta-desc {
 				font-size: 1.05rem;
-				color: #888888;
+				color: #a7a7a7;
 				max-width: 32rem;
 				margin: 0;
 			}
 
-			.cta-btn {
+			.cta-btn-group {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 1rem;
+				flex-wrap: wrap;
 				margin-top: 0.5rem;
+			}
+
+			.cta-btn {
 				padding: 0.95rem 2.25rem !important;
 				font-size: 1rem !important;
 			}
@@ -1249,14 +1487,14 @@
 		gap: 0.75rem;
 
 		.accordion-item {
-			background: #090909;
+			background: #181818;
 			border: 1px solid rgba(255, 255, 255, 0.08);
-			border-radius: 6px;
+			border-radius: 12px;
 			overflow: hidden;
 			transition: border-color 140ms ease;
 
 			&.open {
-				border-color: rgba(255, 255, 255, 0.3);
+				border-color: rgba(30, 215, 96, 0.45);
 			}
 
 			.accordion-btn {
@@ -1275,13 +1513,13 @@
 				cursor: pointer;
 
 				&:hover {
-					color: #e5e5e5;
+					color: #1ed760;
 				}
 
 				.accordion-icon {
 					font-size: 1.25rem;
 					font-weight: 700;
-					color: #888888;
+					color: #1ed760;
 				}
 			}
 
@@ -1292,15 +1530,15 @@
 					margin: 0;
 					font-size: 0.92rem;
 					line-height: 1.6;
-					color: #888888;
+					color: #a7a7a7;
 				}
 			}
 		}
 	}
 
-	/* Footer (Completely Non-Fixed & Clean) */
+	/* Footer */
 	.mono-footer {
-		background: #000000;
+		background: #0a0a0a;
 		padding: 4.5rem 1.5rem 3rem;
 
 		.footer-layout {
@@ -1321,6 +1559,7 @@
 		.footer-brand-side {
 			display: flex;
 			flex-direction: column;
+			align-items: flex-start;
 			gap: 0.85rem;
 
 			.footer-logo-row {
@@ -1338,16 +1577,21 @@
 				.footer-brand-title {
 					font-size: 1.15rem;
 					font-weight: 900;
-					letter-spacing: 0.12em;
+					letter-spacing: -0.02em;
 					color: #ffffff;
 				}
 			}
 
 			.footer-subtext {
 				font-size: 0.85rem;
-				color: #666666;
+				color: #6a6a6a;
 				line-height: 1.5;
 				margin: 0;
+			}
+
+			.footer-download {
+				padding: 0.5rem 1rem !important;
+				font-size: 0.8rem !important;
 			}
 		}
 
@@ -1370,7 +1614,7 @@
 					font-size: 0.72rem;
 					font-weight: 800;
 					letter-spacing: 0.1em;
-					color: #888888;
+					color: #a7a7a7;
 					margin-bottom: 0.25rem;
 				}
 
@@ -1378,7 +1622,7 @@
 					background: transparent !important;
 					border: none !important;
 					padding: 0 !important;
-					color: #666666 !important;
+					color: #6a6a6a !important;
 					font-size: 0.85rem !important;
 					font-weight: 500 !important;
 					text-align: left !important;
@@ -1386,19 +1630,19 @@
 					transition: color 120ms ease !important;
 
 					&:hover {
-						color: #ffffff !important;
+						color: #1ed760 !important;
 					}
 				}
 
 				a {
-					color: #666666;
+					color: #6a6a6a;
 					text-decoration: none;
 					font-size: 0.85rem;
 					font-weight: 500;
 					transition: color 120ms ease;
 
 					&:hover {
-						color: #ffffff;
+						color: #1ed760;
 					}
 				}
 			}
@@ -1415,7 +1659,7 @@
 
 			.copyright-text {
 				font-size: 0.78rem;
-				color: #555555;
+				color: #5a5a5a;
 			}
 
 			.footer-social-links {
@@ -1424,12 +1668,12 @@
 
 				a {
 					font-size: 0.78rem;
-					color: #555555;
+					color: #5a5a5a;
 					text-decoration: none;
 					transition: color 120ms ease;
 
 					&:hover {
-						color: #ffffff;
+						color: #1ed760;
 					}
 				}
 			}
