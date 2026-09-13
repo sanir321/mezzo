@@ -26,6 +26,7 @@
 	import { fetchLyrics, type LyricsData, type LyricLine } from "$lib/services/lyrics";
 	import { shareTrack } from "$lib/utils/share";
 	import { offlineStore } from "$lib/services/offline.svelte";
+	import { DEFAULT_ALBUM_COVER, handleImageError } from "$lib/utils/image";
 
 	let loading = $state(false);
 	let lyricsData = $state<LyricsData | null>(null);
@@ -634,13 +635,17 @@
 				>
 					{#if playerCurrentTrack.value}
 						<img
-							src={coverUrl(playerCurrentTrack.value)}
+							src={coverUrl(playerCurrentTrack.value) || DEFAULT_ALBUM_COVER}
 							alt={playerCurrentTrack.value.title}
 							class="cd-img cd"
-							onerror={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80'; }}
+							onerror={handleImageError}
 						/>
 					{:else}
-						<div class="cd-placeholder"></div>
+						<img
+							src={DEFAULT_ALBUM_COVER}
+							alt="Mezzo Music"
+							class="cd-img cd"
+						/>
 					{/if}
 					<div class="cd-sheen"></div>
 					<div class="cd-ring cd"></div>
@@ -1371,14 +1376,6 @@
 			object-fit: cover;
 			clip-path: url('#cd-hole-clip');
 			display: block;
-		}
-
-		.cd-placeholder {
-			width: 100%;
-			height: 100%;
-			border-radius: 50%;
-			background: #222;
-			clip-path: url('#cd-hole-clip');
 		}
 
 		.cd-sheen {
