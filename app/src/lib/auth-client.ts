@@ -12,16 +12,32 @@ const baseURL = API_BASE
     ? window.location.origin
     : (import.meta.env.BETTER_AUTH_URL ?? "http://localhost:5173");
 
+// better-auth's $fetch calls `new URL(path, baseURL)` for every request.
+// When `path` starts with `/` (e.g. `/sign-in/social`), the absolute
+// path **replaces** the entire baseURL pathname, so `baseURL + /sign-in`
+// becomes `https://mezzo-music.pages.dev/sign-in` instead of the
+// intended `https://mezzo-music.pages.dev/api/auth/sign-in`.
+// We work around this by providing a customFetchImpl that rewrites the URL.
+const customFetchImpl: typeof fetch = (url, init) => {
+    const u = url instanceof URL ? url.href : url instanceof Request ? url.url : url;
+    if (typeof u === "string" && u.startsWith(`${API_BASE}/`) && !u.includes("/api/auth/")) {
+        const fixed = u.replace(`${API_BASE}/`, `${API_BASE}/api/auth/`);
+        return fetch(fixed, init);
+    }
+    return fetch(url, init);
+};
+
 export const authClient = createAuthClient({
-  baseURL,
-  fetchOptions: {
-    onRequest: ({ headers, method, url }) => {
-      const token = getAuthToken();
-      if (token && headers) {
-        headers.set("Authorization", `Bearer ${token}`);
-      }
+    baseURL,
+    fetchOptions: {
+        customFetchImpl,
+        onRequest: ({ headers, method, url }) => {
+            const token = getAuthToken();
+            if (token && headers) {
+                headers.set("Authorization", `Bearer ${token}`);
+            }
+        },
     },
-  },
 });
 
 export const { signIn, signUp, signOut, useSession } = authClient;
