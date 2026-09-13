@@ -154,7 +154,7 @@
 					id="signup-name"
 					bind:value={name}
 					type="text"
-					placeholder="Enter a profile name"
+					placeholder="Enter your profile name"
 					class="auth-input"
 					autocomplete="name"
 				/>
@@ -195,12 +195,13 @@
 		width: 100%;
 		max-width: 28rem;
 		background: #121212;
-		border-radius: 8px;
+		border-radius: 16px;
 		padding: 2.5rem 2rem;
 		box-sizing: border-box;
 		display: flex;
 		flex-direction: column;
-		border: 1px solid rgba(255, 255, 255, 0.08);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
 	}
 
 	.auth-header {
@@ -220,8 +221,8 @@
 		}
 
 		.brand-logo {
-			width: 2.75rem;
-			height: 2.75rem;
+			width: 3rem;
+			height: 3rem;
 			display: block;
 		}
 
@@ -240,6 +241,7 @@
 		flex-direction: column;
 		gap: 0.75rem;
 		margin-bottom: 1.5rem;
+		width: 100%;
 	}
 
 	.google-btn {
@@ -248,12 +250,12 @@
 		justify-content: center;
 		gap: 0.75rem;
 		background: transparent;
-		border: 1px solid #727272;
+		border: 1.5px solid rgba(255, 255, 255, 0.35);
 		border-radius: 9999px;
 		color: #ffffff;
 		font-size: 0.95rem;
 		font-weight: 700;
-		padding: 0.75rem 1.5rem;
+		padding: 0.85rem 1.5rem;
 		cursor: pointer;
 		width: 100%;
 		box-sizing: border-box;
@@ -261,7 +263,7 @@
 
 		&:hover:not(:disabled) {
 			border-color: #ffffff;
-			background: rgba(255, 255, 255, 0.05);
+			background: rgba(255, 255, 255, 0.08);
 			transform: scale(1.01);
 		}
 
@@ -284,6 +286,7 @@
 		align-items: center;
 		gap: 1rem;
 		margin-bottom: 1.5rem;
+		width: 100%;
 
 		.divider-line {
 			flex: 1;
@@ -294,16 +297,16 @@
 		.divider-text {
 			color: #a7a7a7;
 			font-size: 0.8rem;
-			font-weight: 600;
+			font-weight: 700;
 			text-transform: uppercase;
-			letter-spacing: 0.05em;
+			letter-spacing: 0.08em;
 		}
 	}
 
 	.error-banner {
 		background: rgba(239, 68, 68, 0.15);
 		border: 1px solid rgba(239, 68, 68, 0.35);
-		border-radius: 6px;
+		border-radius: 10px;
 		padding: 0.75rem 1rem;
 		color: #fca5a5;
 		font-size: 0.88rem;
@@ -312,6 +315,8 @@
 		align-items: center;
 		gap: 0.5rem;
 		margin-bottom: 1.25rem;
+		width: 100%;
+		box-sizing: border-box;
 
 		svg {
 			flex-shrink: 0;
@@ -322,16 +327,30 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1.25rem;
+		width: 100%;
+		box-sizing: border-box;
 
 		.form-group {
-			display: flex;
-			flex-direction: column;
-			gap: 0.5rem;
+			display: flex !important;
+			flex-direction: column !important;
+			align-items: stretch !important;
+			gap: 0.45rem;
+			width: 100%;
+			box-sizing: border-box;
 
 			label {
-				font-size: 0.875rem;
-				font-weight: 700;
-				color: #ffffff;
+				display: block !important;
+				width: 100% !important;
+				font-size: 0.82rem !important;
+				font-weight: 800 !important;
+				color: #ffffff !important;
+				letter-spacing: 0.04em !important;
+				text-transform: uppercase !important;
+				font-variant: normal !important;
+				font-variant-caps: normal !important;
+				padding-left: 0.6rem;
+				margin: 0;
+				text-align: left !important;
 			}
 		}
 
@@ -339,14 +358,18 @@
 			position: relative;
 			display: flex;
 			align-items: center;
+			width: 100%;
+			box-sizing: border-box;
 
 			.auth-input {
-				padding-right: 3rem;
+				padding-right: 3.25rem !important;
 			}
 
 			.eye-btn {
 				position: absolute;
-				right: 0.75rem;
+				right: 0.85rem;
+				top: 50%;
+				transform: translateY(-50%);
 				background: transparent;
 				border: none;
 				color: #a7a7a7;
@@ -354,37 +377,38 @@
 				display: flex;
 				align-items: center;
 				justify-content: center;
-				padding: 0.4rem;
+				padding: 0.45rem;
 				border-radius: 50%;
-				transition: color 150ms ease;
+				transition: color 150ms ease, background-color 150ms ease;
 
 				&:hover {
 					color: #ffffff;
+					background: rgba(255, 255, 255, 0.1);
 				}
 			}
 		}
 
 		.auth-input {
-			background: #121212;
-			border: 1px solid #727272;
-			border-radius: 4px;
-			color: #ffffff;
-			font-size: 1rem;
-			padding: 0.85rem 1rem;
-			outline: none;
-			width: 100%;
-			box-sizing: border-box;
-			transition: border-color 150ms ease, background-color 150ms ease;
+			display: block !important;
+			width: 100% !important;
+			background: #181818 !important;
+			border: 1.5px solid rgba(255, 255, 255, 0.22) !important;
+			border-radius: 9999px !important;
+			color: #ffffff !important;
+			font-size: 0.95rem !important;
+			padding: 0.95rem 1.4rem !important;
+			outline: none !important;
+			box-sizing: border-box !important;
+			transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
 
 			&:hover {
-				border-color: #ffffff;
+				border-color: rgba(255, 255, 255, 0.5) !important;
 			}
 
 			&:focus {
-				border-color: #ffffff;
-				outline: 2px solid #ffffff;
-				outline-offset: 1px;
-				background: #181818;
+				border-color: #ffffff !important;
+				box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25) !important;
+				background: #202020 !important;
 			}
 
 			&::placeholder {
@@ -395,10 +419,10 @@
 			&:-webkit-autofill:hover,
 			&:-webkit-autofill:focus,
 			&:-webkit-autofill:active {
-				-webkit-box-shadow: 0 0 0 1000px #121212 inset !important;
+				-webkit-box-shadow: 0 0 0 1000px #181818 inset !important;
 				-webkit-text-fill-color: #ffffff !important;
 				caret-color: #ffffff !important;
-				border-radius: 4px !important;
+				border-radius: 9999px !important;
 				transition: background-color 5000s ease-in-out 0s;
 			}
 		}
@@ -413,17 +437,21 @@
 		color: #000000;
 		border: none;
 		border-radius: 9999px;
-		padding: 0.875rem 1.5rem;
+		padding: 0.95rem 1.5rem;
 		font-size: 1rem;
-		font-weight: 700;
+		font-weight: 800;
 		cursor: pointer;
 		text-decoration: none;
 		margin-top: 0.5rem;
-		transition: background-color 150ms ease, transform 120ms ease;
+		width: 100%;
+		box-sizing: border-box;
+		box-shadow: 0 4px 20px rgba(30, 215, 96, 0.25);
+		transition: background-color 150ms ease, transform 120ms ease, box-shadow 150ms ease;
 
 		&:hover:not(:disabled) {
-			background: #1fdf64;
-			transform: scale(1.02);
+			background: #22e065;
+			transform: scale(1.01);
+			box-shadow: 0 6px 24px rgba(30, 215, 96, 0.35);
 		}
 
 		&:active:not(:disabled) {
@@ -485,7 +513,7 @@
 	@media (max-width: 480px) {
 		.auth-page {
 			padding: 1.5rem 1rem;
-			background: #121212;
+			background: #000000;
 			align-items: flex-start;
 		}
 
@@ -493,6 +521,7 @@
 			padding: 1.5rem 0.5rem;
 			border: none;
 			background: transparent;
+			box-shadow: none;
 		}
 	}
 </style>
