@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
-	import { signIn } from "$lib/auth-client";
+	import { signIn, signUp, persistAuthToken } from "$lib/auth-client";
 	import { useSharedSession } from "$lib/session.svelte";
+	import { isNativeApp } from "$lib/native";
 
 	const sessionAtom = useSharedSession();
+	const native = isNativeApp();
 
 	$effect(() => {
 		return sessionAtom.subscribe((value: any) => {
@@ -13,8 +15,28 @@
 		});
 	});
 
+	let email = $state("");
+	let password = $state("");
+	let name = $state("");
+	let showPassword = $state(false);
 	let authError = $state("");
 	let authBusy = $state(false);
+
+	async function handleSignUp(e: Event) {
+		e.preventDefault();
+		authError = "";
+		authBusy = true;
+		try {
+			const r = await signUp.email({ email, password, name: name.trim() || email.split("@")[0] });
+			if (r.error) throw new Error(r.error.message ?? "Registration failed. Please try again.");
+			persistAuthToken(r);
+			goto("/");
+		} catch (err: any) {
+			authError = err.message ?? "Sign up failed. Please check your details.";
+		} finally {
+			authBusy = false;
+		}
+	}
 
 	async function handleGoogleSignUp() {
 		authError = "";
@@ -49,8 +71,8 @@
 					<span class="dot"></span>
 					<span>Lossless Audio Engine</span>
 				</div>
-				<h1 class="auth-title">Sign up for Mezzo</h1>
-				<p class="auth-subtitle">Join Mezzo with your Google account. Fast, secure, and no passwords to remember.</p>
+				<h1 class="auth-title">Create your free account</h1>
+				<p class="auth-subtitle">Join Mezzo with Google or your email & password — fast, secure and free.</p>
 			</div>
 
 			{#if authError}
@@ -62,27 +84,108 @@
 				</div>
 			{/if}
 
-			<div class="signup-cta-wrap">
-				<button
-					type="button"
-					class="google-signup-btn"
-					onclick={handleGoogleSignUp}
-					disabled={authBusy}
-				>
+			{#if !native}
+				<div class="signup-cta-wrap">
+					<button
+						type="button"
+						class="google-signup-btn"
+						onclick={handleGoogleSignUp}
+						disabled={authBusy}
+					>
+						{#if authBusy}
+							<span class="spinner"></span>
+							<span>Connecting to Google...</span>
+						{:else}
+							<svg viewBox="0 0 24 24" width="1.4rem" height="1.4rem" class="google-icon">
+								<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+								<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+								<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+								<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+							</svg>
+							<span>Continue with Google</span>
+						{/if}
+					</button>
+				</div>
+
+				<div class="auth-divider-wrap">
+					<span class="divider-line"></span>
+					<span class="divider-text">or create with email</span>
+					<span class="divider-line"></span>
+				</div>
+			{/if}
+
+			<form onsubmit={handleSignUp} class="auth-form">
+				<div class="form-group">
+					<label for="signup-name">Your name</label>
+					<input
+						id="signup-name"
+						bind:value={name}
+						type="text"
+						placeholder="e.g. Alex Rivera"
+						class="auth-input"
+						autocomplete="name"
+					/>
+				</div>
+
+				<div class="form-group">
+					<label for="signup-email">Email address</label>
+					<input
+						id="signup-email"
+						bind:value={email}
+						type="email"
+						placeholder="name@domain.com"
+						class="auth-input"
+						required
+						autocomplete="email"
+					/>
+				</div>
+
+				<div class="form-group">
+					<label for="signup-password">Password</label>
+					<div class="password-wrap">
+						<input
+							id="signup-password"
+							bind:value={password}
+							type={showPassword ? "text" : "password"}
+							placeholder="Create a password (min 6 chars)"
+							class="auth-input"
+							required
+							minlength="6"
+							autocomplete="new-password"
+						/>
+						<button
+							type="button"
+							class="eye-btn"
+							onclick={() => (showPassword = !showPassword)}
+							aria-label={showPassword ? "Hide password" : "Show password"}
+						>
+							{#if showPassword}
+								<svg viewBox="0 0 24 24" width="1.3rem" height="1.3rem" fill="none" stroke="currentColor" stroke-width="2">
+									<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+									<line x1="1" y1="1" x2="23" y2="23" />
+								</svg>
+							{:else}
+								<svg viewBox="0 0 24 24" width="1.3rem" height="1.3rem" fill="none" stroke="currentColor" stroke-width="2">
+									<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+									<circle cx="12" cy="12" r="3" />
+								</svg>
+							{/if}
+						</button>
+					</div>
+				</div>
+
+				<button type="submit" class="auth-submit" disabled={authBusy}>
 					{#if authBusy}
 						<span class="spinner"></span>
-						<span>Connecting to Google...</span>
+						<span>Creating your account...</span>
 					{:else}
-						<svg viewBox="0 0 24 24" width="1.35rem" height="1.35rem" class="google-icon">
-							<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-							<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-							<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
-							<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+						<span>Sign Up Free</span>
+						<svg viewBox="0 0 24 24" width="1.2rem" height="1.2rem" fill="none" stroke="currentColor" stroke-width="2.5">
+							<line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
 						</svg>
-						<span>Continue with Google</span>
 					{/if}
 				</button>
-			</div>
+			</form>
 
 			<div class="benefits-card">
 				<div class="benefit-item">
@@ -116,7 +219,7 @@
 						</svg>
 					</div>
 					<div class="benefit-text">
-						<strong>100% Free • No Passwords Needed</strong>
+						<strong>100% Free • Zero Ads</strong>
 						<span>Clean, ad-free listening experience designed for audiophiles.</span>
 					</div>
 				</div>
@@ -161,12 +264,12 @@
 			}
 
 			.brand-logo {
-				width: 2.25rem;
-				height: 2.25rem;
+				width: 2.5rem;
+				height: 2.5rem;
 			}
 
 			.brand-text {
-				font-size: 1.4rem;
+				font-size: 1.5rem;
 				font-weight: 900;
 				letter-spacing: 0.08em;
 			}
@@ -183,17 +286,17 @@
 
 	.auth-card {
 		width: 100%;
-		max-width: 28rem;
+		max-width: 30rem;
 		background: #12141a;
 		border: 1px solid rgba(255, 255, 255, 0.12);
-		border-radius: 20px;
-		padding: 2.75rem 2.25rem;
+		border-radius: 22px;
+		padding: 3rem 2.75rem;
 		display: flex;
 		flex-direction: column;
 		box-shadow: 0 32px 64px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.05);
 
 		@media (max-width: 600px) {
-			padding: 2rem 1.25rem;
+			padding: 2.25rem 1.5rem;
 			background: transparent;
 			border: none;
 			box-shadow: none;
@@ -214,13 +317,13 @@
 			background: rgba(30, 215, 96, 0.12);
 			border: 1px solid rgba(30, 215, 96, 0.3);
 			color: #86efac;
-			padding: 0.3rem 0.85rem;
+			padding: 0.35rem 0.95rem;
 			border-radius: 9999px;
-			font-size: 0.74rem;
+			font-size: 0.8rem;
 			font-weight: 700;
 			letter-spacing: 0.04em;
 			text-transform: uppercase;
-			margin-bottom: 0.85rem;
+			margin-bottom: 0.9rem;
 
 			.dot {
 				width: 6px;
@@ -232,39 +335,39 @@
 		}
 
 		.auth-title {
-			font-size: 1.85rem;
+			font-size: 2.15rem;
 			font-weight: 900;
 			letter-spacing: -0.03em;
-			margin: 0 0 0.5rem;
+			margin: 0 0 0.55rem;
 			color: #ffffff;
 		}
 
 		.auth-subtitle {
 			color: #a7a7a7;
-			font-size: 0.92rem;
+			font-size: 1rem;
 			margin: 0;
-			line-height: 1.45;
-			max-width: 24rem;
+			line-height: 1.5;
+			max-width: 25rem;
 		}
 	}
 
 	.signup-cta-wrap {
 		display: flex;
 		flex-direction: column;
-		margin-bottom: 1.75rem;
+		margin-bottom: 1.5rem;
 
 		.google-signup-btn {
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			gap: 0.85rem;
+			gap: 0.9rem;
 			background: #ffffff;
 			color: #0b0d12;
 			border: none;
 			border-radius: 9999px;
-			font-size: 1.05rem;
+			font-size: 1.1rem;
 			font-weight: 800;
-			padding: 1.05rem 1.75rem;
+			padding: 1.15rem 1.75rem;
 			cursor: pointer;
 			box-shadow: 0 4px 20px rgba(255, 255, 255, 0.2), 0 2px 6px rgba(0, 0, 0, 0.3);
 			transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -300,24 +403,186 @@
 		}
 	}
 
+	.auth-divider-wrap {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		margin: 0.25rem 0 1.5rem;
+
+		.divider-line {
+			flex: 1;
+			height: 1px;
+			background: rgba(255, 255, 255, 0.1);
+		}
+
+		.divider-text {
+			color: #777777;
+			font-size: 0.78rem;
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+		}
+	}
+
+	.auth-form {
+		display: flex;
+		flex-direction: column;
+		gap: 1.25rem;
+
+		.form-group {
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+
+			label {
+				font-size: 0.85rem;
+				font-weight: 800;
+				color: #ffffff;
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+				padding-left: 0.75rem;
+			}
+		}
+
+		.password-wrap {
+			position: relative;
+			display: flex;
+			align-items: center;
+			width: 100%;
+
+			.auth-input {
+				padding-right: 3.25rem !important;
+			}
+
+			.eye-btn {
+				position: absolute;
+				right: 1rem;
+				background: transparent;
+				border: none;
+				color: #a7a7a7;
+				cursor: pointer;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding: 0.45rem;
+				border-radius: 50%;
+				transition: all 150ms ease;
+
+				&:hover {
+					color: #ffffff;
+					background: rgba(255, 255, 255, 0.1);
+				}
+			}
+		}
+
+		.auth-input {
+			background: #181818;
+			border: 1px solid rgba(255, 255, 255, 0.18);
+			border-radius: 9999px;
+			color: #ffffff;
+			font-size: 1.05rem;
+			padding: 1.05rem 1.5rem;
+			outline: none;
+			width: 100%;
+			box-sizing: border-box;
+			transition: all 150ms ease;
+
+			&:hover {
+				border-color: rgba(255, 255, 255, 0.4);
+			}
+
+			&:focus {
+				border-color: #ffffff;
+				box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
+				background: #1f1f1f;
+			}
+
+			&::placeholder {
+				color: #777777;
+			}
+
+			&:-webkit-autofill,
+			&:-webkit-autofill:hover,
+			&:-webkit-autofill:focus,
+			&:-webkit-autofill:active {
+				-webkit-box-shadow: 0 0 0 1000px #181818 inset !important;
+				-webkit-text-fill-color: #ffffff !important;
+				caret-color: #ffffff !important;
+				border-radius: 9999px !important;
+				transition: background-color 5000s ease-in-out 0s;
+			}
+		}
+
+		.auth-submit {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 0.55rem;
+			background: #1ed760;
+			color: #000000;
+			border: none;
+			border-radius: 9999px;
+			padding: 1.15rem 1.5rem;
+			font-size: 1.15rem;
+			font-weight: 800;
+			cursor: pointer;
+			margin-top: 0.3rem;
+			box-shadow: 0 6px 22px rgba(30, 215, 96, 0.25);
+			transition: all 150ms cubic-bezier(0.16, 1, 0.3, 1);
+
+			&:hover:not(:disabled) {
+				background: #22e065;
+				transform: scale(1.01);
+				box-shadow: 0 8px 30px rgba(30, 215, 96, 0.35);
+			}
+
+			&:disabled {
+				opacity: 0.5;
+				cursor: default;
+			}
+
+			.spinner {
+				width: 1.1rem;
+				height: 1.1rem;
+				border: 2px solid rgba(0, 0, 0, 0.2);
+				border-top-color: #000000;
+				border-radius: 50%;
+				animation: spin 600ms linear infinite;
+			}
+		}
+	}
+
+	.error-banner {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		background: rgba(239, 68, 68, 0.15);
+		border: 1px solid rgba(239, 68, 68, 0.35);
+		border-radius: 10px;
+		padding: 0.85rem 1rem;
+		color: #fca5a5;
+		font-size: 0.9rem;
+		font-weight: 600;
+	}
+
 	.benefits-card {
 		background: rgba(255, 255, 255, 0.03);
 		border: 1px solid rgba(255, 255, 255, 0.08);
-		border-radius: 14px;
-		padding: 1.25rem;
+		border-radius: 16px;
+		padding: 1.35rem;
 		display: flex;
 		flex-direction: column;
 		gap: 1.1rem;
-		margin-bottom: 1.75rem;
+		margin-top: 1.75rem;
 
 		.benefit-item {
 			display: flex;
 			align-items: flex-start;
-			gap: 0.85rem;
+			gap: 0.9rem;
 
 			.benefit-icon {
-				width: 24px;
-				height: 24px;
+				width: 26px;
+				height: 26px;
 				border-radius: 50%;
 				background: rgba(30, 215, 96, 0.12);
 				display: flex;
@@ -333,32 +598,18 @@
 				gap: 0.15rem;
 
 				strong {
-					font-size: 0.88rem;
+					font-size: 0.92rem;
 					font-weight: 700;
 					color: #ffffff;
 				}
 
 				span {
-					font-size: 0.78rem;
+					font-size: 0.82rem;
 					color: #8e8e8e;
-					line-height: 1.35;
+					line-height: 1.4;
 				}
 			}
 		}
-	}
-
-	.error-banner {
-		display: flex;
-		align-items: center;
-		gap: 0.6rem;
-		background: rgba(239, 68, 68, 0.15);
-		border: 1px solid rgba(239, 68, 68, 0.35);
-		border-radius: 10px;
-		padding: 0.75rem 1rem;
-		color: #fca5a5;
-		font-size: 0.85rem;
-		font-weight: 600;
-		margin-bottom: 1.25rem;
 	}
 
 	.toggle-footer {
@@ -367,18 +618,18 @@
 		align-items: center;
 		justify-content: center;
 		gap: 0.5rem;
-		padding-top: 1.25rem;
+		padding-top: 1.4rem;
 		border-top: 1px solid rgba(255, 255, 255, 0.08);
 
 		p {
 			color: #a7a7a7;
-			font-size: 0.9rem;
+			font-size: 1rem;
 			margin: 0;
 		}
 
 		.toggle-link {
 			color: #ffffff;
-			font-size: 0.9rem;
+			font-size: 1rem;
 			font-weight: 700;
 			text-decoration: underline;
 			text-underline-offset: 2px;
@@ -394,7 +645,7 @@
 		padding: 2rem;
 		text-align: center;
 		color: #666666;
-		font-size: 0.78rem;
+		font-size: 0.8rem;
 		letter-spacing: 0.03em;
 	}
 

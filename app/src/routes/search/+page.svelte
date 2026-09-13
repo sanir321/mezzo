@@ -463,7 +463,7 @@
 			{/if}
 		</div>
 
-		<!-- Live Search Suggestions Words (like Monochrome) -->
+		<!-- Live Search Suggestion Tokens -->
 		{#if suggestions.length > 0 && query.trim()}
 			<div class="live-suggestions-tray" role="listbox" aria-label="Search suggestions">
 				<div class="suggestions-header">

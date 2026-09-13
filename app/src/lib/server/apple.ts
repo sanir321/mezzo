@@ -1,4 +1,4 @@
-// Apple Music Catalog Integration for Mezzo (Inspired by Monochrome)
+// Apple Music Catalog Integration for Mezzo
 import type { Track } from "$lib/stores/player.svelte";
 import type { SearchArtist, SearchAlbum } from "./music";
 

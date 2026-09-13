@@ -25,7 +25,7 @@
 		activeFaq = activeFaq === index ? null : index;
 	}
 
-	// Curated Showcase Cards (Monochrome Minimalist Style)
+	// Curated Showcase Cards (Minimalist Style)
 	const SHOWCASE_ITEMS = [
 		{
 			title: "Anirudh Ravichander",
@@ -117,7 +117,7 @@
 </script>
 
 <svelte:head>
-	<title>Mezzo — Music without the noise | Monochrome Hi-Fi Player</title>
+	<title>Mezzo — Music without the noise | Hi-Fi Player</title>
 	<meta name="description" content="Experience music the way it was recorded. Distraction-free, lossless audio streaming in Tamil, Telugu, Hindi, and Global Hits on Mezzo." />
 </svelte:head>
 
@@ -180,7 +180,7 @@
 			<div class="hero-header-box">
 				<div class="hero-pill-badge">
 					<span class="pulse-dot"></span>
-					<span>MONOCHROME HI-FI STREAMING</span>
+					<span>LOSSLESS HI-FI STREAMING</span>
 				</div>
 				<h1 class="hero-title">Music without the noise.</h1>
 				<p class="hero-description">
@@ -435,7 +435,7 @@
 </div>
 
 <style lang="scss">
-	/* Monochrome Minimalist Theme Root */
+	/* Minimalist Dark Theme Root */
 	.mono-landing {
 		min-height: 100vh;
 		background: #000000;
@@ -546,7 +546,7 @@
 		}
 	}
 
-	/* Buttons (Monochrome Standards) */
+	/* Buttons (Minimalist Standards) */
 	.mono-btn-solid {
 		background: #ffffff !important;
 		color: #000000 !important;
