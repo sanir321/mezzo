@@ -19,7 +19,6 @@
 	import { useSharedSession } from "$lib/session.svelte";
 	import { initNativeIntegration } from "$lib/native-integration";
 	import { syncNativeRoot } from "$lib/stores/native-back.svelte";
-	import { nativeLog } from "$lib/native-debug";
 	import "../global/redesign/main.scss";
 
 	let { children }: { children?: Snippet } = $props();
@@ -56,7 +55,6 @@
 
 	const unsub = sessionAtom.subscribe((value: any) => {
 		sessionData = value;
-		nativeLog("session", "user=" + (value?.data?.user?.email ?? "null"), "pending=" + value?.isPending);
 		const isAuthed = Boolean(value?.data?.user);
 		setPlayerAuth(isAuthed);
 		if (isAuthed) {
@@ -112,7 +110,6 @@
 	// Require account login or sign up to use Mezzo protected pages
 	$effect(() => {
 		if (typeof window !== "undefined" && !isSessionLoading) {
-			nativeLog("redir", "path=" + pathname, "in=" + isLoggedIn, "authPage=" + isAuthPage, "landing=" + showLanding);
 			if (!isLoggedIn && !isAuthPage && !isOAuthPage && !showLanding) {
 				goto("/login");
 			}

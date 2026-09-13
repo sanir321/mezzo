@@ -1,7 +1,6 @@
 import { createAuthClient } from "better-auth/svelte";
 import { API_BASE, apiUrl } from "$lib/config";
 import { getAuthToken, setAuthToken, clearAuthToken } from "$lib/auth-token";
-import { nativeLog } from "$lib/native-debug";
 
 // Web (same-origin): use the current origin so OAuth redirects always go to
 // the right host (localhost in dev, the deployed URL in production).
@@ -13,10 +12,6 @@ const baseURL = API_BASE
     ? window.location.origin
     : (import.meta.env.BETTER_AUTH_URL ?? "http://localhost:5173");
 
-if (typeof window !== "undefined") {
-  nativeLog("boot", "origin=" + window.location.origin, "API_BASE=" + API_BASE, "baseURL=" + baseURL);
-}
-
 export const authClient = createAuthClient({
   baseURL,
   fetchOptions: {
@@ -24,9 +19,6 @@ export const authClient = createAuthClient({
       const token = getAuthToken();
       if (token && headers) {
         headers.set("Authorization", `Bearer ${token}`);
-      }
-      if (typeof window !== "undefined") {
-        nativeLog("req", method, String(url).replace(/^https?:\/\/[^/]+/, ""), "bearer=" + (token ? "yes" : "no"));
       }
     },
   },
