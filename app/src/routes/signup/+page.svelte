@@ -3,6 +3,7 @@
 	import { signIn, signUp, persistAuthToken } from "$lib/auth-client";
 	import { useSharedSession } from "$lib/session.svelte";
 	import { isNativeApp } from "$lib/native";
+	import { nativeLog } from "$lib/native-debug";
 
 	const sessionAtom = useSharedSession();
 	const native = isNativeApp();
@@ -28,10 +29,13 @@
 		authBusy = true;
 		try {
 			const r = await signUp.email({ email, password, name: name.trim() || email.split("@")[0] });
+			nativeLog("signup.signUp", "err=" + (r.error ? r.error.message ?? "[no msg]" : "none"), "user=" + (r.data?.user?.email ?? "[none]"));
 			if (r.error) throw new Error(r.error.message ?? "Registration failed. Please try again.");
+			nativeLog("signup.ok", "token=" + (r.data?.token ? "yes" : "no"), "goto=/, native=" + native);
 			persistAuthToken(r);
 			goto("/");
 		} catch (err: any) {
+			nativeLog("signup.catch", err?.message ?? String(err));
 			authError = err.message ?? "Sign up failed. Please check your details.";
 		} finally {
 			authBusy = false;

@@ -3,6 +3,7 @@
 	import { signIn, persistAuthToken } from "$lib/auth-client";
 	import { useSharedSession } from "$lib/session.svelte";
 	import { isNativeApp } from "$lib/native";
+	import { nativeLog } from "$lib/native-debug";
 
 	const sessionAtom = useSharedSession();
 	const native = isNativeApp();
@@ -28,10 +29,13 @@
 		authBusy = true;
 		try {
 			const r = await signIn.email({ email, password });
+			nativeLog("login.signIn", "err=" + (r.error ? r.error.message ?? "[no msg]" : "none"), "user=" + (r.data?.user?.email ?? "[none]"));
 			if (r.error) throw new Error(r.error.message ?? "Incorrect email or password.");
+			nativeLog("login.ok", "token=" + (r.data?.token ? "yes" : "no"), "goto=/, native=" + native);
 			persistAuthToken(r);
 			goto("/");
 		} catch (err: any) {
+			nativeLog("login.catch", err?.message ?? String(err));
 			authError = err.message ?? "Login failed. Please check your credentials.";
 		} finally {
 			authBusy = false;
