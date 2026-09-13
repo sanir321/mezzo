@@ -1,4 +1,11 @@
-const RAW_API_BASE = import.meta.env.PUBLIC_API_BASE as string | undefined;
+// Vite only inlines *prefixed* process-env vars into `import.meta.env`; the
+// default prefix is `VITE_`. Prefer it, but keep `PUBLIC_API_BASE` as a
+// fallback for local `.env` files / IDE-based tooling.
+const RAW_API_BASE = (
+	import.meta.env.VITE_PUBLIC_API_BASE ??
+	import.meta.env.PUBLIC_API_BASE ??
+	""
+) as string | undefined;
 
 export const API_BASE = (RAW_API_BASE ?? "").replace(/\/+$/, "");
 

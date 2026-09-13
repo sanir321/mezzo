@@ -30,7 +30,7 @@ jobs:
       - name: Build static SPA bundle
         env:
           STATIC_BUILD: "1"
-          PUBLIC_API_BASE: ${{ vars.PUBLIC_API_BASE || 'https://mezzo-music.pages.dev' }}
+          VITE_PUBLIC_API_BASE: ${{ vars.VITE_PUBLIC_API_BASE || vars.PUBLIC_API_BASE || 'https://mezzo-music.pages.dev' }}
         run: npm run build
 
       - name: Sync web assets into Android project
