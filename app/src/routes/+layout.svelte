@@ -20,6 +20,7 @@
 	import { syncNativeRoot } from "$lib/stores/native-back.svelte";
 	import { getCachedUser, setCachedUser } from "$lib/auth-token";
 	import { offlineStore } from "$lib/services/offline.svelte";
+	import { isNativeApp } from "$lib/native";
 	import "../global/redesign/main.scss";
 
 	let { children }: { children?: Snippet } = $props();
@@ -115,25 +116,31 @@
 		syncNativeRoot(pathname);
 	});
 	const isAuthPage = $derived(pathname === "/login" || pathname.startsWith("/login/") || pathname === "/signup");
+	const isLandingPage = $derived(pathname === "/landing" || pathname.startsWith("/landing/") || pathname === "/download" || pathname.startsWith("/download/"));
 
 	// OAuth completion routes (/oauth/*) finish the social sign-in themselves
 	// (getSession -> persist token). Never bounce them to /login first.
 	const isOAuthPage = $derived(pathname.startsWith("/oauth/"));
 
-	// Require account login or sign up to use Mezzo protected pages
+	// Require account login or sign up to use Mezzo protected pages.
+	// On native Android app, redirect to /login. On web, introduce users via /landing.
 	$effect(() => {
 		if (typeof window !== "undefined" && !isSessionLoading) {
-			if (!isLoggedIn && !isAuthPage && !isOAuthPage) {
+			if (!isLoggedIn && !isAuthPage && !isOAuthPage && !isLandingPage) {
 				if (!navigator.onLine && (user != null || hasOfflineTracks)) {
 					return;
 				}
-				goto("/login");
+				if (isNativeApp()) {
+					goto("/login");
+				} else {
+					goto("/landing");
+				}
 			}
 		}
 	});
 </script>
 
-{#if isAuthPage}
+{#if isAuthPage || isLandingPage}
 	{#if children}
 		{@render children()}
 	{/if}
@@ -187,16 +194,17 @@
 	</div>
 {/if}
 
-<InstallPrompt />
-
-<AuthModal bind:open={authModal.isOpen} />
-<LyricsModal />
-<EqualizerModal />
-<OnboardingModal
-	open={userPreferences.showOnboarding}
-	onclose={() => userPreferences.closeOnboarding()}
-	oncompleted={() => userPreferences.closeOnboarding()}
-/>
+{#if !isLandingPage && !isAuthPage}
+	<InstallPrompt />
+	<AuthModal bind:open={authModal.isOpen} />
+	<LyricsModal />
+	<EqualizerModal />
+	<OnboardingModal
+		open={userPreferences.showOnboarding}
+		onclose={() => userPreferences.closeOnboarding()}
+		oncompleted={() => userPreferences.closeOnboarding()}
+	/>
+{/if}
 
 <style lang="scss">
 	:global(body) {

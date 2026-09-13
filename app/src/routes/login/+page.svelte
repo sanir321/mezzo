@@ -163,6 +163,12 @@
 			<p>Don't have an account?</p>
 			<a href="/signup" class="switch-link">Sign up for Mezzo</a>
 		</div>
+
+		<div class="landing-switch">
+			<a href="/landing" class="subtle-link">← Back to Mezzo overview</a>
+			<span class="dot-sep">•</span>
+			<a href="/apk/Mezzo-1.0.apk" download="Mezzo-1.0.apk" class="subtle-link">Download Android App (.apk)</a>
+		</div>
 	</div>
 </div>
 
@@ -509,6 +515,31 @@
 			&:hover {
 				color: #1ed760;
 			}
+		}
+	}
+
+	.landing-switch {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.6rem;
+		font-size: 0.85rem;
+		margin-top: 1.25rem;
+		flex-wrap: wrap;
+
+		.subtle-link {
+			color: rgba(255, 255, 255, 0.5);
+			text-decoration: none;
+			transition: color 140ms ease;
+
+			&:hover {
+				color: #1ed760;
+				text-decoration: underline;
+			}
+		}
+
+		.dot-sep {
+			color: rgba(255, 255, 255, 0.25);
 		}
 	}
 
