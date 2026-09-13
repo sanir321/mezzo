@@ -42,6 +42,49 @@ function decodeHtmlEntities(str: string): string {
     .replace(/&apos;/g, "'");
 }
 
+// Default fallback artwork whenever a provider returns no cover image
+export const DEFAULT_TRACK_ART =
+  "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80";
+
+// Ringtone / callertune / notification-tone junk detection
+const JUNK_TITLE_RE =
+  /(ring ?tone|caller ?tune|call ?tune|notification ?tone|dialer ?tune|ringing ?tone)/i;
+const JUNK_GENRE_RE = /ring ?ton|caller ?tune|dialer ?tune|tones?\b/i;
+
+function looksLikeJunkTitle(text: string): boolean {
+  const normalized = text.toLowerCase().replace(/[\s_-]+/g, " ");
+  return JUNK_TITLE_RE.test(normalized);
+}
+
+// Raw JioSaavn song object -> junk filter (title / artist / language / duration)
+function isJunkSaavnSong(s: any): boolean {
+  try {
+    const dur = parseInt(s.duration, 10) || 0;
+    if (dur > 0 && dur < 60) return true;
+    const lang = decodeHtmlEntities(s.language || "").toLowerCase();
+    if (JUNK_GENRE_RE.test(lang)) return true;
+    const title = decodeHtmlEntities(s.song || "").toLowerCase();
+    if (looksLikeJunkTitle(title)) return true;
+    const singers = decodeHtmlEntities(
+      `${s.primary_artists || ""} ${s.singers || ""}`,
+    ).toLowerCase();
+    if (looksLikeJunkTitle(singers)) return true;
+  } catch {
+    // Malformed record: keep it
+  }
+  return false;
+}
+
+// Normalized Track -> junk filter (public: merged search + trending)
+export function isJunkTrack(track: Track): boolean {
+  const dur = track.duration || 0;
+  if (dur > 0 && dur < 60) return true;
+  if (JUNK_GENRE_RE.test((track.genre || "").toLowerCase())) return true;
+  if (looksLikeJunkTitle(track.title || "")) return true;
+  if (looksLikeJunkTitle(track.artist || "")) return true;
+  return false;
+}
+
 function decryptSaavnMediaUrl(encryptedMediaUrl: string): string {
   if (!encryptedMediaUrl) return "";
   try {
@@ -239,6 +282,8 @@ export async function searchJioSaavnMusic(
       );
       if (!streamUrl) continue;
 
+      if (isJunkSaavnSong(s)) continue;
+
       const dur = parseInt(s.duration, 10) || 180;
       const artwork = (s.image || "")
         .replace("150x150", "500x500")
@@ -433,6 +478,8 @@ export async function getJioSaavnPlaylistDetails(listid: string): Promise<{
       );
       if (!streamUrl) continue;
 
+      if (isJunkSaavnSong(s)) continue;
+
       const dur = parseInt(s.duration, 10) || 180;
       const trackArt = (s.image || artwork)
         .replace("150x150", "500x500")
@@ -513,6 +560,8 @@ export async function getJioSaavnAlbumDetails(albumid: string): Promise<{
         s.encrypted_media_url || s.encrypted_drm_media_url || "",
       );
       if (!streamUrl) continue;
+
+      if (isJunkSaavnSong(s)) continue;
 
       const dur = parseInt(s.duration, 10) || 180;
       const trackArt = (s.image || artwork)
@@ -663,7 +712,9 @@ export async function searchOnlineMusic(
     }
   }
 
-  let tracks: Track[] = Array.from(trackMap.values()).slice(0, limit);
+  let tracks: Track[] = Array.from(trackMap.values())
+    .filter((t) => !isJunkTrack(t))
+    .slice(0, limit);
 
   // Merge Artists
   const tidalArtists: SearchArtist[] =
@@ -739,7 +790,7 @@ export async function searchOnlineMusic(
         id: `alb_${encodeURIComponent(t.album)}`,
         album: t.album,
         artist: t.artist || "Various Artists",
-        coverUrl: t.cover_url || "",
+        coverUrl: t.cover_url || DEFAULT_TRACK_ART,
         trackCount: 1,
         year: t.year || undefined,
         tracks: [t],
@@ -811,22 +862,45 @@ export async function searchOnlineMusic(
 }
 
 // Full-length Trending Tracks: Uses JioSaavn top hits & charts
-export async function getTrendingOnlineTracks(limit = 25): Promise<Track[]> {
-  try {
-    // 1. Try JioSaavn trending global & popular hits
-    const trendingSaavn = await searchJioSaavnMusic("Top Global Hits", limit);
-    if (trendingSaavn.length >= 5) {
-      return trendingSaavn;
-    }
+const trendingCache: { at: number; tracks: Track[] } = { at: 0, tracks: [] };
+const TRENDING_CACHE_TTL = 10 * 60_000;
 
-    // 2. Try English Trending & Billboard hits
-    const fallbackTrending = await searchJioSaavnMusic("Trending Songs", limit);
-    if (fallbackTrending.length > 0) {
-      return fallbackTrending;
-    }
+export async function getTrendingOnlineTracks(limit = 25): Promise<Track[]> {
+  const now = Date.now();
+  if (
+    trendingCache.tracks.length > 0 &&
+    now - trendingCache.at < TRENDING_CACHE_TTL
+  ) {
+    return trendingCache.tracks;
+  }
+
+  let tracks: Track[] = [];
+  try {
+    // 1. Try JioSaavn trending global & popular hits (junk ringtones filtered out)
+    tracks = (await searchJioSaavnMusic("Top Global Hits", limit)).filter(
+      (t) => !isJunkTrack(t),
+    );
   } catch (err) {
     console.warn("Trending fetch failed:", err);
   }
 
-  return [];
+  if (tracks.length === 0) {
+    try {
+      // 2. Try English Trending & Billboard hits
+      tracks = (await searchJioSaavnMusic("Trending Songs", limit)).filter(
+        (t) => !isJunkTrack(t),
+      );
+    } catch (err) {
+      console.warn("Trending fallback fetch failed:", err);
+    }
+  }
+
+  if (tracks.length > 0) {
+    trendingCache.at = Date.now();
+    trendingCache.tracks = tracks;
+    return tracks;
+  }
+
+  // 3. Upstream flaky: serve last good batch (even if stale) instead of empty
+  return trendingCache.tracks;
 }

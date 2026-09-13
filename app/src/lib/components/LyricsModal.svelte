@@ -40,6 +40,11 @@
 	let isDownloading = $state(false);
 	let mobileView = $state<"player" | "lyrics">("player");
 
+	// Swipe-down-to-dismiss gesture state (mobile)
+	let dragStartY = $state(0);
+	let dragDy = $state(0);
+	let isDragging = $state(false);
+
 	const isLiked = $derived(playerCurrentTrack.value ? likedStore.isLiked(playerCurrentTrack.value.id) : false);
 
 	// Load lyrics when current track changes
@@ -290,6 +295,54 @@
 		}
 	}
 
+	// iOS-style swipe-down-to-dismiss (mobile)
+	function handleSwipeStart(e: TouchEvent) {
+		if (hideChrome) return;
+		if (e.touches.length !== 1) return;
+		const target = e.target as HTMLElement | null;
+		if (!target) return;
+		// Never start a dismiss drag on interactive controls
+		if (target.closest("button, input, [role='slider'], .playback-controls-row, .timeline-container, .mobile-segmented-control")) {
+			return;
+		}
+
+		const lyricsPane = target.closest(".fullscreen-lyrics-pane") as HTMLElement | null;
+		if (lyricsPane && lyricsPane.scrollTop > 0) {
+			// Only allow pull-to-dismiss from lyrics when already scrolled to the very top
+			return;
+		}
+		dragStartY = e.touches[0].clientY;
+		dragDy = 0;
+		isDragging = true;
+	}
+
+	function handleSwipeMove(e: TouchEvent) {
+		if (!isDragging) return;
+		const dy = e.touches[0].clientY - dragStartY;
+		if (dy <= 0) {
+			dragDy = 0;
+			return;
+		}
+		dragDy = dy;
+		if (dragDy > 8) e.preventDefault();
+	}
+
+	function handleSwipeEnd() {
+		if (!isDragging) return;
+		const dist = dragDy;
+		isDragging = false;
+		dragDy = 0;
+		if (dist > 90) {
+			close();
+		}
+	}
+
+	const overlayDragStyle = $derived(
+		isDragging
+			? `transform: translate3d(0, ${dragDy}px, 0); opacity: ${Math.max(0, 1 - dragDy / 480)}; transition: none;`
+			: "transform: translate3d(0, 0, 0); opacity: 1; transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.3s ease;"
+	);
+
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === "Escape") {
 			if (equalizerStore.isOpen) {
@@ -346,9 +399,19 @@
 		class:ui-hidden={hideChrome}
 		class:zen-revealed={showZenControlsOnHover}
 		class:lyrics-hidden={!lyricsVisible}
+		style={overlayDragStyle}
+		ontouchstart={handleSwipeStart}
+		ontouchmove={handleSwipeMove}
+		ontouchend={handleSwipeEnd}
+		ontouchcancel={handleSwipeEnd}
 		onclick={handleOverlayClick}
 		onmousemove={handleMouseMove}
 	>
+		<!-- iOS-style drag handle (mobile) -->
+		<div class="swipe-handle mobile-only" aria-hidden="true">
+			<span class="swipe-handle-bar"></span>
+		</div>
+
 		<!-- Floating Exit Zen Mode Button (Always visible & clickable when in Zen Mode) -->
 		{#if hideChrome}
 			<button
@@ -1070,6 +1133,25 @@
 		display: none !important;
 	}
 
+	/* iOS-style drag handle for swipe-down dismiss (mobile) */
+	.swipe-handle {
+		position: fixed;
+		top: calc(env(safe-area-inset-top, 0px) + 0.55rem);
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 11;
+		display: flex;
+		justify-content: center;
+		pointer-events: none;
+
+		.swipe-handle-bar {
+			width: 2.75rem;
+			height: 5px;
+			border-radius: 999px;
+			background: rgba(255, 255, 255, 0.28);
+		}
+	}
+
 	/* Top Navigation Bar */
 	.fullscreen-top-bar {
 		position: relative;
@@ -1122,26 +1204,36 @@
 
 		.mobile-segmented-control {
 			background: rgba(0, 0, 0, 0.45);
-			border: 1px solid rgba(255, 255, 255, 0.1);
-			border-radius: 999px;
+			border: 1px solid rgba(255, 255, 255, 0.12);
+			border-radius: 11px;
 			padding: 3px;
-			gap: 2px;
+			gap: 3px;
 			backdrop-filter: blur(12px);
+			display: flex;
+			align-items: center;
 
 			.segment-btn {
+				appearance: none;
 				background: transparent;
 				border: none;
 				color: rgba(255, 255, 255, 0.65);
-				padding: 0.35rem 0.85rem;
-				border-radius: 999px;
-				font-size: 0.82rem;
+				padding: 0.42rem 1rem;
+				min-width: 4.5rem;
+				border-radius: 8px;
+				font-size: 0.8rem;
 				font-weight: 600;
+				line-height: 1;
+				white-space: nowrap;
 				cursor: pointer;
 				transition: all 0.2s ease;
 
 				&.active {
-					background: rgba(255, 255, 255, 0.22);
+					background: rgba(255, 255, 255, 0.2);
 					color: #ffffff;
+				}
+
+				&:active {
+					transform: scale(0.96);
 				}
 			}
 		}

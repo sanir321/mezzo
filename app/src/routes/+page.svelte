@@ -31,10 +31,10 @@
 
 	let trendingTracks = $state<Track[]>([]);
 	let artistMixTracks = $state<{ artist: string; tracks: Track[]; coverUrl?: string; gradient: string }[]>([]);
-	let becauseYouListened = $state<{ artist: string; tracks: Track[] } | null>(null);
 	let recommendedSections = $state<{ title: string; kicker: string; tracks: Track[] }[]>([]);
 	let userPlaylists = $state<Playlist[]>([]);
 	let loading = $state(true);
+	let preferencesReady = $state(false);
 	$effect(() => {
 		if (sessionData === undefined || sessionData.isPending) return;
 		const userKey = untrack(() => user?.email || user?.id);
@@ -56,6 +56,7 @@
 				userPreferences.openOnboarding();
 			}
 		});
+		preferencesReady = true;
 	});
 
 	// Dynamic time-based greeting
@@ -67,62 +68,12 @@
 	});
 
 	// Dynamic User Taste Profile derived directly from tracks the user actually listens to and likes
-	const userTaste = $derived.by(() => {
-		const history = [...playerRecentlyPlayed.value, ...likedStore.tracks];
-		if (history.length === 0) {
-			return {
-				hasHistory: false,
-				topArtists: [] as string[],
-				latestArtist: null as string | null,
-				topGenres: [] as string[],
-			};
-		}
-
-		const artistFrequency = new Map<string, number>();
-		const orderedArtists: string[] = [];
-		const genreFrequency = new Map<string, number>();
-
-		for (const track of history) {
-			if (track.artist) {
-				const mainArtist = track.artist.split(/[,&/]|(?:feat\.?)|(?:ft\.?)/i)[0].trim();
-				if (mainArtist && mainArtist.length > 1) {
-					artistFrequency.set(mainArtist, (artistFrequency.get(mainArtist) || 0) + 1);
-					if (!orderedArtists.includes(mainArtist)) {
-						orderedArtists.push(mainArtist);
-					}
-				}
-			}
-			if (track.genre && track.genre !== "Music" && track.genre !== "LOSSLESS") {
-				genreFrequency.set(track.genre, (genreFrequency.get(track.genre) || 0) + 1);
-			}
-		}
-
-		const sortedArtists = Array.from(artistFrequency.entries())
-			.sort((a, b) => b[1] - a[1])
-			.map(([a]) => a);
-
-		const sortedGenres = Array.from(genreFrequency.entries())
-			.sort((a, b) => b[1] - a[1])
-			.map(([g]) => g);
-
-		return {
-			hasHistory: true,
-			topArtists: sortedArtists.slice(0, 6),
-			latestArtist: orderedArtists[0] || null,
-			topGenres: sortedGenres.slice(0, 4),
-		};
-	});
-
 	const activeArtists = $derived.by(() => {
-		// 1. If user has played music, use their real most-listened artists!
-		if (userTaste.hasHistory && userTaste.topArtists.length > 0) {
-			return userTaste.topArtists.slice(0, 4);
-		}
-		// 2. Explicit favorite artists from settings
+		// 1. Explicit favorite artists from onboarding settings
 		if (userPreferences.favoriteArtists.length > 0) {
 			return userPreferences.favoriteArtists.slice(0, 4);
 		}
-		// 3. Match top artists according to user's selected languages
+		// 2. Match top artists according to user's selected languages
 		const userLangs = userPreferences.languages.map((l) => l.toLowerCase());
 		const matchedFromLangs = POPULAR_ARTISTS
 			.filter((a) => a.languages.some((l) => userLangs.includes(l.toLowerCase())))
@@ -130,21 +81,12 @@
 		if (matchedFromLangs.length > 0) {
 			return matchedFromLangs.slice(0, 4);
 		}
-		// 4. Diverse global and multi-genre spread
+		// 3. Diverse global and multi-genre spread
 		return ["Arijit Singh", "The Weeknd", "Diljit Dosanjh", "Taylor Swift"];
 	});
 
 	const quickMixTiles = $derived.by(() => {
 		const list: Array<{ title: string; tracks: Track[]; coverUrl: string; link: string }> = [];
-
-		if (becauseYouListened && becauseYouListened.tracks.length > 0) {
-			list.push({
-				title: `${becauseYouListened.artist} Mix`,
-				tracks: becauseYouListened.tracks,
-				coverUrl: becauseYouListened.tracks[0]?.cover_url || getArtistMeta(becauseYouListened.artist).image,
-				link: `/artist/${encodeURIComponent(becauseYouListened.artist)}`,
-			});
-		}
 
 		for (const mix of artistMixTracks) {
 			if (list.length >= 4) break;
@@ -173,26 +115,7 @@
 	});
 
 	const sortedPopularArtists = $derived.by(() => {
-		// If user has listening history, prioritize artists matching their genres and top artists
-		if (userTaste.hasHistory) {
-			const userArts = userTaste.topArtists.map((a) => a.toLowerCase());
-			const userGenres = userTaste.topGenres.map((g) => g.toLowerCase());
-			return [...POPULAR_ARTISTS]
-				.sort((a, b) => {
-					const aMatchArt = userArts.some((art) => a.name.toLowerCase().includes(art));
-					const bMatchArt = userArts.some((art) => b.name.toLowerCase().includes(art));
-					if (aMatchArt && !bMatchArt) return -1;
-					if (!aMatchArt && bMatchArt) return 1;
-
-					const aMatchGenre = userGenres.some((g) => a.genre.toLowerCase().includes(g));
-					const bMatchGenre = userGenres.some((g) => b.genre.toLowerCase().includes(g));
-					if (aMatchGenre && !bMatchGenre) return -1;
-					if (!aMatchGenre && bMatchGenre) return 1;
-					return 0;
-				})
-				.slice(0, 8);
-		}
-
+		// Prioritize artists matching the user's onboarding languages
 		const userLangs = userPreferences.languages.map((l) => l.toLowerCase());
 		if (userLangs.length === 0) return POPULAR_ARTISTS.slice(0, 8);
 
@@ -239,10 +162,7 @@
 			// 1. Fetch Global Trending tracks
 			const trPromise = getOnlineTrending(15).catch(() => ({ tracks: [] }));
 
-			// 2. Compute dynamic recommendations based on user's actual listening
-			const taste = userTaste;
-
-			// 3. Artist Mixes for their actual top artists
+			// 2. Artist Mixes for the user's favorite artists (onboarding)
 			const favs = activeArtists.slice(0, 4);
 			const artistPromises = favs.map(async (art) => {
 				const res = await searchOnlineMusic(art, 8).catch(() => ({ tracks: [] }));
@@ -256,27 +176,15 @@
 				};
 			});
 
-			// 4. "Because you listened to [Latest Artist]"
-			let becausePromise: Promise<any> = Promise.resolve(null);
-			if (taste.hasHistory && taste.latestArtist) {
-				becausePromise = searchOnlineMusic(taste.latestArtist, 8)
-					.then((res) => ({ artist: taste.latestArtist!, tracks: res.tracks ?? [] }))
-					.catch(() => null);
-			}
-
-			// 5. Genre / Vibe Discovery Mixes (adapting to their played genres or preferred languages)
+			// 3. Genre / Vibe Discovery Mixes from the user's onboarding languages
 			let genresToFetch: string[] = [];
-			if (taste.hasHistory && taste.topGenres.length > 0) {
-				genresToFetch = taste.topGenres.slice(0, 3);
+			const langQueries = userPreferences.languages
+				.map((l) => LANGUAGE_SEARCH_TERMS[l] || `${l} Top Hits`)
+				.filter(Boolean);
+			if (langQueries.length > 0) {
+				genresToFetch = langQueries.slice(0, 3);
 			} else {
-				const langQueries = userPreferences.languages
-					.map((l) => LANGUAGE_SEARCH_TERMS[l] || `${l} Top Hits`)
-					.filter(Boolean);
-				if (langQueries.length > 0) {
-					genresToFetch = langQueries.slice(0, 3);
-				} else {
-					genresToFetch = ["Bollywood Top Hits", "Global Pop Hits", "Punjabi Top Hits"];
-				}
+				genresToFetch = ["Bollywood Top Hits", "Global Pop Hits", "Punjabi Top Hits"];
 			}
 
 			const genrePromises = genresToFetch.map(async (g) => {
@@ -284,25 +192,23 @@
 				const res = await searchOnlineMusic(cleanQuery, 8).catch(() => ({ tracks: [] }));
 				return {
 					title: g.includes("Hits") || g.includes("Dance") ? g : `${g} Mix`,
-					kicker: taste.hasHistory ? "BASED ON YOUR VIBES" : "FEATURED VIBE",
+					kicker: "FEATURED VIBE",
 					tracks: res.tracks ?? [],
 				};
 			});
 
-			// 6. User playlists if authed
+			// 4. User playlists if authed
 			const plPromise = getPlaylists().catch(() => ({ playlists: [] }));
 
-			const [tr, mixes, becauseRes, genreRes, plRes] = await Promise.all([
+			const [tr, mixes, genreRes, plRes] = await Promise.all([
 				trPromise,
 				Promise.all(artistPromises),
-				becausePromise,
 				Promise.all(genrePromises),
 				plPromise,
 			]);
 
 			trendingTracks = tr.tracks ?? [];
 			artistMixTracks = mixes.filter((m) => m.tracks.length > 0);
-			becauseYouListened = becauseRes && becauseRes.tracks.length > 0 ? becauseRes : null;
 			recommendedSections = genreRes.filter((s) => s.tracks.length > 0);
 			userPlaylists = plRes.playlists ?? [];
 		} catch {
@@ -318,11 +224,12 @@
 	}
 
 	$effect(() => {
-		// Reactive reload whenever user plays or likes tracks, or updates preferences
-		void playerRecentlyPlayed.value.length;
-		void likedStore.tracks.length;
+		// Reload home content only when onboarding preferences change.
+		// Does NOT react to playback or likes, so the page never refreshes mid-song.
 		void userPreferences.languages.join(",");
 		void userPreferences.favoriteArtists.join(",");
+		void userPreferences.isUserOnboarded(user?.email || user?.id);
+		if (!preferencesReady) return;
 		loadHomeContent();
 	});
 
@@ -349,27 +256,19 @@
 			<div class="greeting-text">
 				<h1 class="greeting-title">{greeting}, {userName}</h1>
 				<div class="pref-meta-row">
-					{#if userTaste.hasHistory && userTaste.topArtists.length > 0}
-						<span class="pref-label">Your Vibes:</span>
-						{#each userTaste.topArtists.slice(0, 3) as art}
-							<span class="pref-pill artist">{art}</span>
-						{/each}
-						{#each userTaste.topGenres.slice(0, 2) as g}
-							<span class="pref-pill">{g}</span>
-						{/each}
-					{:else}
+					{#if userPreferences.languages.length > 0}
 						<span class="pref-label">Languages:</span>
 						{#each userPreferences.languages as lang}
 							<span class="pref-pill">{lang}</span>
 						{/each}
-						{#if userPreferences.favoriteArtists.length > 0}
-							<span class="pref-label">• Favorites:</span>
-							{#each userPreferences.favoriteArtists.slice(0, 3) as art}
-								<span class="pref-pill artist">{art}</span>
-							{/each}
-							{#if userPreferences.favoriteArtists.length > 3}
-								<span class="pref-pill more">+{userPreferences.favoriteArtists.length - 3}</span>
-							{/if}
+					{/if}
+					{#if userPreferences.favoriteArtists.length > 0}
+						<span class="pref-label">• Favorites:</span>
+						{#each userPreferences.favoriteArtists.slice(0, 3) as art}
+							<span class="pref-pill artist">{art}</span>
+						{/each}
+						{#if userPreferences.favoriteArtists.length > 3}
+							<span class="pref-pill more">+{userPreferences.favoriteArtists.length - 3}</span>
 						{/if}
 					{/if}
 				</div>
@@ -510,52 +409,7 @@
 			</section>
 		{/if}
 
-		<!-- 1. Section: Because You Listened (Adaptive to recent listening history) -->
-		{#if becauseYouListened && becauseYouListened.tracks.length > 0}
-			<section class="spotify-section">
-				<div class="section-title-bar">
-					<div>
-						<span class="section-kicker">BECAUSE YOU LISTENED TO {becauseYouListened.artist.toUpperCase()}</span>
-						<h2 class="section-heading">More by {becauseYouListened.artist} & Similar</h2>
-					</div>
-					<button class="spotify-play-btn" onclick={() => playTracks(becauseYouListened!.tracks, 0)}>
-						<svg viewBox="0 0 24 24" width="1.1rem" height="1.1rem" fill="currentColor">
-							<polygon points="6 4 20 12 6 20 6 4" />
-						</svg>
-						<span>Play All</span>
-					</button>
-				</div>
-
-				<div class="mix-cards-grid">
-					{#each becauseYouListened.tracks.slice(0, 6) as track, i (track.id)}
-						<!-- svelte-ignore a11y_click_events_have_key_events -->
-						<!-- svelte-ignore a11y_no_static_element_interactions -->
-						<div class="mix-card" onclick={() => playTracks(becauseYouListened!.tracks, i)}>
-							<div class="card-cover-wrap">
-								<img
-									src={track.cover_url || getArtistMeta(track.artist ?? "").image}
-									alt={track.title}
-									class="card-cover-img"
-									loading="lazy"
-									onerror={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80'; }}
-								/>
-								<div class="card-play-hover" title="Play {track.title}">
-									<svg viewBox="0 0 24 24" width="1.5rem" height="1.5rem" fill="currentColor">
-										<polygon points="6 4 20 12 6 20 6 4" />
-									</svg>
-								</div>
-							</div>
-							<div class="card-meta">
-								<h3 class="card-title">{track.title}</h3>
-								<p class="card-subtitle">{track.artist || "Various Artists"}</p>
-							</div>
-						</div>
-					{/each}
-				</div>
-			</section>
-		{/if}
-
-		<!-- 2. Section: Favorite Artist Mixes (Made For You) -->
+		<!-- 1. Section: Favorite Artist Mixes (Made For You) -->
 		{#if artistMixTracks.length > 0}
 			<section class="spotify-section">
 				<div class="section-title-bar">
@@ -1437,5 +1291,56 @@
 
 	@keyframes spin {
 		to { transform: rotate(360deg); }
+	}
+
+	@media screen and (max-width: 600px) {
+		.home-page {
+			gap: 2rem;
+			padding-bottom: 6.5rem;
+		}
+
+		.greeting-row {
+			.greeting-title {
+				font-size: 1.5rem;
+				letter-spacing: -0.03em;
+			}
+		}
+
+		.pref-meta-row {
+			font-size: 0.78rem;
+
+			.pref-pill {
+				font-size: 0.7rem;
+				padding: 0.15rem 0.5rem;
+			}
+		}
+
+		.genre-tile {
+			padding: 0.85rem;
+			font-size: 0.95rem;
+		}
+	}
+
+	@media screen and (max-width: 400px) {
+		.quick-tile {
+			height: 3.4rem;
+
+			.tile-art,
+			.tile-img {
+				width: 3.4rem;
+				height: 3.4rem;
+			}
+
+			.tile-title {
+				padding: 0 0.7rem;
+				font-size: 0.82rem;
+			}
+
+			.tile-play-btn {
+				width: 2.2rem;
+				height: 2.2rem;
+				right: 0.6rem;
+			}
+		}
 	}
 </style>

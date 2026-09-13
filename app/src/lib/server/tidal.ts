@@ -17,6 +17,10 @@ const TIDAL_CLIENT_SECRET =
     : "");
 const TIDAL_AUTH_URL = "https://auth.tidal.com/v1/oauth2/token";
 const TIDAL_API_BASE = "https://api.tidal.com/v1";
+
+// Default fallback artwork whenever Tidal returns no cover image
+const DEFAULT_ART =
+  "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80";
 const HIFI_API_BASE_URL =
   (import.meta.env.VITE_HIFI_API_BASE_URL as string | undefined) ??
   (typeof globalThis !== "undefined" &&
@@ -143,7 +147,7 @@ export async function searchTidalTracks(
         date_added: Date.now(),
         play_count: item.popularity ? item.popularity * 1000 : 50000,
         stream_url: `/api/tracks/tidal_${item.id}/stream`,
-        cover_url: getTidalImageUrl(coverPic, "1280x1280"),
+        cover_url: getTidalImageUrl(coverPic, "1280x1280") || DEFAULT_ART,
         isrc: item.isrc || undefined,
         audioQuality: item.audioQuality || undefined,
       };
@@ -216,7 +220,7 @@ export async function searchTidalAlbums(
         item.artist?.name ||
         item.artists?.map((a: any) => a.name).join(", ") ||
         "Various Artists",
-      coverUrl: getTidalImageUrl(item.cover, "1280x1280") || "",
+      coverUrl: getTidalImageUrl(item.cover, "1280x1280") || DEFAULT_ART,
       trackCount: item.numberOfTracks || 1,
       year: item.releaseDate
         ? new Date(item.releaseDate).getFullYear()
@@ -252,7 +256,7 @@ export async function searchTidalPlaylists(
       id: `tidal_pl_${item.uuid}`,
       name: item.title || "Tidal Playlist",
       description: item.description || "Tidal curated playlist",
-      coverUrl: getTidalImageUrl(item.image, "1280x1280") || "",
+      coverUrl: getTidalImageUrl(item.image, "1280x1280") || DEFAULT_ART,
       trackCount: item.numberOfTracks || 25,
       isOnline: true,
       query: item.title,
@@ -367,7 +371,7 @@ export async function getTidalArtistTopTracks(
     const artist: SearchArtist = {
       id: `tidal_art_${artistData.id}`,
       name: artistData.name || "Unknown Artist",
-      image: artistImage,
+      image: artistImage || DEFAULT_ART,
       role: "Artist",
       trackCount: tracks.length,
       tracks,
