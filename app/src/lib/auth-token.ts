@@ -18,6 +18,7 @@ export function setAuthToken(token: string | null | undefined): void {
 		} else {
 			window.localStorage.removeItem(TOKEN_KEY);
 		}
+		window.dispatchEvent(new CustomEvent("mezzo:auth-changed", { detail: { token } }));
 	} catch {}
 }
 
@@ -39,10 +40,14 @@ export function setCachedUser(user: any | null | undefined): void {
 		} else {
 			window.localStorage.removeItem(USER_KEY);
 		}
+		window.dispatchEvent(new CustomEvent("mezzo:auth-changed", { detail: { user } }));
 	} catch {}
 }
 
 export function clearAuthToken(): void {
 	setAuthToken(null);
 	setCachedUser(null);
+	if (typeof window !== "undefined") {
+		window.dispatchEvent(new CustomEvent("mezzo:auth-changed", { detail: { token: null, user: null } }));
+	}
 }

@@ -5,7 +5,7 @@ html {
   box-sizing: border-box;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
-  font-size: 12px;
+  font-size: clamp(14px, 0.95vw + 10px, 16px);
 }
 
 *,
@@ -38,7 +38,7 @@ body {
     sans-serif;
   word-wrap: break-word;
   -webkit-text-size-adjust: 100%;
-  --base-font-size: 0.75rem;
+  --base-font-size: 0.925rem;
 
   /* ===== Scrollbar CSS ===== */
 
@@ -85,15 +85,15 @@ body {
   font-smooth: auto;
   @media screen and (min-width: 40em) and (max-width: 115.375em) {
     --top-bar-height: clamp(3.8rem, 4rem, 4.75rem);
-    --base-font-size: 0.875rem;
+    --base-font-size: 0.95rem;
   }
   @media screen and (min-width: 115.375em) and (max-width: 134em) {
     --top-bar-height: clamp(3.8rem, 4rem, 4.75rem);
-    --base-font-size: 1rem;
+    --base-font-size: 1.025rem;
   }
   @media screen and (min-width: 134.75em) {
     --top-bar-height: clamp(3.8rem, 4rem, 4.75rem);
-    --base-font-size: 1.125rem;
+    --base-font-size: 1.15rem;
   }
 }
 .tooltip {

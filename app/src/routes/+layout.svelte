@@ -70,7 +70,19 @@
 	});
 
 	$effect(() => {
-		return () => { unsub(); };
+		if (typeof window === "undefined") return;
+		const handler = (e: any) => {
+			if (e.detail?.user) {
+				cachedUser = e.detail.user;
+			} else if (e.detail?.user === null) {
+				cachedUser = null;
+			}
+		};
+		window.addEventListener("mezzo:auth-changed", handler);
+		return () => {
+			window.removeEventListener("mezzo:auth-changed", handler);
+			unsub();
+		};
 	});
 
 	// Fail-safe: never leave users stuck on the "Verifying session..." screen.
@@ -89,9 +101,10 @@
 		!sessionTimedOut &&
 		(sessionData === undefined || sessionData.isPending) &&
 		!cachedUser &&
+		!getCachedUser() &&
 		(typeof navigator === "undefined" || navigator.onLine),
 	);
-	const user = $derived(sessionData?.data?.user ?? cachedUser);
+	const user = $derived(sessionData?.data?.user ?? cachedUser ?? getCachedUser());
 	const hasOfflineTracks = $derived(offlineStore.downloadedTracks.length > 0);
 	const isLoggedIn = $derived(user != null || (typeof navigator !== "undefined" && !navigator.onLine && hasOfflineTracks));
 

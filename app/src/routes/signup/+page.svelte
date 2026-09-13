@@ -29,6 +29,10 @@
 			const r = await signUp.email({ email, password, name: name.trim() || email.split("@")[0] });
 			if (r.error) throw new Error(r.error.message ?? "Registration failed. Please try again.");
 			persistAuthToken(r);
+			try {
+				const { authClient } = await import("$lib/auth-client");
+				await authClient.getSession({ query: {} });
+			} catch {}
 			goto("/");
 		} catch (err: any) {
 			authError = err.message ?? "Sign up failed. Please check your details.";
@@ -177,33 +181,33 @@
 <style lang="scss">
 	.auth-page {
 		min-height: 100dvh;
-		background: #000000;
+		background: radial-gradient(circle at 50% 15%, #1c1c1c 0%, #000000 70%);
 		color: #ffffff;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 2rem 1rem;
+		padding: 2.5rem 1.25rem;
 		box-sizing: border-box;
 	}
 
 	.auth-card {
 		width: 100%;
-		max-width: 28rem;
-		background: #121212;
-		border-radius: 16px;
-		padding: 2.5rem 2rem;
+		max-width: 32rem;
+		background: #141414;
+		border-radius: 24px;
+		padding: 3rem 2.5rem;
 		box-sizing: border-box;
 		display: flex;
 		flex-direction: column;
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
 	}
 
 	.auth-header {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		margin-bottom: 1.75rem;
+		margin-bottom: 2rem;
 
 		.brand-link {
 			display: inline-block;
@@ -211,20 +215,20 @@
 			transition: transform 150ms ease;
 
 			&:hover {
-				transform: scale(1.05);
+				transform: scale(1.08);
 			}
 		}
 
 		.brand-logo {
-			width: 3rem;
-			height: 3rem;
+			width: 3.5rem;
+			height: 3.5rem;
 			display: block;
 		}
 
 		.auth-title {
-			font-size: 1.85rem;
+			font-size: 2.15rem;
 			font-weight: 800;
-			letter-spacing: -0.03em;
+			letter-spacing: -0.035em;
 			margin: 0;
 			color: #ffffff;
 			text-align: center;
@@ -234,8 +238,8 @@
 	.auth-actions {
 		display: flex;
 		flex-direction: column;
-		gap: 0.75rem;
-		margin-bottom: 1.5rem;
+		gap: 0.85rem;
+		margin-bottom: 1.75rem;
 		width: 100%;
 	}
 
@@ -243,14 +247,15 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 0.75rem;
+		gap: 0.85rem;
 		background: transparent;
 		border: 1.5px solid rgba(255, 255, 255, 0.35);
 		border-radius: 9999px;
 		color: #ffffff;
-		font-size: 0.95rem;
+		font-size: 1.05rem;
 		font-weight: 700;
-		padding: 0.85rem 1.5rem;
+		padding: 1rem 1.6rem;
+		min-height: 3.4rem;
 		cursor: pointer;
 		width: 100%;
 		box-sizing: border-box;
@@ -329,21 +334,21 @@
 			display: flex !important;
 			flex-direction: column !important;
 			align-items: stretch !important;
-			gap: 0.45rem;
+			gap: 0.55rem;
 			width: 100%;
 			box-sizing: border-box;
 
 			label {
 				display: block !important;
 				width: 100% !important;
-				font-size: 0.82rem !important;
+				font-size: 0.88rem !important;
 				font-weight: 800 !important;
 				color: #ffffff !important;
-				letter-spacing: 0.04em !important;
+				letter-spacing: 0.05em !important;
 				text-transform: uppercase !important;
 				font-variant: normal !important;
 				font-variant-caps: normal !important;
-				padding-left: 0.6rem;
+				padding-left: 0.75rem;
 				margin: 0;
 				text-align: left !important;
 			}
@@ -357,12 +362,12 @@
 			box-sizing: border-box;
 
 			.auth-input {
-				padding-right: 3.25rem !important;
+				padding-right: 3.5rem !important;
 			}
 
 			.eye-btn {
 				position: absolute;
-				right: 0.85rem;
+				right: 0.95rem;
 				top: 50%;
 				transform: translateY(-50%);
 				background: transparent;
@@ -372,7 +377,7 @@
 				display: flex;
 				align-items: center;
 				justify-content: center;
-				padding: 0.45rem;
+				padding: 0.5rem;
 				border-radius: 50%;
 				transition: color 150ms ease, background-color 150ms ease;
 
@@ -390,8 +395,9 @@
 			border: 1.5px solid rgba(255, 255, 255, 0.22) !important;
 			border-radius: 9999px !important;
 			color: #ffffff !important;
-			font-size: 0.95rem !important;
-			padding: 0.95rem 1.4rem !important;
+			font-size: 1.05rem !important;
+			padding: 1.05rem 1.5rem !important;
+			min-height: 3.4rem !important;
 			outline: none !important;
 			box-sizing: border-box !important;
 			transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
@@ -427,14 +433,15 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		gap: 0.6rem;
+		gap: 0.65rem;
 		background: #1ed760;
 		color: #000000;
 		border: none;
 		border-radius: 9999px;
-		padding: 0.95rem 1.5rem;
-		font-size: 1rem;
+		padding: 1.05rem 1.75rem;
+		font-size: 1.08rem;
 		font-weight: 800;
+		min-height: 3.4rem;
 		cursor: pointer;
 		text-decoration: none;
 		margin-top: 0.5rem;
@@ -459,8 +466,8 @@
 		}
 
 		.spinner {
-			width: 1rem;
-			height: 1rem;
+			width: 1.1rem;
+			height: 1.1rem;
 			border: 2px solid rgba(0, 0, 0, 0.25);
 			border-top-color: #000000;
 			border-radius: 50%;
@@ -471,7 +478,7 @@
 	.bottom-divider {
 		height: 1px;
 		background: #292929;
-		margin: 2rem 0 1.5rem;
+		margin: 2.2rem 0 1.5rem;
 		width: 100%;
 	}
 
@@ -479,8 +486,8 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 0.35rem;
-		font-size: 0.95rem;
+		gap: 0.4rem;
+		font-size: 1rem;
 		color: #a7a7a7;
 
 		p {
@@ -508,15 +515,21 @@
 	@media (max-width: 480px) {
 		.auth-page {
 			padding: 1.5rem 1rem;
-			background: #000000;
-			align-items: flex-start;
+			background: radial-gradient(circle at 50% 15%, #181818 0%, #000000 80%);
+			align-items: center !important;
+			justify-content: center !important;
 		}
 
 		.auth-card {
-			padding: 1.5rem 0.5rem;
-			border: none;
-			background: transparent;
-			box-shadow: none;
+			padding: 2.2rem 1.4rem !important;
+			border: 1px solid rgba(255, 255, 255, 0.12) !important;
+			background: #141414 !important;
+			border-radius: 20px !important;
+			box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8) !important;
+		}
+
+		.auth-header .auth-title {
+			font-size: 1.85rem !important;
 		}
 	}
 </style>
