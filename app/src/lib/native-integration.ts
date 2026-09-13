@@ -83,7 +83,7 @@ async function setupDeepLinks() {
 	try {
 		const { App } = await import("@capacitor/app");
 		const { Browser } = await import("@capacitor/browser");
-		const { setAuthToken } = await import("$lib/auth-client");
+		const { setAuthToken, setCachedUser } = await import("$lib/auth-client");
 		const { goto } = await import("$app/navigation");
 
 		async function handleUrl(rawUrl: string) {
@@ -95,6 +95,15 @@ async function setupDeepLinks() {
 						const token = parsed.searchParams.get("token");
 						if (token) {
 							setAuthToken(token);
+						}
+						const userParam = parsed.searchParams.get("user");
+						if (userParam) {
+							try {
+								const userObj = JSON.parse(userParam);
+								if (userObj?.id || userObj?.email) {
+									setCachedUser(userObj);
+								}
+							} catch {}
 						}
 						try {
 							await Browser.close();

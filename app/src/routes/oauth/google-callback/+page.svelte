@@ -2,26 +2,36 @@
 	import { onMount } from "svelte";
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
-	import { authClient, setAuthToken } from "$lib/auth-client";
+	import { authClient, setAuthToken, setCachedUser } from "$lib/auth-client";
 
+	let { data } = $props();
 	let deepLinkUrl = $state<string | null>(null);
 
 	onMount(async () => {
-		let token = "";
-		try {
-			const res = await authClient.getSession({ query: {} });
-			token = res.data?.session?.token || "";
-			const user = res.data?.user;
-			if (token && user) {
-				setAuthToken(token);
+		let token = data?.token || "";
+		let user: any = data?.user || null;
+
+		if (!token) {
+			try {
+				const res = await authClient.getSession({ query: {} });
+				token = res.data?.session?.token || "";
+				user = res.data?.user || null;
+			} catch {
+				// session may already be set from the cookie jar
 			}
-		} catch {
-			// session may already be set from the cookie jar
+		}
+
+		if (token) {
+			setAuthToken(token);
+			if (user) {
+				setCachedUser(user);
+			}
 		}
 
 		const isNative = page.url.searchParams.get("native") === "1";
 		if (isNative) {
-			const target = `mezzo://oauth-success?token=${encodeURIComponent(token)}`;
+			const userParam = user ? `&user=${encodeURIComponent(JSON.stringify(user))}` : "";
+			const target = `mezzo://oauth-success?token=${encodeURIComponent(token)}${userParam}`;
 			deepLinkUrl = target;
 			// Automatically launch the app
 			window.location.href = target;

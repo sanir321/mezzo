@@ -36,7 +36,7 @@ const ALLOWED_CORS_ORIGINS = new Set([
 ]);
 
 const CORS_HEADERS = {
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept, Origin, User-Agent, Cache-Control, Pragma, Range",
   "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
   "Access-Control-Max-Age": "86400",
   "Access-Control-Allow-Credentials": "true",
@@ -44,16 +44,34 @@ const CORS_HEADERS = {
 
 function corsOrigin(request: Request): string | null {
   const origin = request.headers.get("Origin");
-  return origin && ALLOWED_CORS_ORIGINS.has(origin) ? origin : null;
+  if (!origin) return null;
+  if (
+    ALLOWED_CORS_ORIGINS.has(origin) ||
+    origin === "null" ||
+    origin.startsWith("http://localhost") ||
+    origin.startsWith("https://localhost") ||
+    origin.startsWith("capacitor://") ||
+    origin.startsWith("ionic://") ||
+    origin.startsWith("app://") ||
+    origin.endsWith(".pages.dev") ||
+    origin.endsWith(".workers.dev")
+  ) {
+    return origin;
+  }
+  return null;
 }
 
-function withCors(response: Response, origin: string | null): Response {
+function withCors(response: Response, origin: string | null, request?: Request): Response {
   if (!origin) return response;
   const headers = new Headers(response.headers);
   headers.set("Access-Control-Allow-Origin", origin);
   headers.set("Vary", "Origin");
   for (const [key, value] of Object.entries(CORS_HEADERS)) {
     headers.set(key, value);
+  }
+  const reqHeaders = request?.headers.get("Access-Control-Request-Headers");
+  if (reqHeaders) {
+    headers.set("Access-Control-Allow-Headers", reqHeaders);
   }
   return new Response(response.body, {
     status: response.status,
@@ -70,16 +88,17 @@ export const handle: Handle = async ({ event, resolve }) => {
 
   const origin = corsOrigin(event.request);
 
-  // CORS preflight for cross-origin (Capacitor WebView) fetches that use the
-  // Authorization header or exclusive methods.
+  // CORS preflight for cross-origin (Capacitor WebView) fetches
   if (event.request.method === "OPTIONS") {
     if (!origin) return new Response(null, { status: 204 });
+    const reqHeaders = event.request.headers.get("Access-Control-Request-Headers");
     return new Response(null, {
       status: 204,
       headers: {
         "Access-Control-Allow-Origin": origin,
         Vary: "Origin",
         ...CORS_HEADERS,
+        ...(reqHeaders ? { "Access-Control-Allow-Headers": reqHeaders } : {}),
       },
     });
   }
@@ -99,7 +118,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   for (const key in securityHeaders) {
     response.headers.set(key, (securityHeaders as Record<string, string>)[key]);
   }
-  return withCors(response, origin);
+  return withCors(response, origin, event.request);
 };
 
 export const handleError: HandleServerError = ({ error }) => {
