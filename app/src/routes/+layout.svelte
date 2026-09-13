@@ -7,7 +7,6 @@
 	import LyricsModal from "$lib/components/LyricsModal.svelte";
 	import EqualizerModal from "$lib/components/EqualizerModal.svelte";
 	import OnboardingModal from "$lib/components/OnboardingModal.svelte";
-	import LandingPage from "$lib/components/LandingPage.svelte";
 	import InstallPrompt from "$lib/components/InstallPrompt.svelte";
 	import { likedStore } from "$lib/stores/liked.svelte";
 	import { setPlayerAuth } from "$lib/stores/player.svelte";
@@ -96,34 +95,11 @@
 	// (getSession -> persist token). Never bounce them to /login first.
 	const isOAuthPage = $derived(pathname.startsWith("/oauth/"));
 
-	// Detect running inside the Capacitor Android WebView app. There we skip
-	// the web landing page and route straight to the login/signup entry screen.
-	const isNativeApp = $derived.by(() => {
-		if (typeof window === "undefined") return false;
-		const cap = (window as Window & { Capacitor?: { getPlatform?: () => string; isNativePlatform?: () => boolean } }).Capacitor;
-		if (!cap) return false;
-		return cap.getPlatform?.() !== "web" || cap.isNativePlatform?.() === true;
-	});
-
-	const showLanding = $derived(pathname === "/" && !isLoggedIn && !isNativeApp);
-
 	// Require account login or sign up to use Mezzo protected pages
 	$effect(() => {
 		if (typeof window !== "undefined" && !isSessionLoading) {
-			if (!isLoggedIn && !isAuthPage && !isOAuthPage && !showLanding) {
+			if (!isLoggedIn && !isAuthPage && !isOAuthPage) {
 				goto("/login");
-			}
-		}
-	});
-
-	$effect(() => {
-		if (typeof document !== "undefined") {
-			if (showLanding) {
-				document.body.style.overflow = "auto";
-				document.body.style.position = "static";
-			} else {
-				document.body.style.overflow = "";
-				document.body.style.position = "";
 			}
 		}
 	});
@@ -133,10 +109,6 @@
 	{#if children}
 		{@render children()}
 	{/if}
-{:else if showLanding}
-	<div class="landing-scroll-wrapper">
-		<LandingPage />
-	</div>
 {:else if isSessionLoading || !isLoggedIn}
 	<div class="auth-loading-screen">
 		<div class="splash-inner">
@@ -213,18 +185,6 @@
 		margin: 0;
 		padding: 0;
 		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-	}
-
-	.landing-scroll-wrapper {
-		width: 100vw;
-		height: 100vh;
-		height: 100dvh;
-		overflow-y: auto;
-		overflow-x: hidden;
-		-webkit-overflow-scrolling: touch !important;
-		touch-action: pan-y !important;
-		background: #000000;
-		scroll-behavior: smooth;
 	}
 
 	.spotify-shell {

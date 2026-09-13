@@ -15,7 +15,6 @@
 		});
 	});
 
-	let showLogin = $state(false);
 	let email = $state("");
 	let password = $state("");
 	let showPassword = $state(false);
@@ -44,10 +43,6 @@
 		try {
 			const r = await signIn.social({
 				provider: "google",
-				// On native the OAuth loop runs inside the WebView and finishes
-				// back inside the SPA at this same-origin route (session cookie
-				// arrives in the WebView's jar, then getSession() hands us the
-				// bearer token). On web better-auth defaults to the API origin.
 				...(native ? { callbackURL: "https://localhost/oauth/google-callback" } : {}),
 			});
 			if (r.error) throw new Error(r.error.message ?? "Google sign in failed");
@@ -57,152 +52,126 @@
 			authBusy = false;
 		}
 	}
-
-	function backToEntry() {
-		showLogin = false;
-		authError = "";
-	}
 </script>
 
 <svelte:head>
-	<title>Mezzo — Music without the noise</title>
+	<title>Log in — Mezzo</title>
 </svelte:head>
 
 <div class="auth-page">
-	<main class="auth-main">
-		<div class="auth-card">
-			<div class="entry-hero">
-				<div class="big-logo-wrap">
-					<img src="/logo.svg" alt="Mezzo" class="big-logo" />
-				</div>
-				<h1 class="entry-title">Music without the noise.</h1>
-				<p class="entry-tagline">
-					Your personal streaming library.<br />
-					Lossless audio. Zero clutter. Free.
-				</p>
+	<div class="auth-card">
+		<header class="auth-header">
+			<a href="/" class="brand-link" aria-label="Mezzo Home">
+				<img src="/logo.svg" alt="Mezzo" class="brand-logo" />
+			</a>
+			<h1 class="auth-title">Log in to Mezzo</h1>
+		</header>
+
+		<div class="auth-actions">
+			<button type="button" class="google-btn" onclick={handleGoogleLogin} disabled={authBusy}>
+				<svg viewBox="0 0 24 24" width="1.25rem" height="1.25rem" class="google-icon">
+					<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+					<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+					<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+					<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+				</svg>
+				<span>Continue with Google</span>
+			</button>
+		</div>
+
+		<div class="divider">
+			<span class="divider-line"></span>
+			<span class="divider-text">or</span>
+			<span class="divider-line"></span>
+		</div>
+
+		{#if authError}
+			<div class="error-banner">
+				<svg viewBox="0 0 24 24" width="1.1rem" height="1.1rem" fill="none" stroke="currentColor" stroke-width="2">
+					<circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+				</svg>
+				<span>{authError}</span>
+			</div>
+		{/if}
+
+		<form onsubmit={handleLogin} class="auth-form">
+			<div class="form-group">
+				<label for="login-email">Email or username</label>
+				<input
+					id="login-email"
+					bind:value={email}
+					type="email"
+					placeholder="Email or username"
+					class="auth-input"
+					required
+					autocomplete="email"
+				/>
 			</div>
 
-			{#if !showLogin}
-				<div class="entry-actions">
-					<a href="/signup" class="btn btn-primary">
-						Sign up for free
-						<svg viewBox="0 0 24 24" width="1.25rem" height="1.25rem" fill="none" stroke="currentColor" stroke-width="2.5">
-							<line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-						</svg>
-					</a>
-					<button type="button" class="btn btn-secondary" onclick={() => (showLogin = true)}>
-						Log in
-					</button>
-				</div>
-			{:else}
-				<div class="login-head">
-					<button type="button" class="back-btn" onclick={backToEntry} aria-label="Back to entry">
-						<svg viewBox="0 0 24 24" width="1.1rem" height="1.1rem" fill="none" stroke="currentColor" stroke-width="2.5">
-							<line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
-						</svg>
-						<span>Back</span>
-					</button>
-					<h2 class="login-title">Log in to Mezzo</h2>
-					<p class="login-subtitle">Welcome back! Sign in to access your saved music & playlists.</p>
-				</div>
-
-				<div class="social-list">
-						<button type="button" class="google-login-btn" onclick={handleGoogleLogin} disabled={authBusy}>
-							<svg viewBox="0 0 24 24" width="1.4rem" height="1.4rem" class="social-icon">
-								<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-								<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-								<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
-								<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+			<div class="form-group">
+				<label for="login-password">Password</label>
+				<div class="password-wrap">
+					<input
+						id="login-password"
+						bind:value={password}
+						type={showPassword ? "text" : "password"}
+						placeholder="Password"
+						class="auth-input"
+						required
+						minlength="6"
+						autocomplete="current-password"
+					/>
+					<button
+						type="button"
+						class="eye-btn"
+						onclick={() => (showPassword = !showPassword)}
+						aria-label={showPassword ? "Hide password" : "Show password"}
+					>
+						{#if showPassword}
+							<svg viewBox="0 0 24 24" width="1.25rem" height="1.25rem" fill="none" stroke="currentColor" stroke-width="2">
+								<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+								<line x1="1" y1="1" x2="23" y2="23" />
 							</svg>
-							<span>Continue with Google</span>
-						</button>
-					</div>
-
-<div class="auth-divider-wrap">
-					<span class="divider-line"></span>
-					<span class="divider-text">or email & password</span>
-					<span class="divider-line"></span>
-				</div>
-
-				{#if authError}
-					<div class="error-banner">
-						<svg viewBox="0 0 24 24" width="1.1rem" height="1.1rem" fill="none" stroke="currentColor" stroke-width="2">
-							<circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-						</svg>
-						<span>{authError}</span>
-					</div>
-				{/if}
-
-				<form onsubmit={handleLogin} class="auth-form">
-					<div class="form-group">
-						<label for="login-email">Email address</label>
-						<input
-							id="login-email"
-							bind:value={email}
-							type="email"
-							placeholder="name@domain.com"
-							class="auth-input"
-							required
-						/>
-					</div>
-
-					<div class="form-group">
-						<label for="login-password">Password</label>
-						<div class="password-wrap">
-							<input
-								id="login-password"
-								bind:value={password}
-								type={showPassword ? "text" : "password"}
-								placeholder="Enter your password"
-								class="auth-input"
-								required
-								minlength="6"
-							/>
-							<button
-								type="button"
-								class="eye-btn"
-								onclick={() => (showPassword = !showPassword)}
-								aria-label={showPassword ? "Hide password" : "Show password"}
-							>
-								{#if showPassword}
-									<svg viewBox="0 0 24 24" width="1.3rem" height="1.3rem" fill="none" stroke="currentColor" stroke-width="2">
-										<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-										<line x1="1" y1="1" x2="23" y2="23" />
-									</svg>
-								{:else}
-									<svg viewBox="0 0 24 24" width="1.3rem" height="1.3rem" fill="none" stroke="currentColor" stroke-width="2">
-										<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-										<circle cx="12" cy="12" r="3" />
-									</svg>
-								{/if}
-							</button>
-						</div>
-					</div>
-
-					<button type="submit" class="auth-submit" disabled={authBusy}>
-						{#if authBusy}
-							<span class="spinner"></span>
-							<span>Logging in...</span>
 						{:else}
-							<span>Log In with Password</span>
-							<svg viewBox="0 0 24 24" width="1.2rem" height="1.2rem" fill="none" stroke="currentColor" stroke-width="2.5">
-								<line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+							<svg viewBox="0 0 24 24" width="1.25rem" height="1.25rem" fill="none" stroke="currentColor" stroke-width="2">
+								<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z" />
+								<circle cx="12" cy="12" r="3" />
 							</svg>
 						{/if}
 					</button>
-				</form>
-
-				<div class="inline-signup">
-					<p>New to Mezzo?</p>
-					<a href="/signup" class="toggle-link">Create a free account</a>
 				</div>
-			{/if}
-		</div>
-	</main>
+			</div>
 
-	<footer class="auth-legal">
-		<span>Mezzo Lossless Audio Engine • Minimalist & High-Fidelity</span>
-	</footer>
+			<button type="submit" class="btn-green" disabled={authBusy}>
+				{#if authBusy}
+					<span class="spinner"></span>
+					<span>Logging in...</span>
+				{:else}
+					<span>Log In</span>
+				{/if}
+			</button>
+		</form>
+
+		<div class="forgot-wrap">
+			<a
+				href="/login/forgot"
+				class="forgot-link"
+				onclick={(e) => {
+					e.preventDefault();
+					alert("Password reset flow not implemented yet.");
+				}}
+			>
+				Forgot your password?
+			</a>
+		</div>
+
+		<div class="bottom-divider"></div>
+
+		<div class="auth-switch">
+			<p>Don't have an account?</p>
+			<a href="/signup" class="switch-link">Sign up for Mezzo</a>
+		</div>
+	</div>
 </div>
 
 <style lang="scss">
@@ -211,223 +180,136 @@
 		background: #000000;
 		color: #ffffff;
 		display: flex;
-		flex-direction: column;
-	}
-
-	.auth-main {
-		flex: 1;
-		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 2rem 1rem 2.5rem;
+		padding: 2rem 1rem;
+		box-sizing: border-box;
 	}
 
 	.auth-card {
 		width: 100%;
-		max-width: 30rem;
-		background: #12141a;
-		border: 1px solid rgba(255, 255, 255, 0.12);
-		border-radius: 22px;
-		padding: 3.25rem 2.75rem;
+		max-width: 28rem;
+		background: #121212;
+		border-radius: 8px;
+		padding: 2.5rem 2rem;
+		box-sizing: border-box;
 		display: flex;
 		flex-direction: column;
-		box-shadow: 0 32px 64px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.05);
-
-		@media (max-width: 600px) {
-			padding: 2.5rem 1.5rem;
-			background: transparent;
-			border: none;
-			box-shadow: none;
-		}
+		border: 1px solid rgba(255, 255, 255, 0.08);
 	}
 
-	.entry-hero {
+	.auth-header {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		text-align: center;
-		gap: 1.1rem;
-		margin-bottom: 2.25rem;
-
-		.big-logo-wrap {
-			width: 7.5rem;
-			height: 7.5rem;
-			border-radius: 1.8rem;
-			overflow: hidden;
-			box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
-			margin-bottom: 0.5rem;
-
-			.big-logo {
-				width: 100%;
-				height: 100%;
-				display: block;
-			}
-		}
-
-		.entry-title {
-			font-size: 2.2rem;
-			font-weight: 900;
-			letter-spacing: -0.03em;
-			margin: 0;
-			color: #ffffff;
-		}
-
-		.entry-tagline {
-			color: #9a9a9a;
-			font-size: 1.05rem;
-			line-height: 1.55;
-			margin: 0;
-		}
-	}
-
-	.entry-actions {
-		display: flex;
-		flex-direction: column;
-		gap: 0.85rem;
-
-		.btn {
-			display: inline-flex;
-			align-items: center;
-			justify-content: center;
-			gap: 0.6rem;
-			border-radius: 9999px;
-			padding: 1.15rem 1.75rem;
-			font-size: 1.15rem;
-			font-weight: 800;
-			letter-spacing: -0.01em;
-			cursor: pointer;
-			transition: all 150ms cubic-bezier(0.16, 1, 0.3, 1);
-			border: none;
-			text-decoration: none;
-			box-sizing: border-box;
-
-			&.btn-primary {
-				background: #1ed760;
-				color: #000000;
-				box-shadow: 0 6px 22px rgba(30, 215, 96, 0.28);
-
-				&:hover {
-					background: #22e065;
-					transform: scale(1.02);
-					box-shadow: 0 8px 30px rgba(30, 215, 96, 0.38);
-				}
-			}
-
-			&.btn-secondary {
-				background: transparent;
-				color: #ffffff;
-				border: 1.5px solid rgba(255, 255, 255, 0.4);
-
-				&:hover {
-					background: rgba(255, 255, 255, 0.1);
-					border-color: #ffffff;
-					transform: scale(1.02);
-				}
-			}
-
-			&:active {
-				transform: scale(0.98);
-			}
-		}
-	}
-
-	.login-head {
-		text-align: center;
 		margin-bottom: 1.75rem;
-		position: relative;
 
-		.back-btn {
-			position: absolute;
-			left: 0;
-			top: 0.2rem;
-			display: inline-flex;
-			align-items: center;
-			gap: 0.3rem;
-			background: none;
-			border: none;
-			color: #a7a7a7;
-			font-size: 0.9rem;
-			font-weight: 700;
-			cursor: pointer;
-			padding: 0.35rem 0.5rem;
-			border-radius: 9999px;
-			transition: all 150ms ease;
+		.brand-link {
+			display: inline-block;
+			margin-bottom: 1.25rem;
+			transition: transform 150ms ease;
 
 			&:hover {
-				color: #ffffff;
-				background: rgba(255, 255, 255, 0.08);
+				transform: scale(1.05);
 			}
 		}
 
-		.login-title {
-			font-size: 1.9rem;
-			font-weight: 900;
-			letter-spacing: -0.03em;
-			margin: 0 0 0.5rem;
-			color: #ffffff;
+		.brand-logo {
+			width: 2.75rem;
+			height: 2.75rem;
+			display: block;
 		}
 
-		.login-subtitle {
-			color: #a7a7a7;
-			font-size: 1rem;
+		.auth-title {
+			font-size: 1.85rem;
+			font-weight: 800;
+			letter-spacing: -0.03em;
 			margin: 0;
-			line-height: 1.45;
+			color: #ffffff;
+			text-align: center;
 		}
 	}
 
-	.social-list {
+	.auth-actions {
 		display: flex;
 		flex-direction: column;
-		gap: 0.85rem;
-		margin-bottom: 1.25rem;
+		gap: 0.75rem;
+		margin-bottom: 1.5rem;
+	}
 
-		.google-login-btn {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			gap: 0.9rem;
-			background: #ffffff;
-			border: none;
-			border-radius: 9999px;
-			color: #0b0d12;
-			font-size: 1.1rem;
-			font-weight: 800;
-			padding: 1.1rem 1.5rem;
-			cursor: pointer;
-			box-shadow: 0 4px 16px rgba(255, 255, 255, 0.18);
-			transition: all 150ms cubic-bezier(0.16, 1, 0.3, 1);
+	.google-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.75rem;
+		background: transparent;
+		border: 1px solid #727272;
+		border-radius: 9999px;
+		color: #ffffff;
+		font-size: 0.95rem;
+		font-weight: 700;
+		padding: 0.75rem 1.5rem;
+		cursor: pointer;
+		width: 100%;
+		box-sizing: border-box;
+		transition: border-color 150ms ease, transform 120ms ease, background-color 150ms ease;
 
-			&:hover:not(:disabled) {
-				background: #f4f4f4;
-				transform: scale(1.02);
-				box-shadow: 0 6px 24px rgba(255, 255, 255, 0.28);
-			}
+		&:hover:not(:disabled) {
+			border-color: #ffffff;
+			background: rgba(255, 255, 255, 0.05);
+			transform: scale(1.01);
+		}
 
-			&:disabled {
-				opacity: 0.6;
-				cursor: default;
-			}
+		&:active:not(:disabled) {
+			transform: scale(0.99);
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: default;
+		}
+
+		.google-icon {
+			flex-shrink: 0;
 		}
 	}
 
-	.auth-divider-wrap {
+	.divider {
 		display: flex;
 		align-items: center;
-		gap: 0.75rem;
-		margin: 0.25rem 0 1.5rem;
+		gap: 1rem;
+		margin-bottom: 1.5rem;
 
 		.divider-line {
 			flex: 1;
 			height: 1px;
-			background: rgba(255, 255, 255, 0.1);
+			background: #292929;
 		}
 
 		.divider-text {
-			color: #777777;
-			font-size: 0.78rem;
+			color: #a7a7a7;
+			font-size: 0.8rem;
 			font-weight: 600;
 			text-transform: uppercase;
 			letter-spacing: 0.05em;
+		}
+	}
+
+	.error-banner {
+		background: rgba(239, 68, 68, 0.15);
+		border: 1px solid rgba(239, 68, 68, 0.35);
+		border-radius: 6px;
+		padding: 0.75rem 1rem;
+		color: #fca5a5;
+		font-size: 0.88rem;
+		font-weight: 600;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-bottom: 1.25rem;
+
+		svg {
+			flex-shrink: 0;
 		}
 	}
 
@@ -442,12 +324,9 @@
 			gap: 0.5rem;
 
 			label {
-				font-size: 0.85rem;
-				font-weight: 800;
+				font-size: 0.875rem;
+				font-weight: 700;
 				color: #ffffff;
-				letter-spacing: 0.04em;
-				text-transform: uppercase;
-				padding-left: 0.75rem;
 			}
 		}
 
@@ -455,15 +334,14 @@
 			position: relative;
 			display: flex;
 			align-items: center;
-			width: 100%;
 
 			.auth-input {
-				padding-right: 3.25rem !important;
+				padding-right: 3rem;
 			}
 
 			.eye-btn {
 				position: absolute;
-				right: 1rem;
+				right: 0.75rem;
 				background: transparent;
 				border: none;
 				color: #a7a7a7;
@@ -471,129 +349,107 @@
 				display: flex;
 				align-items: center;
 				justify-content: center;
-				padding: 0.45rem;
+				padding: 0.4rem;
 				border-radius: 50%;
-				transition: all 150ms ease;
+				transition: color 150ms ease;
 
 				&:hover {
 					color: #ffffff;
-					background: rgba(255, 255, 255, 0.1);
 				}
 			}
 		}
 
 		.auth-input {
-			background: #181818;
-			border: 1px solid rgba(255, 255, 255, 0.18);
-			border-radius: 9999px;
+			background: #121212;
+			border: 1px solid #727272;
+			border-radius: 4px;
 			color: #ffffff;
-			font-size: 1.05rem;
-			padding: 1.05rem 1.5rem;
+			font-size: 1rem;
+			padding: 0.85rem 1rem;
 			outline: none;
 			width: 100%;
 			box-sizing: border-box;
-			transition: all 150ms ease;
+			transition: border-color 150ms ease, background-color 150ms ease;
 
 			&:hover {
-				border-color: rgba(255, 255, 255, 0.4);
+				border-color: #ffffff;
 			}
 
 			&:focus {
 				border-color: #ffffff;
-				box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
-				background: #1f1f1f;
+				outline: 2px solid #ffffff;
+				outline-offset: 1px;
+				background: #181818;
 			}
 
 			&::placeholder {
-				color: #777777;
+				color: #727272;
 			}
 
 			&:-webkit-autofill,
 			&:-webkit-autofill:hover,
 			&:-webkit-autofill:focus,
 			&:-webkit-autofill:active {
-				-webkit-box-shadow: 0 0 0 1000px #181818 inset !important;
+				-webkit-box-shadow: 0 0 0 1000px #121212 inset !important;
 				-webkit-text-fill-color: #ffffff !important;
 				caret-color: #ffffff !important;
-				border-radius: 9999px !important;
+				border-radius: 4px !important;
 				transition: background-color 5000s ease-in-out 0s;
 			}
 		}
-
-		.auth-submit {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			gap: 0.55rem;
-			background: #1ed760;
-			color: #000000;
-			border: none;
-			border-radius: 9999px;
-			padding: 1.1rem 1.5rem;
-			font-size: 1.1rem;
-			font-weight: 800;
-			cursor: pointer;
-			margin-top: 0.3rem;
-			box-shadow: 0 6px 22px rgba(30, 215, 96, 0.25);
-			transition: all 150ms cubic-bezier(0.16, 1, 0.3, 1);
-
-			&:hover:not(:disabled) {
-				background: #22e065;
-				transform: scale(1.01);
-				box-shadow: 0 8px 30px rgba(30, 215, 96, 0.35);
-			}
-
-			&:disabled {
-				opacity: 0.5;
-				cursor: default;
-			}
-
-			.spinner {
-				width: 1.1rem;
-				height: 1.1rem;
-				border: 2px solid rgba(0, 0, 0, 0.2);
-				border-top-color: #000000;
-				border-radius: 50%;
-				animation: spin 600ms linear infinite;
-			}
-		}
 	}
 
-	.error-banner {
-		display: flex;
-		align-items: center;
-		gap: 0.6rem;
-		background: rgba(239, 68, 68, 0.15);
-		border: 1px solid rgba(239, 68, 68, 0.35);
-		border-radius: 10px;
-		padding: 0.85rem 1rem;
-		color: #fca5a5;
-		font-size: 0.9rem;
-		font-weight: 600;
-	}
-
-	.inline-signup {
-		text-align: center;
-		display: flex;
+	.btn-green {
+		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		gap: 0.55rem;
-		margin-top: 1.75rem;
-		padding-top: 1.4rem;
-		border-top: 1px solid rgba(255, 255, 255, 0.08);
+		gap: 0.6rem;
+		background: #1ed760;
+		color: #000000;
+		border: none;
+		border-radius: 9999px;
+		padding: 0.875rem 1.5rem;
+		font-size: 1rem;
+		font-weight: 700;
+		cursor: pointer;
+		text-decoration: none;
+		margin-top: 0.5rem;
+		transition: background-color 150ms ease, transform 120ms ease;
 
-		p {
-			color: #a7a7a7;
-			font-size: 1rem;
-			margin: 0;
+		&:hover:not(:disabled) {
+			background: #1fdf64;
+			transform: scale(1.02);
 		}
 
-		.toggle-link {
+		&:active:not(:disabled) {
+			transform: scale(0.99);
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: default;
+		}
+
+		.spinner {
+			width: 1rem;
+			height: 1rem;
+			border: 2px solid rgba(0, 0, 0, 0.25);
+			border-top-color: #000000;
+			border-radius: 50%;
+			animation: spin 600ms linear infinite;
+		}
+	}
+
+	.forgot-wrap {
+		display: flex;
+		justify-content: center;
+		margin-top: 1.25rem;
+
+		.forgot-link {
 			color: #ffffff;
-			font-size: 1rem;
+			font-size: 0.875rem;
 			font-weight: 700;
 			text-decoration: underline;
-			text-underline-offset: 2px;
 			transition: color 150ms ease;
 
 			&:hover {
@@ -602,15 +458,54 @@
 		}
 	}
 
-	.auth-legal {
-		padding: 2rem;
-		text-align: center;
-		color: #666666;
-		font-size: 0.8rem;
-		letter-spacing: 0.03em;
+	.bottom-divider {
+		height: 1px;
+		background: #292929;
+		margin: 2rem 0 1.5rem;
+		width: 100%;
+	}
+
+	.auth-switch {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.35rem;
+		font-size: 0.95rem;
+		color: #a7a7a7;
+
+		p {
+			margin: 0;
+		}
+
+		.switch-link {
+			color: #ffffff;
+			font-weight: 700;
+			text-decoration: underline;
+			transition: color 150ms ease;
+
+			&:hover {
+				color: #1ed760;
+			}
+		}
 	}
 
 	@keyframes spin {
-		to { transform: rotate(360deg); }
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	@media (max-width: 480px) {
+		.auth-page {
+			padding: 1.5rem 1rem;
+			background: #121212;
+			align-items: flex-start;
+		}
+
+		.auth-card {
+			padding: 1.5rem 0.5rem;
+			border: none;
+			background: transparent;
+		}
 	}
 </style>
