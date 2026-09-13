@@ -46,7 +46,10 @@
 		authError = "";
 		authBusy = true;
 		try {
-			const r = await signIn.social({ provider: "google" });
+			const r = await signIn.social({
+				provider: "google",
+				...(native ? { callbackURL: "https://localhost/oauth/google-callback" } : {}),
+			});
 			if (r.error) throw new Error(r.error.message ?? "Google sign up failed. Please try again.");
 		} catch (err: any) {
 			authError = err.message ?? "Unable to initiate Google sign in. Please try again.";
@@ -88,8 +91,7 @@
 				</div>
 			{/if}
 
-			{#if !native}
-				<div class="signup-cta-wrap">
+<div class="signup-cta-wrap">
 					<button
 						type="button"
 						class="google-signup-btn"
@@ -111,12 +113,11 @@
 					</button>
 				</div>
 
-				<div class="auth-divider-wrap">
-					<span class="divider-line"></span>
-					<span class="divider-text">or create with email</span>
-					<span class="divider-line"></span>
-				</div>
-			{/if}
+<div class="auth-divider-wrap">
+				<span class="divider-line"></span>
+				<span class="divider-text">or create with email</span>
+				<span class="divider-line"></span>
+			</div>
 
 			<form onsubmit={handleSignUp} class="auth-form">
 				<div class="form-group">

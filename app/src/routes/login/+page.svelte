@@ -46,7 +46,14 @@
 		authError = "";
 		authBusy = true;
 		try {
-			const r = await signIn.social({ provider: "google" });
+			const r = await signIn.social({
+				provider: "google",
+				// On native the OAuth loop runs inside the WebView and finishes
+				// back inside the SPA at this same-origin route (session cookie
+				// arrives in the WebView's jar, then getSession() hands us the
+				// bearer token). On web better-auth defaults to the API origin.
+				...(native ? { callbackURL: "https://localhost/oauth/google-callback" } : {}),
+			});
 			if (r.error) throw new Error(r.error.message ?? "Google sign in failed");
 		} catch (err: any) {
 			authError = err.message ?? "Google sign in failed";
@@ -103,8 +110,7 @@
 					<p class="login-subtitle">Welcome back! Sign in to access your saved music & playlists.</p>
 				</div>
 
-				{#if !native}
-					<div class="social-list">
+				<div class="social-list">
 						<button type="button" class="google-login-btn" onclick={handleGoogleLogin} disabled={authBusy}>
 							<svg viewBox="0 0 24 24" width="1.4rem" height="1.4rem" class="social-icon">
 								<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -116,12 +122,11 @@
 						</button>
 					</div>
 
-					<div class="auth-divider-wrap">
-						<span class="divider-line"></span>
-						<span class="divider-text">or email & password</span>
-						<span class="divider-line"></span>
-					</div>
-				{/if}
+<div class="auth-divider-wrap">
+					<span class="divider-line"></span>
+					<span class="divider-text">or email & password</span>
+					<span class="divider-line"></span>
+				</div>
 
 				{#if authError}
 					<div class="error-banner">

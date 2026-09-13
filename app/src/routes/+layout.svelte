@@ -94,6 +94,10 @@
 	});
 	const isAuthPage = $derived(pathname === "/login" || pathname === "/signup");
 
+	// OAuth completion routes (/oauth/*) finish the social sign-in themselves
+	// (getSession -> persist token). Never bounce them to /login first.
+	const isOAuthPage = $derived(pathname.startsWith("/oauth/"));
+
 	// Detect running inside the Capacitor Android WebView app. There we skip
 	// the web landing page and route straight to the login/signup entry screen.
 	const isNativeApp = $derived.by(() => {
@@ -109,7 +113,7 @@
 	$effect(() => {
 		if (typeof window !== "undefined" && !isSessionLoading) {
 			nativeLog("redir", "path=" + pathname, "in=" + isLoggedIn, "authPage=" + isAuthPage, "landing=" + showLanding);
-			if (!isLoggedIn && !isAuthPage && !showLanding) {
+			if (!isLoggedIn && !isAuthPage && !isOAuthPage && !showLanding) {
 				goto("/login");
 			}
 		}

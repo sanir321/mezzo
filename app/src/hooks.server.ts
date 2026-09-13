@@ -19,8 +19,11 @@ const checkUserAgent = (userAgent: string | null) =>
 
 // Origins allowed to call the hosted API cross-origin. The Capacitor Android
 // WebView runs the static bundle from https://localhost (androidScheme), so its
-// fetches to this host must be CORS-enabled. Bearer-token auth means no
-// credentials/cookies are involved cross-origin.
+// fetches to this host must be CORS-enabled.
+// The better-auth client sends `credentials: "include"`, so cross-origin
+// requests are credentialed and the CORS spec requires
+// `Access-Control-Allow-Credentials: true` (with an exact reflected origin,
+// never `*`) or the browser blocks them with "Failed to fetch".
 const ALLOWED_CORS_ORIGINS = new Set([
   "http://localhost",
   "http://localhost:5173",
@@ -36,6 +39,7 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
   "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
   "Access-Control-Max-Age": "86400",
+  "Access-Control-Allow-Credentials": "true",
 };
 
 function corsOrigin(request: Request): string | null {
