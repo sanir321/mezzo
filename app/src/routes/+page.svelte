@@ -14,6 +14,7 @@
 	import { getOnlineTrending, searchOnlineMusic, getPlaylists, getPlaylist } from "$lib/api";
 	import TrackRow from "$lib/components/TrackRow.svelte";
 	import { FEATURED_PLAYLISTS } from "$lib/featured-playlists";
+	import { DEFAULT_ALBUM_COVER, DEFAULT_PLAYLIST_COVER, handleImageError, handlePlaylistImageError } from "$lib/utils/image";
 
 	import { likedStore } from "$lib/stores/liked.svelte";
 
@@ -29,11 +30,30 @@
 	const user = $derived(sessionData?.data?.user ?? null);
 	const userName = $derived(user?.name ? user.name.split(" ")[0] : "Listener");
 
-	let trendingTracks = $state<Track[]>([]);
-	let artistMixTracks = $state<{ artist: string; tracks: Track[]; coverUrl?: string; gradient: string }[]>([]);
-	let recommendedSections = $state<{ title: string; kicker: string; tracks: Track[] }[]>([]);
-	let userPlaylists = $state<Playlist[]>([]);
-	let loading = $state(true);
+	const HOME_CACHE_KEY = "mezzo_home_cache_v3";
+	let initialTrending: Track[] = [];
+	let initialMixes: { artist: string; tracks: Track[]; coverUrl?: string; gradient: string }[] = [];
+	let initialSections: { title: string; kicker: string; tracks: Track[] }[] = [];
+	let initialPlaylists: Playlist[] = [];
+
+	if (typeof window !== "undefined") {
+		try {
+			const raw = localStorage.getItem(HOME_CACHE_KEY);
+			if (raw) {
+				const parsed = JSON.parse(raw);
+				if (Array.isArray(parsed.trendingTracks) && parsed.trendingTracks.length > 0) initialTrending = parsed.trendingTracks;
+				if (Array.isArray(parsed.artistMixTracks) && parsed.artistMixTracks.length > 0) initialMixes = parsed.artistMixTracks;
+				if (Array.isArray(parsed.recommendedSections) && parsed.recommendedSections.length > 0) initialSections = parsed.recommendedSections;
+				if (Array.isArray(parsed.userPlaylists) && parsed.userPlaylists.length > 0) initialPlaylists = parsed.userPlaylists;
+			}
+		} catch {}
+	}
+
+	let trendingTracks = $state<Track[]>(initialTrending);
+	let artistMixTracks = $state<{ artist: string; tracks: Track[]; coverUrl?: string; gradient: string }[]>(initialMixes);
+	let recommendedSections = $state<{ title: string; kicker: string; tracks: Track[] }[]>(initialSections);
+	let userPlaylists = $state<Playlist[]>(initialPlaylists);
+	let loading = $state(initialTrending.length === 0);
 	let preferencesReady = $state(false);
 	$effect(() => {
 		if (sessionData === undefined || sessionData.isPending) return;
@@ -157,7 +177,9 @@
 			return;
 		}
 		homeContentLoading = true;
-		loading = true;
+		if (trendingTracks.length === 0) {
+			loading = true;
+		}
 		try {
 			// 1. Fetch Global Trending tracks
 			const trPromise = getOnlineTrending(15).catch(() => ({ tracks: [] }));
@@ -207,10 +229,26 @@
 				plPromise,
 			]);
 
-			trendingTracks = tr.tracks ?? [];
-			artistMixTracks = mixes.filter((m) => m.tracks.length > 0);
-			recommendedSections = genreRes.filter((s) => s.tracks.length > 0);
-			userPlaylists = plRes.playlists ?? [];
+			if (tr.tracks?.length) trendingTracks = tr.tracks;
+			const validMixes = mixes.filter((m) => m.tracks.length > 0);
+			if (validMixes.length) artistMixTracks = validMixes;
+			const validSections = genreRes.filter((s) => s.tracks.length > 0);
+			if (validSections.length) recommendedSections = validSections;
+			if (plRes.playlists) userPlaylists = plRes.playlists;
+
+			if (typeof window !== "undefined") {
+				try {
+					localStorage.setItem(
+						HOME_CACHE_KEY,
+						JSON.stringify({
+							trendingTracks,
+							artistMixTracks,
+							recommendedSections,
+							userPlaylists,
+						})
+					);
+				} catch {}
+			}
 		} catch {
 			// ignore
 		} finally {
@@ -331,10 +369,10 @@
 			{#each quickMixTiles as mix (mix.title)}
 				<a href={mix.link} class="quick-tile">
 					<img
-						src={mix.coverUrl}
+						src={mix.coverUrl || DEFAULT_ALBUM_COVER}
 						alt={mix.title}
 						class="tile-img"
-						onerror={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80'; }}
+						onerror={handleImageError}
 					/>
 					<span class="tile-title">{mix.title}</span>
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -387,11 +425,11 @@
 						<div class="mix-card" onclick={() => playTracks(playerRecentlyPlayed.value, i)}>
 							<div class="card-cover-wrap">
 								<img
-									src={coverUrl(track)}
+									src={coverUrl(track) || DEFAULT_ALBUM_COVER}
 									alt={track.title}
 									class="card-cover-img"
 									loading="lazy"
-									onerror={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80'; }}
+									onerror={handleImageError}
 								/>
 								<div class="card-play-hover" title="Play {track.title}">
 									<svg viewBox="0 0 24 24" width="1.5rem" height="1.5rem" fill="currentColor">
@@ -424,11 +462,11 @@
 						<a href="/artist/{encodeURIComponent(mix.artist)}" class="mix-card">
 							<div class="card-cover-wrap">
 								<img
-									src={mix.coverUrl}
+									src={mix.coverUrl || DEFAULT_ALBUM_COVER}
 									alt={mix.artist}
 									class="card-cover-img"
 									loading="lazy"
-									onerror={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80'; }}
+									onerror={handleImageError}
 								/>
 								<!-- svelte-ignore a11y_click_events_have_key_events -->
 								<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -475,11 +513,11 @@
 						<div class="mix-card" onclick={() => playTracks(sec.tracks, i)}>
 							<div class="card-cover-wrap">
 								<img
-									src={track.cover_url || getArtistMeta(track.artist ?? "").image}
+									src={track.cover_url || getArtistMeta(track.artist ?? "").image || DEFAULT_ALBUM_COVER}
 									alt={track.title}
 									class="card-cover-img"
 									loading="lazy"
-									onerror={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80'; }}
+									onerror={handleImageError}
 								/>
 								<div class="card-play-hover" title="Play {track.title}">
 									<svg viewBox="0 0 24 24" width="1.5rem" height="1.5rem" fill="currentColor">
@@ -511,11 +549,11 @@
 					<a href="/artist/{encodeURIComponent(artist.name)}" class="artist-card">
 						<div class="artist-circle">
 							<img
-								src={artist.image}
+								src={artist.image || DEFAULT_ALBUM_COVER}
 								alt={artist.name}
 								class="artist-circle-img"
 								loading="lazy"
-								onerror={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80'; }}
+								onerror={handleImageError}
 							/>
 							<div class="card-play-hover" title="Play {artist.name}">
 								<svg viewBox="0 0 24 24" width="1.4rem" height="1.4rem" fill="currentColor">
@@ -576,11 +614,11 @@
 					<a href="/playlists/{pl.id}" class="mix-card">
 						<div class="card-cover-wrap">
 							<img
-								src={pl.cover}
+								src={pl.cover || DEFAULT_PLAYLIST_COVER}
 								alt={pl.name}
 								class="card-cover-img"
 								loading="lazy"
-								onerror={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80'; }}
+								onerror={handlePlaylistImageError}
 							/>
 							<button
 								type="button"

@@ -11,6 +11,7 @@
 		coverUrl,
 	} from "$lib/stores/player.svelte";
 	import type { Track, Playlist } from "$lib/stores/player.svelte";
+	import { DEFAULT_ALBUM_COVER, DEFAULT_PLAYLIST_COVER, handleImageError, handlePlaylistImageError } from "$lib/utils/image";
 	import TrackRow from "$lib/components/TrackRow.svelte";
 	import {
 		getPlaylist,
@@ -232,7 +233,12 @@
 						<path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
 					</svg>
 				{:else if playlist.cover_key}
-					<img src={playlist.cover_key} alt={playlist.name} class="hero-cover-img" />
+					<img
+						src={playlist.cover_key || DEFAULT_PLAYLIST_COVER}
+						alt={playlist.name}
+						class="hero-cover-img"
+						onerror={handlePlaylistImageError}
+					/>
 				{:else}
 					<svg viewBox="0 0 24 24" width="3.5rem" height="3.5rem" fill="none" stroke="currentColor" stroke-width="1.5">
 						<line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
@@ -342,11 +348,11 @@
 							<div class="suggestion-row">
 								<div class="track-left">
 									<img
-										src={coverUrl(track)}
+										src={coverUrl(track) || DEFAULT_ALBUM_COVER}
 										alt={track.title}
 										class="track-thumb"
 										loading="lazy"
-										onerror={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80'; }}
+										onerror={handleImageError}
 									/>
 									<div class="track-info-col">
 										<span class="suggestion-title" title={track.title}>{track.title}</span>

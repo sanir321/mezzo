@@ -124,14 +124,6 @@
 	{#if children}
 		{@render children()}
 	{/if}
-{:else if isSessionLoading || !isLoggedIn}
-	<div class="auth-loading-screen">
-		<div class="splash-inner">
-			<img src="/logo.svg" alt="Mezzo" class="auth-splash-logo" />
-			<div class="auth-spinner"></div>
-			<p class="auth-splash-text">Verifying session...</p>
-		</div>
-	</div>
 {:else}
 	<div class="spotify-shell">
 		<div class="spotify-app-body">
@@ -326,62 +318,6 @@
 			&.active svg {
 				color: #1ed760;
 			}
-		}
-	}
-
-	.auth-loading-screen {
-		position: fixed;
-		inset: 0;
-		background: #000000;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 9999;
-
-		.splash-inner {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			gap: 1.25rem;
-		}
-
-		.auth-splash-logo {
-			width: 64px;
-			height: 64px;
-			animation: pulseLogo 2s infinite ease-in-out;
-		}
-
-		.auth-spinner {
-			width: 28px;
-			height: 28px;
-			border: 2.5px solid rgba(255, 255, 255, 0.15);
-			border-top-color: #1ed760;
-			border-radius: 50%;
-			animation: spin 0.8s linear infinite;
-		}
-
-		.auth-splash-text {
-			color: #b3b3b3;
-			font-size: 0.9rem;
-			letter-spacing: 0.02em;
-			margin: 0;
-		}
-	}
-
-	@keyframes pulseLogo {
-		0%, 100% {
-			transform: scale(1);
-			opacity: 0.9;
-		}
-		50% {
-			transform: scale(1.06);
-			opacity: 1;
-		}
-	}
-
-	@keyframes spin {
-		to {
-			transform: rotate(360deg);
 		}
 	}
 </style>

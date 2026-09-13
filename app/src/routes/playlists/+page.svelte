@@ -7,6 +7,7 @@
 	import { likedStore } from "$lib/stores/liked.svelte";
 	import { authModal } from "$lib/stores/auth-modal.svelte";
 	import { FEATURED_PLAYLISTS } from "$lib/featured-playlists";
+	import { DEFAULT_PLAYLIST_COVER, handlePlaylistImageError } from "$lib/utils/image";
 
 	const sessionAtom = useSharedSession();
 	let sessionData = $state<{ data: any; isPending: boolean } | undefined>(undefined);
@@ -145,11 +146,11 @@
 				<a href="/playlists/{pl.id}" class="playlist-card featured-pl-card">
 					<div class="card-artwork">
 						<img
-							src={pl.cover}
+							src={pl.cover || DEFAULT_PLAYLIST_COVER}
 							alt={pl.name}
 							class="card-img"
 							loading="lazy"
-							onerror={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80'; }}
+							onerror={handlePlaylistImageError}
 						/>
 						{#if pl.badge}
 							<span class="card-tag">{pl.badge}</span>

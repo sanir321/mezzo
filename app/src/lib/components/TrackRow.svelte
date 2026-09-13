@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Track } from "$lib/stores/player.svelte";
 	import { coverUrl, formatDuration, addToQueue, playNext } from "$lib/stores/player.svelte";
+	import { DEFAULT_ALBUM_COVER, handleImageError } from "$lib/utils/image";
 	import { likedStore } from "$lib/stores/liked.svelte";
 	import { goto } from "$app/navigation";
 	import AddToPlaylistModal from "$lib/components/AddToPlaylistModal.svelte";
@@ -20,7 +21,6 @@
 
 	let { track, index, onplay, ondelete, onremove, onupdated, playing = false, showMenu = true }: Props = $props();
 
-	let imgError = $state(false);
 	let menuOpen = $state(false);
 	let showPlaylistModal = $state(false);
 	let showEditModal = $state(false);
@@ -183,20 +183,12 @@
 
 		<div class="cover-col">
 			<div class="track-cover">
-				{#if !imgError}
-					<img
-						src={coverUrl(track)}
-						alt=""
-						onerror={() => (imgError = true)}
-						loading="lazy"
-					/>
-				{:else}
-					<div class="cover-placeholder">
-						<svg viewBox="0 0 24 24" width="1.1rem" height="1.1rem" fill="none" stroke="currentColor" stroke-width="1.8">
-							<path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
-						</svg>
-					</div>
-				{/if}
+				<img
+					src={coverUrl(track) || DEFAULT_ALBUM_COVER}
+					alt=""
+					onerror={handleImageError}
+					loading="lazy"
+				/>
 			</div>
 		</div>
 
@@ -457,15 +449,6 @@
 			width: 100%;
 			height: 100%;
 			object-fit: cover;
-		}
-
-		.cover-placeholder {
-			width: 100%;
-			height: 100%;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			color: rgba(255, 255, 255, 0.3);
 		}
 	}
 

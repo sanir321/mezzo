@@ -23,6 +23,7 @@
 	} from "$lib/api";
 	import { getArtistMeta, POPULAR_ARTISTS } from "$lib/stores/preferences.svelte";
 	import { FEATURED_PLAYLISTS } from "$lib/featured-playlists";
+	import { DEFAULT_ALBUM_COVER, DEFAULT_PLAYLIST_COVER, handleImageError, handlePlaylistImageError } from "$lib/utils/image";
 
 	let query = $state("");
 	let activeTab = $state<"all" | "songs" | "artists" | "playlists" | "albums">("all");
@@ -39,6 +40,7 @@
 	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 	let suggestionDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 	let searchInputEl: HTMLInputElement | null = $state(null);
+	let activeSearchId = 0;
 
 	async function loadData() {
 		loading = true;
@@ -95,20 +97,26 @@
 			onlineAlbums = [];
 			return;
 		}
+		const searchId = ++activeSearchId;
 		loadingOnline = true;
 		try {
 			const res = await searchOnlineMusic(trimmed, 30);
+			if (searchId !== activeSearchId) return;
 			onlineSearchResults = res.tracks ?? [];
 			onlineArtists = res.artists ?? [];
 			onlinePlaylists = res.playlists ?? [];
 			onlineAlbums = res.albums ?? [];
 		} catch {
-			onlineSearchResults = [];
-			onlineArtists = [];
-			onlinePlaylists = [];
-			onlineAlbums = [];
+			if (searchId === activeSearchId) {
+				onlineSearchResults = [];
+				onlineArtists = [];
+				onlinePlaylists = [];
+				onlineAlbums = [];
+			}
 		} finally {
-			loadingOnline = false;
+			if (searchId === activeSearchId) {
+				loadingOnline = false;
+			}
 		}
 	}
 
@@ -589,7 +597,13 @@
 					{#each FEATURED_PLAYLISTS.slice(0, 8) as pl (pl.id)}
 						<a href="/playlists/{pl.id}" class="playlist-card">
 							<div class="card-cover-box">
-								<img src={pl.cover} alt={pl.name} class="playlist-img" loading="lazy" />
+								<img
+									src={pl.cover || DEFAULT_PLAYLIST_COVER}
+									alt={pl.name}
+									class="playlist-img"
+									loading="lazy"
+									onerror={handlePlaylistImageError}
+								/>
 								<button
 									type="button"
 									class="card-play-btn"
@@ -686,7 +700,12 @@
 								class="top-result-card artist-top-result"
 								onclick={() => goto(`/artist/${encodeURIComponent(matchedArtist.name)}`)}
 							>
-								<img src={matchedArtist.image} alt={matchedArtist.name} class="top-res-cover artist-circle-avatar" />
+								<img
+									src={matchedArtist.image || DEFAULT_ALBUM_COVER}
+									alt={matchedArtist.name}
+									class="top-res-cover artist-circle-avatar"
+									onerror={handleImageError}
+								/>
 								<h3 class="top-res-title">{matchedArtist.name}</h3>
 								<div class="top-res-meta">
 									<span class="top-res-type">Artist</span>
@@ -709,7 +728,12 @@
 							<!-- svelte-ignore a11y_click_events_have_key_events -->
 							<!-- svelte-ignore a11y_no_static_element_interactions -->
 							<div class="top-result-card" onclick={() => playTracks(onlineSearchResults, 0)}>
-								<img src={topResult.cover_url || getArtistMeta(topResult.artist ?? "").image} alt={topResult.title} class="top-res-cover" />
+								<img
+									src={topResult.cover_url || getArtistMeta(topResult.artist ?? "").image || DEFAULT_ALBUM_COVER}
+									alt={topResult.title}
+									class="top-res-cover"
+									onerror={handleImageError}
+								/>
 								<h3 class="top-res-title">{topResult.title}</h3>
 								<div class="top-res-meta">
 									{#if topResult.artist}
@@ -766,7 +790,13 @@
 						{#each matchingArtists.slice(0, 6) as artist (artist.name)}
 							<a href="/artist/{encodeURIComponent(artist.name)}" class="artist-card">
 								<div class="artist-avatar-box">
-									<img src={artist.image} alt={artist.name} class="artist-img" loading="lazy" />
+									<img
+										src={artist.image || DEFAULT_ALBUM_COVER}
+										alt={artist.name}
+										class="artist-img"
+										loading="lazy"
+										onerror={handleImageError}
+									/>
 									<button
 										type="button"
 										class="card-play-btn"
@@ -812,7 +842,13 @@
 							<!-- svelte-ignore a11y_no_static_element_interactions -->
 							<div class="playlist-card" onclick={() => handlePlaylistClick(pl)}>
 								<div class="card-cover-box">
-									<img src={pl.coverUrl} alt={pl.name} class="playlist-img" loading="lazy" />
+									<img
+										src={pl.coverUrl || DEFAULT_PLAYLIST_COVER}
+										alt={pl.name}
+										class="playlist-img"
+										loading="lazy"
+										onerror={handlePlaylistImageError}
+									/>
 									<button
 										type="button"
 										class="card-play-btn"
@@ -865,7 +901,13 @@
 							<!-- svelte-ignore a11y_no_static_element_interactions -->
 							<div class="playlist-card" onclick={() => handleAlbumClick(album)}>
 								<div class="card-cover-box">
-									<img src={album.coverUrl || getArtistMeta(album.artist).image} alt={album.album} class="playlist-img" loading="lazy" />
+									<img
+										src={album.coverUrl || getArtistMeta(album.artist).image || DEFAULT_ALBUM_COVER}
+										alt={album.album}
+										class="playlist-img"
+										loading="lazy"
+										onerror={handleImageError}
+									/>
 									<button
 										type="button"
 										class="card-play-btn"
@@ -959,7 +1001,13 @@
 						{#each matchingArtists as artist (artist.name)}
 							<a href="/artist/{encodeURIComponent(artist.name)}" class="artist-card">
 								<div class="artist-avatar-box">
-									<img src={artist.image} alt={artist.name} class="artist-img" loading="lazy" />
+									<img
+										src={artist.image || DEFAULT_ALBUM_COVER}
+										alt={artist.name}
+										class="artist-img"
+										loading="lazy"
+										onerror={handleImageError}
+									/>
 									<button
 										type="button"
 										class="card-play-btn"
@@ -1002,7 +1050,13 @@
 							<!-- svelte-ignore a11y_no_static_element_interactions -->
 							<div class="playlist-card" onclick={() => handlePlaylistClick(pl)}>
 								<div class="card-cover-box">
-									<img src={pl.coverUrl} alt={pl.name} class="playlist-img" loading="lazy" />
+									<img
+										src={pl.coverUrl || DEFAULT_PLAYLIST_COVER}
+										alt={pl.name}
+										class="playlist-img"
+										loading="lazy"
+										onerror={handlePlaylistImageError}
+									/>
 									<button
 										type="button"
 										class="card-play-btn"
@@ -1052,7 +1106,13 @@
 							<!-- svelte-ignore a11y_no_static_element_interactions -->
 							<div class="playlist-card" onclick={() => handleAlbumClick(album)}>
 								<div class="card-cover-box">
-									<img src={album.coverUrl || getArtistMeta(album.artist).image} alt={album.album} class="playlist-img" loading="lazy" />
+									<img
+										src={album.coverUrl || getArtistMeta(album.artist).image || DEFAULT_ALBUM_COVER}
+										alt={album.album}
+										class="playlist-img"
+										loading="lazy"
+										onerror={handleImageError}
+									/>
 									<button
 										type="button"
 										class="card-play-btn"

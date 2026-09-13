@@ -35,6 +35,7 @@
 	import { offlineStore } from "$lib/services/offline.svelte";
 	import { shareTrack } from "$lib/utils/share";
 	import { apiUrl, isServerStreamSrc } from "$lib/config";
+	import { DEFAULT_ALBUM_COVER, handleImageError } from "$lib/utils/image";
 	import QueueDrawer from "$lib/components/QueueDrawer.svelte";
 	import ShortcutsModal from "$lib/components/ShortcutsModal.svelte";
 	import AddToPlaylistModal from "$lib/components/AddToPlaylistModal.svelte";
@@ -42,10 +43,11 @@
 	let audioEl: HTMLAudioElement | null = $state(null);
 	let seekInput = $state(playerCurrentTime.value || 0);
 	let isSeeking = $state(false);
-	let imgError = $state(false);
 	let showPlaylistModal = $state(false);
 	let shareToast = $state(false);
 	let shareToastTimer: ReturnType<typeof setTimeout> | null = null;
+	let lastLoadedTrackId = "";
+	let hasRestoredInitialPosition = false;
 
 	// Sleep timer state
 	let sleepTimerMinutes = $state<number | null>(null);
@@ -131,8 +133,13 @@
 	function handleLoadedMetadata() {
 		if (!audioEl) return;
 		playerDuration.value = audioEl.duration;
-		if (playerCurrentTime.value > 0 && Math.abs(audioEl.currentTime - playerCurrentTime.value) > 0.5) {
-			audioEl.currentTime = playerCurrentTime.value;
+		if (!hasRestoredInitialPosition && playerCurrentTime.value > 0) {
+			hasRestoredInitialPosition = true;
+			if (Math.abs(audioEl.currentTime - playerCurrentTime.value) > 0.5) {
+				audioEl.currentTime = playerCurrentTime.value;
+			}
+		} else {
+			hasRestoredInitialPosition = true;
 		}
 	}
 
@@ -201,6 +208,19 @@
 	});
 
 	$effect(() => {
+		const track = playerCurrentTrack.value;
+		if (track && lastLoadedTrackId && track.id !== lastLoadedTrackId) {
+			if (audioEl) {
+				audioEl.pause();
+				audioEl.currentTime = 0;
+			}
+			playerCurrentTime.value = 0;
+			seekInput = 0;
+			hasRestoredInitialPosition = true;
+		}
+	});
+
+	$effect(() => {
 		if (!audioEl) return;
 		const track = playerCurrentTrack.value;
 		const onlineSrc = playerSrc.value;
@@ -247,15 +267,27 @@
 				: (typeof window !== "undefined" ? new URL(finalSrc, window.location.href).href : finalSrc);
 
 			if (currentLoadedSrc !== targetUrl) {
+				const isSameTrack = track && track.id === lastLoadedTrackId;
+				lastLoadedTrackId = track?.id || "";
 				currentLoadedSrc = targetUrl;
 				audioEl.src = finalSrc;
 				audioEl.load();
 				watchStall();
 
-				const targetTime = untrack(() => playerCurrentTime.value);
-				if (targetTime > 0) {
-					audioEl.currentTime = targetTime;
+				// Restore position ONLY on cold boot of saved session track, NEVER for new songs!
+				if (isSameTrack || (!hasRestoredInitialPosition && playerCurrentTime.value > 0)) {
+					const targetTime = untrack(() => playerCurrentTime.value);
+					if (targetTime > 0) {
+						audioEl.currentTime = targetTime;
+					}
+					hasRestoredInitialPosition = true;
+				} else {
+					audioEl.currentTime = 0;
+					playerCurrentTime.value = 0;
+					seekInput = 0;
+					hasRestoredInitialPosition = true;
 				}
+
 				if (untrack(() => playerPlaying.value)) {
 					audioEl.muted = playerMuted.value;
 					audioEl.volume = playerMuted.value ? 0 : Math.max(0.1, playerVolume.value || 1.0);
@@ -518,20 +550,12 @@
 	<div class="track-info" title="Expand Now Playing & Lyrics" onclick={() => (playerShowLyrics.value = true)}>
 		{#if playerCurrentTrack.value}
 			<div class="cover-wrapper">
-				{#if !imgError && coverUrl(playerCurrentTrack.value)}
-					<img
-						src={coverUrl(playerCurrentTrack.value)}
-						alt={playerCurrentTrack.value.title}
-						onerror={() => (imgError = true)}
-						class="cover"
-					/>
-				{:else}
-					<div class="cover-fallback">
-						<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
-							<path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
-						</svg>
-					</div>
-				{/if}
+				<img
+					src={coverUrl(playerCurrentTrack.value) || DEFAULT_ALBUM_COVER}
+					alt={playerCurrentTrack.value.title}
+					onerror={handleImageError}
+					class="cover"
+				/>
 			</div>
 
 			<div class="details">
@@ -566,11 +590,11 @@
 			</button>
 		{:else}
 			<div class="cover-wrapper">
-				<div class="cover-fallback">
-					<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
-						<path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
-					</svg>
-				</div>
+				<img
+					src={DEFAULT_ALBUM_COVER}
+					alt="Mezzo Music"
+					class="cover"
+				/>
 			</div>
 
 			<div class="details">
@@ -958,18 +982,28 @@
 		flex-shrink: 0;
 		width: 100%;
 		height: 5.5rem;
-		background: radial-gradient(ellipse 80% 120% at 50% 100%, #1c1d32 0%, #101118 45%, #080809 100%);
-		border-top: 1px solid rgba(255, 255, 255, 0.12);
+		background: rgba(13, 14, 18, 0.88);
+		backdrop-filter: blur(28px) saturate(190%);
+		-webkit-backdrop-filter: blur(28px) saturate(190%);
+		border-top: 1px solid rgba(255, 255, 255, 0.08);
 		display: grid;
-		grid-template-columns: minmax(180px, 1fr) minmax(260px, 1.8fr) minmax(190px, 1fr);
+		grid-template-columns: minmax(190px, 1.1fr) minmax(280px, 2fr) minmax(190px, 1.1fr);
 		align-items: center;
-		padding: 0 1.25rem;
-		gap: 0.85rem;
+		padding: 0 1.5rem;
+		gap: 1rem;
 		z-index: 2100;
 		user-select: none;
 		position: relative;
 		box-sizing: border-box;
-		box-shadow: 0 -4px 28px rgba(30, 215, 96, 0.14), 0 -10px 40px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+		box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+		button, .ctrl-icon-btn, .action-icon-btn, .mobile-icon-btn, .play-pause-btn {
+			-webkit-tap-highlight-color: transparent;
+			&:active {
+				transform: scale(0.92) !important;
+				transition: transform 0.1s cubic-bezier(0.25, 1, 0.5, 1);
+			}
+		}
 
 		.player-share-toast {
 			position: absolute;
@@ -1038,21 +1072,21 @@
 		@media screen and (max-width: 1024px) {
 			position: fixed !important;
 			bottom: calc(3.6rem + env(safe-area-inset-bottom) + 8px) !important;
-			left: 8px !important;
-			right: 8px !important;
+			left: 10px !important;
+			right: 10px !important;
 			transform: none !important;
 			width: auto !important;
 			display: flex !important;
 			align-items: center !important;
 			justify-content: space-between !important;
-			padding: 0.35rem 0.65rem 0.55rem !important;
-			height: 3.75rem !important;
-			border-radius: 12px !important;
-			background: linear-gradient(135deg, #181a30 0%, #0f1019 50%, #131422 100%) !important;
-			backdrop-filter: blur(28px) !important;
-			-webkit-backdrop-filter: blur(28px) !important;
-			border: 1px solid rgba(255, 255, 255, 0.15) !important;
-			box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85), 0 0 25px rgba(30, 215, 96, 0.2), 0 0 45px rgba(99, 102, 241, 0.15), inset 0 1px 0 rgba(255,255,255,0.08) !important;
+			padding: 0.4rem 0.75rem !important;
+			height: 3.85rem !important;
+			border-radius: 14px !important;
+			background: rgba(22, 23, 29, 0.88) !important;
+			backdrop-filter: blur(32px) saturate(190%) !important;
+			-webkit-backdrop-filter: blur(32px) saturate(190%) !important;
+			border: 1px solid rgba(255, 255, 255, 0.12) !important;
+			box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7), 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
 			z-index: 2150 !important;
 
 			.mini-bottom-progress {
