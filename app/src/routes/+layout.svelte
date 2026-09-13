@@ -18,6 +18,7 @@
 	import { base } from "$app/paths";
 	import { useSharedSession } from "$lib/session.svelte";
 	import { initNativeIntegration } from "$lib/native-integration";
+	import { syncNativeRoot } from "$lib/stores/native-back.svelte";
 	import "../global/redesign/main.scss";
 
 	let { children }: { children?: Snippet } = $props();
@@ -84,6 +85,11 @@
 	const isLoggedIn = $derived(user != null);
 
 	const pathname = $derived($page.url.pathname);
+
+	$effect(() => {
+		if (typeof window === "undefined") return;
+		syncNativeRoot(pathname);
+	});
 	const isAuthPage = $derived(pathname === "/login" || pathname === "/signup");
 
 	// Detect running inside the Capacitor Android WebView app. There we skip

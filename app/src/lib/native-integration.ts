@@ -1,5 +1,6 @@
 import { browser } from "$app/environment";
 import { isNativeApp } from "./native";
+import { nativeRoot } from "$lib/stores/native-back.svelte";
 import { playerShowQueue, playerShowLyrics, playerShowVisualizer } from "$lib/stores/player.svelte";
 
 type NativeOverlay =
@@ -43,17 +44,34 @@ function currentOverlay(): NativeOverlay | null {
 async function setupBackButton() {
 	try {
 		const { App } = await import("@capacitor/app");
-		App.addListener("backButton", ({ canGoBack }) => {
+		App.addListener("backButton", async ({ canGoBack }) => {
 			const overlay = currentOverlay();
 			if (overlay) {
 				overlay.close();
 				return;
 			}
-			if (canGoBack) {
-				window.history.back();
+
+			// Top-level screen: exit straight away, like a native app.
+			if (nativeRoot.value) {
+				await App.exitApp();
 				return;
 			}
-			void App.exitApp();
+
+			// Deeper page: pop SPA history. WebView history can be stale/looping,
+			// so if the route does not actually change within a short window,
+			// fall back to exiting instead of leaving the user stuck.
+			if (canGoBack) {
+				const before = window.location.pathname + window.location.search;
+				window.history.back();
+				window.setTimeout(() => {
+					if (currentOverlay()) return;
+					const now = window.location.pathname + window.location.search;
+					if (now === before) void App.exitApp();
+				}, 220);
+				return;
+			}
+
+			await App.exitApp();
 		});
 	} catch {
 		// back integration unavailable; WebView default (history) applies
