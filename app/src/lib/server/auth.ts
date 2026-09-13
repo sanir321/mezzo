@@ -51,6 +51,8 @@ export function createAuth(platform: { env: Env } | null, url: string) {
       "https://localhost",
       "app://localhost",
       "capacitor://localhost",
+      "mezzo://*",
+      "com.mezzo.music://*",
     ],
     secret: env.BETTER_AUTH_SECRET || "mezzo-dev-super-secret-key-32chars-min!",
     // Converts `Authorization: Bearer <session-token>` into the session cookie,

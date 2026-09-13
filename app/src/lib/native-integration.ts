@@ -18,6 +18,7 @@ export function initNativeIntegration(opts?: {
 
 	void setupStatusBar(opts?.statusBar);
 	void setupBackButton();
+	void setupDeepLinks();
 }
 
 async function setupStatusBar(opts?: { lightIcons?: boolean; backgroundColor?: string }) {
@@ -75,5 +76,48 @@ async function setupBackButton() {
 		});
 	} catch {
 		// back integration unavailable; WebView default (history) applies
+	}
+}
+
+async function setupDeepLinks() {
+	try {
+		const { App } = await import("@capacitor/app");
+		const { Browser } = await import("@capacitor/browser");
+		const { setAuthToken } = await import("$lib/auth-client");
+		const { goto } = await import("$app/navigation");
+
+		async function handleUrl(rawUrl: string) {
+			if (!rawUrl) return;
+			if (rawUrl.startsWith("mezzo://") || rawUrl.startsWith("com.mezzo.music://")) {
+				try {
+					const parsed = new URL(rawUrl);
+					if (parsed.host === "oauth-success" || parsed.pathname.includes("oauth-success")) {
+						const token = parsed.searchParams.get("token");
+						if (token) {
+							setAuthToken(token);
+						}
+						try {
+							await Browser.close();
+						} catch {
+							// Browser was already closed
+						}
+						await goto("/", { replaceState: true });
+					}
+				} catch {
+					// Invalid URL format
+				}
+			}
+		}
+
+		App.addListener("appUrlOpen", (event) => {
+			void handleUrl(event.url);
+		});
+
+		const launchUrl = await App.getLaunchUrl();
+		if (launchUrl?.url) {
+			void handleUrl(launchUrl.url);
+		}
+	} catch {
+		// Deep links unavailable
 	}
 }

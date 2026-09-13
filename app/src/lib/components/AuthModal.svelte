@@ -2,6 +2,7 @@
 	import { signIn, signUp, persistAuthToken } from "$lib/auth-client";
 	import { authModal } from "$lib/stores/auth-modal.svelte";
 	import { isNativeApp } from "$lib/native";
+	import { startSocialAuth } from "$lib/utils/social-auth";
 
 	const native = isNativeApp();
 
@@ -60,8 +61,7 @@
 	async function handleSocial(provider: "google" | "github") {
 		authError = "";
 		try {
-			const r = await signIn.social({ provider });
-			if (r.error) throw new Error(r.error.message ?? `${provider} sign in failed`);
+			await startSocialAuth(provider);
 		} catch (err: any) {
 			authError = err.message ?? `${provider} sign in failed`;
 		}

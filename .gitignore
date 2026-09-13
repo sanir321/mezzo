@@ -31,3 +31,5 @@ Thumbs.db
 *.log
 *.tmp
 *.ts.timestamp-*.mjs
+*.apk
+apk-release/

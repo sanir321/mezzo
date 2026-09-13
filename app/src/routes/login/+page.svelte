@@ -2,10 +2,9 @@
 	import { goto } from "$app/navigation";
 	import { signIn, persistAuthToken } from "$lib/auth-client";
 	import { useSharedSession } from "$lib/session.svelte";
-	import { isNativeApp } from "$lib/native";
+	import { startSocialAuth } from "$lib/utils/social-auth";
 
 	const sessionAtom = useSharedSession();
-	const native = isNativeApp();
 
 	$effect(() => {
 		return sessionAtom.subscribe((value: any) => {
@@ -41,11 +40,7 @@
 		authError = "";
 		authBusy = true;
 		try {
-			const r = await signIn.social({
-				provider: "google",
-				...(native ? { callbackURL: "https://localhost/oauth/google-callback" } : {}),
-			});
-			if (r.error) throw new Error(r.error.message ?? "Google sign in failed");
+			await startSocialAuth("google");
 		} catch (err: any) {
 			authError = err.message ?? "Google sign in failed";
 		} finally {
