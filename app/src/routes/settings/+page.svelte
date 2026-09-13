@@ -6,6 +6,7 @@ import { userPreferences, POPULAR_LANGUAGES, POPULAR_ARTISTS } from "$lib/stores
 import { equalizerStore } from "$lib/stores/equalizer.svelte";
 import { playerCrossfade, playerAutoRadio } from "$lib/stores/player.svelte";
 import { offlineStore } from "$lib/services/offline.svelte";
+import { isHapticsEnabled, setHapticsEnabled, triggerHaptic } from "$lib/utils/haptics";
 
 const sessionAtom = useSharedSession();
 let sessionData = $state<{ data: any; isPending: boolean } | undefined>(undefined);
@@ -35,14 +36,28 @@ const suggestedArtists = $derived.by(() => {
 // Preferences state in localStorage
 let preferredQuality = $state("lossless");
 let autoPlayNext = $state(true);
+let hapticsActive = $state(true);
 let saveNotification = $state(false);
 
 $effect(() => {
 	if (typeof localStorage !== "undefined") {
 		preferredQuality = localStorage.getItem("mezzo_quality_pref") || "lossless";
 		autoPlayNext = localStorage.getItem("mezzo_autoplay_pref") !== "false";
+		hapticsActive = isHapticsEnabled();
 	}
 });
+
+function toggleHaptics(enabled: boolean) {
+	hapticsActive = enabled;
+	setHapticsEnabled(enabled);
+	if (enabled) {
+		triggerHaptic("medium");
+	}
+	saveNotification = true;
+	setTimeout(() => {
+		saveNotification = false;
+	}, 2000);
+}
 
 function savePreference(key: string, value: string) {
 	if (typeof localStorage !== "undefined") {
@@ -224,6 +239,21 @@ async function handleLogout() {
 					<option value={8}>8 seconds (Club DJ Mix)</option>
 					<option value={12}>12 seconds (Long Ambient Blend)</option>
 				</select>
+			</div>
+
+			<div class="setting-item">
+				<div class="setting-text">
+					<h4>Haptic Feedback (Vibration)</h4>
+					<p>Tactile response when tapping play/pause, skipping tracks, or liking songs.</p>
+				</div>
+				<label class="switch">
+					<input
+						type="checkbox"
+						checked={hapticsActive}
+						onchange={(e) => toggleHaptics((e.target as HTMLInputElement).checked)}
+					/>
+					<span class="slider"></span>
+				</label>
 			</div>
 
 			<div class="setting-item">

@@ -7,6 +7,7 @@
 	import AddToPlaylistModal from "$lib/components/AddToPlaylistModal.svelte";
 	import EditTrackModal from "$lib/components/EditTrackModal.svelte";
 	import { offlineStore } from "$lib/services/offline.svelte";
+	import { triggerHaptic } from "$lib/utils/haptics";
 
 	interface Props {
 		track: Track;
@@ -31,6 +32,7 @@
 	const isDownloaded = $derived(offlineStore.isTrackDownloaded(track.id));
 
 	function handlePlay() {
+		triggerHaptic("light");
 		onplay?.(track);
 	}
 
@@ -45,6 +47,7 @@
 
 	function handleToggleLike(e: MouseEvent) {
 		e.stopPropagation();
+		triggerHaptic("success");
 		likedStore.toggle(track);
 	}
 

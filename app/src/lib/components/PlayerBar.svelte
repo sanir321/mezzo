@@ -36,6 +36,7 @@
 	import { shareTrack } from "$lib/utils/share";
 	import { apiUrl, isServerStreamSrc } from "$lib/config";
 	import { DEFAULT_ALBUM_COVER, handleImageError } from "$lib/utils/image";
+	import { triggerHaptic } from "$lib/utils/haptics";
 	import QueueDrawer from "$lib/components/QueueDrawer.svelte";
 	import ShortcutsModal from "$lib/components/ShortcutsModal.svelte";
 	import AddToPlaylistModal from "$lib/components/AddToPlaylistModal.svelte";
@@ -48,6 +49,39 @@
 	let shareToastTimer: ReturnType<typeof setTimeout> | null = null;
 	let lastLoadedTrackId = "";
 	let hasRestoredInitialPosition = false;
+
+	function onTogglePlay() {
+		triggerHaptic("medium");
+		togglePlay();
+	}
+
+	function onNext() {
+		triggerHaptic("light");
+		next();
+	}
+
+	function onPrevious() {
+		triggerHaptic("light");
+		previous();
+	}
+
+	function onToggleShuffle() {
+		triggerHaptic("light");
+		toggleShuffle();
+	}
+
+	function onToggleRepeat() {
+		triggerHaptic("light");
+		toggleRepeat();
+	}
+
+	function handleToggleLike(e: MouseEvent) {
+		e.stopPropagation();
+		if (playerCurrentTrack.value) {
+			triggerHaptic("success");
+			likedStore.toggle(playerCurrentTrack.value);
+		}
+	}
 
 	// Sleep timer state
 	let sleepTimerMinutes = $state<number | null>(null);
@@ -574,7 +608,7 @@
 			<button
 				class="action-icon-btn track-like-btn desktop-only"
 				class:liked={isCurrentLiked}
-				onclick={(e) => { e.stopPropagation(); playerCurrentTrack.value && likedStore.toggle(playerCurrentTrack.value); }}
+				onclick={handleToggleLike}
 				aria-label={isCurrentLiked ? "Unlike track" : "Like track"}
 				title={isCurrentLiked ? "Remove from Liked Songs" : "Save to Liked Songs"}
 			>
@@ -612,7 +646,7 @@
 			<button
 				class="ctrl-icon-btn"
 				class:active={playerShuffle.value}
-				onclick={toggleShuffle}
+				onclick={onToggleShuffle}
 				aria-label="Shuffle"
 				title="Shuffle"
 			>
@@ -625,7 +659,7 @@
 			<button
 				class="ctrl-icon-btn"
 				disabled={!playerHasPrevious.value}
-				onclick={previous}
+				onclick={onPrevious}
 				aria-label="Previous track"
 				title="Previous (Shift+←)"
 			>
@@ -636,7 +670,7 @@
 
 			<button
 				class="play-pause-btn"
-				onclick={togglePlay}
+				onclick={onTogglePlay}
 				aria-label={playerPlaying.value ? "Pause" : "Play"}
 				title={playerPlaying.value ? "Pause (Space)" : "Play (Space)"}
 			>
@@ -654,7 +688,7 @@
 			<button
 				class="ctrl-icon-btn"
 				disabled={!playerHasNext.value}
-				onclick={next}
+				onclick={onNext}
 				aria-label="Next track"
 				title="Next (Shift+→)"
 			>
@@ -666,7 +700,7 @@
 			<button
 				class="ctrl-icon-btn"
 				class:active={playerRepeat.value !== "off"}
-				onclick={toggleRepeat}
+				onclick={onToggleRepeat}
 				aria-label={`Repeat mode: ${playerRepeat.value}`}
 				title={`Repeat: ${playerRepeat.value}`}
 			>
@@ -716,12 +750,7 @@
 			<button
 				class="mobile-icon-btn mobile-like-btn"
 				class:liked={isCurrentLiked}
-				onclick={(e) => {
-					e.stopPropagation();
-					if (playerCurrentTrack.value) {
-						likedStore.toggle(playerCurrentTrack.value);
-					}
-				}}
+				onclick={handleToggleLike}
 				aria-label={isCurrentLiked ? "Unlike track" : "Like track"}
 				title={isCurrentLiked ? "Remove from Liked Songs" : "Save to Liked Songs"}
 			>
@@ -764,7 +793,7 @@
 			<button
 				class="mobile-icon-btn mobile-prev-btn"
 				disabled={!playerHasPrevious.value}
-				onclick={(e) => { e.stopPropagation(); previous(); }}
+				onclick={(e) => { e.stopPropagation(); onPrevious(); }}
 				aria-label="Previous track"
 				title="Previous track"
 			>
@@ -776,7 +805,7 @@
 			<!-- Spotify Circular White Play/Pause Button -->
 			<button
 				class="mobile-play-btn"
-				onclick={(e) => { e.stopPropagation(); togglePlay(); }}
+				onclick={(e) => { e.stopPropagation(); onTogglePlay(); }}
 				aria-label={playerPlaying.value ? "Pause" : "Play"}
 				title={playerPlaying.value ? "Pause" : "Play"}
 			>
@@ -795,7 +824,7 @@
 			<button
 				class="mobile-icon-btn mobile-next-btn"
 				disabled={!playerHasNext.value}
-				onclick={(e) => { e.stopPropagation(); next(); }}
+				onclick={(e) => { e.stopPropagation(); onNext(); }}
 				aria-label="Next track"
 				title="Next track"
 			>

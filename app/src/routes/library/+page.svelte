@@ -13,6 +13,7 @@ import TrackRow from "$lib/components/TrackRow.svelte";
 import { authModal } from "$lib/stores/auth-modal.svelte";
 import { getLibrary, deleteTrack as apiDeleteTrack, getOnlineTrending } from "$lib/api";
 import { offlineStore } from "$lib/services/offline.svelte";
+import { handleImageError } from "$lib/utils/image";
 
 	const sessionAtom = useSharedSession();
 	let sessionData = $state<{ data: any; isPending: boolean } | undefined>(undefined);
@@ -350,7 +351,7 @@ import { offlineStore } from "$lib/services/offline.svelte";
 							<img
 								src={coverUrl(art.coverTrack)}
 								alt={art.name}
-								onerror={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80'; }}
+								onerror={handleImageError}
 							/>
 							<!-- svelte-ignore a11y_consider_explicit_label -->
 							<button class="card-play-overlay" onclick={(e) => { e.stopPropagation(); playArtist(art.tracks); }} title={`Play songs by ${art.name}`}>
@@ -375,7 +376,7 @@ import { offlineStore } from "$lib/services/offline.svelte";
 							<img
 								src={coverUrl(alb.tracks[0])}
 								alt={alb.album}
-								onerror={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80'; }}
+								onerror={handleImageError}
 							/>
 							<div class="card-play-overlay">
 								<svg viewBox="0 0 24 24" width="1.75rem" height="1.75rem" fill="currentColor">
