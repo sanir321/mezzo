@@ -25,6 +25,21 @@ export function nativeLog(...parts: unknown[]): void {
 			(document.documentElement || document.body)?.appendChild(el);
 		}
 		el.textContent = ring.join("\n");
+		if (document.title && !document.title.includes("#mezzo-")) {
+			document.title = document.title + " #mezzo-dbg";
+		}
+	} catch {
+		/* never break the app */
+	}
+}
+
+export function markDebug(marker: string): void {
+	if (typeof window === "undefined") return;
+	try {
+		const cap = (window as any).Capacitor;
+		if (!cap || !cap.isNativePlatform || !cap.isNativePlatform()) return;
+		const clean = document.title.replace(/\s+#mezzo-[^ ]*$/, "");
+		document.title = `${clean} #mezzo-${marker}`;
 	} catch {
 		/* never break the app */
 	}

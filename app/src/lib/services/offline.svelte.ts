@@ -1,4 +1,4 @@
-import { nativeLog } from "$lib/native-debug";
+import { markDebug, nativeLog } from "$lib/native-debug";
 import type { Track } from "$lib/stores/player.svelte";
 
 const CACHE_NAME = "mezzo-offline-v1";
@@ -98,9 +98,11 @@ class OfflineStore {
       ];
       this.saveMetadata();
       nativeLog("offline-dl", "download complete", track.title);
+      markDebug("dl-ok-" + track.id);
       return true;
     } catch (err) {
       nativeLog("offline-dl", "download failed", track.title, String(err));
+      markDebug("dl-fail-" + track.id);
       console.error("Failed to download track offline:", err);
       return false;
     } finally {
