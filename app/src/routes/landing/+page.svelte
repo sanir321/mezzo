@@ -54,8 +54,8 @@
 						</svg>
 					</a>
 				{:else}
-					<a href="/login" class="btn btn-ghost">Log In</a>
-					<a href="/signup" class="btn btn-secondary">Sign Up Free</a>
+					<a href="/login" class="btn btn-ghost header-login-btn">Log In</a>
+					<a href="/signup" class="btn btn-secondary header-signup-btn">Sign Up Free</a>
 				{/if}
 				<a href="/apk/Mezzo-1.0.apk" download="Mezzo-1.0.apk" class="btn btn-primary btn-sm header-download-btn">
 					<svg viewBox="0 0 24 24" width="0.95rem" height="0.95rem" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -63,7 +63,7 @@
 						<polyline points="7 10 12 15 17 10" />
 						<line x1="12" y1="15" x2="12" y2="3" />
 					</svg>
-					<span>Download App</span>
+					<span class="header-download-text">Download App</span>
 				</a>
 			</div>
 		</div>
@@ -475,6 +475,21 @@
 			<p>© 2026 Mezzo Music. Built for true audiophiles and music lovers.</p>
 		</div>
 	</footer>
+
+	<!-- Sticky Quick-Action Floating Bar on Mobile Devices -->
+	<aside class="mobile-sticky-bar" aria-label="Quick Actions">
+		<a href="/apk/Mezzo-1.0.apk" download="Mezzo-1.0.apk" class="sticky-apk-btn">
+			<svg viewBox="0 0 24 24" width="1.15rem" height="1.15rem" fill="none" stroke="currentColor" stroke-width="2.5">
+				<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+				<polyline points="7 10 12 15 17 10" />
+				<line x1="12" y1="15" x2="12" y2="3" />
+			</svg>
+			<span>Download APK (3.4 MB)</span>
+		</a>
+		<a href={isLoggedIn ? "/" : "/login"} class="sticky-web-btn">
+			<span>{isLoggedIn ? "Open Player" : "Web Player"}</span>
+		</a>
+	</aside>
 </div>
 
 <style lang="scss">
@@ -1423,49 +1438,450 @@
 		}
 	}
 
+	/* Mobile Sticky Quick Action Bar (Hidden on Desktop) */
+	.mobile-sticky-bar {
+		display: none;
+	}
+
 	/* Responsive Media Queries */
 	@media (max-width: 768px) {
-		.landing-header .nav-links {
-			display: none;
-		}
-
-		.mockup-body {
-			grid-template-columns: 1fr !important;
-
-			.mockup-sidebar {
-				display: none;
+		.landing-header {
+			.header-content {
+				padding: 0.75rem 1rem !important;
+				gap: 0.5rem !important;
 			}
-		}
 
-		.mockup-player-bar {
-			.player-right {
+			.brand {
+				gap: 0.55rem !important;
+
+				.brand-logo {
+					width: 1.85rem !important;
+					height: 1.85rem !important;
+				}
+
+				.brand-name {
+					font-size: 1.25rem !important;
+				}
+			}
+
+			.nav-links {
 				display: none !important;
+			}
+
+			.header-signup-btn {
+				display: none !important;
+			}
+
+			.header-download-btn {
+				padding: 0.45rem 0.8rem !important;
+				font-size: 0.82rem !important;
+			}
+
+			.header-login-btn {
+				padding: 0.45rem 0.65rem !important;
+				font-size: 0.85rem !important;
 			}
 		}
 
 		.hero-section {
-			padding: 3rem 1.25rem 2.5rem;
-		}
+			padding: 2.25rem 1.15rem 2rem !important;
 
-		.preview-section,
-		.features-section,
-		.download-section {
-			padding: 0 1.25rem;
-			margin-bottom: 4rem;
-		}
+			.hero-badge {
+				margin-bottom: 1.25rem !important;
+				font-size: 0.76rem !important;
+				padding: 0.3rem 0.8rem !important;
 
-		.hero-cta-group {
-			flex-direction: column;
-			width: 100%;
+				.badge-text {
+					font-size: 0.78rem !important;
+				}
+			}
 
-			.btn {
-				width: 100%;
-				justify-content: center;
+			.hero-title {
+				font-size: clamp(2rem, 8.5vw, 2.85rem) !important;
+				letter-spacing: -0.03em !important;
+				margin-bottom: 1.1rem !important;
+			}
+
+			.hero-subtitle {
+				font-size: 0.96rem !important;
+				line-height: 1.5 !important;
+				margin-bottom: 1.85rem !important;
+			}
+
+			.hero-cta-group {
+				flex-direction: column !important;
+				width: 100% !important;
+				gap: 0.85rem !important;
+				margin-bottom: 2rem !important;
+
+				.btn {
+					width: 100% !important;
+					box-sizing: border-box !important;
+					min-height: 3.6rem !important;
+					padding: 0.85rem 1.25rem !important;
+					border-radius: 1rem !important;
+				}
+
+				.download-btn {
+					justify-content: space-between !important;
+				}
+
+				.web-app-btn {
+					justify-content: space-between !important;
+				}
+			}
+
+			.hero-highlights {
+				display: grid !important;
+				grid-template-columns: repeat(2, 1fr) !important;
+				gap: 0.55rem !important;
+				width: 100% !important;
+
+				.highlight-item {
+					font-size: 0.76rem !important;
+					background: rgba(255, 255, 255, 0.04) !important;
+					border: 1px solid rgba(255, 255, 255, 0.07) !important;
+					padding: 0.45rem 0.6rem !important;
+					border-radius: 0.55rem !important;
+					justify-content: flex-start !important;
+					white-space: nowrap;
+					overflow: hidden;
+					text-overflow: ellipsis;
+				}
 			}
 		}
 
-		.footer-links-group {
-			gap: 2rem !important;
+		/* Interactive Mockup Preview on Mobile */
+		.preview-section {
+			padding: 0 1.15rem !important;
+			margin-bottom: 3.5rem !important;
+
+			.mockup-frame {
+				border-radius: 1rem !important;
+			}
+
+			.mockup-top-bar {
+				padding: 0.65rem 0.95rem !important;
+
+				.dot {
+					width: 0.6rem !important;
+					height: 0.6rem !important;
+				}
+
+				.mockup-title {
+					font-size: 0.74rem !important;
+				}
+			}
+
+			.mockup-body {
+				grid-template-columns: 1fr !important;
+
+				.mockup-sidebar {
+					display: none !important;
+				}
+			}
+
+			.mockup-main {
+				padding: 0.85rem !important;
+				gap: 0.85rem !important;
+			}
+
+			.mockup-hero-banner {
+				padding: 1.1rem !important;
+				border-radius: 0.75rem !important;
+
+				h3 {
+					font-size: 1.2rem !important;
+				}
+
+				p {
+					font-size: 0.8rem !important;
+				}
+			}
+
+			.mockup-track-row {
+				padding: 0.5rem 0.65rem !important;
+				gap: 0.65rem !important;
+
+				.track-cover-mini {
+					width: 2.2rem !important;
+					height: 2.2rem !important;
+				}
+
+				.track-info strong {
+					font-size: 0.82rem !important;
+				}
+
+				.track-info span {
+					font-size: 0.7rem !important;
+				}
+
+				.track-badge {
+					display: none !important;
+				}
+
+				.track-time {
+					font-size: 0.75rem !important;
+				}
+			}
+
+			.mockup-player-bar {
+				padding: 0.65rem 0.85rem !important;
+
+				.player-left {
+					gap: 0.6rem !important;
+
+					.now-playing-avatar {
+						width: 2.2rem !important;
+						height: 2.2rem !important;
+					}
+
+					.np-title {
+						font-size: 0.82rem !important;
+					}
+
+					.np-artist {
+						font-size: 0.7rem !important;
+					}
+				}
+
+				.player-center {
+					flex: 0 !important;
+					max-width: none !important;
+
+					.progress-bar-wrap {
+						display: none !important;
+					}
+
+					.control-icons {
+						gap: 0.75rem !important;
+
+						svg {
+							display: none;
+						}
+					}
+				}
+
+				.player-right {
+					display: none !important;
+				}
+			}
+		}
+
+		/* Features Section on Mobile */
+		.features-section {
+			padding: 0 1.15rem !important;
+			margin-bottom: 3.5rem !important;
+
+			.section-head {
+				margin-bottom: 2rem !important;
+
+				.section-title {
+					font-size: clamp(1.65rem, 6.5vw, 2.15rem) !important;
+				}
+
+				.section-desc {
+					font-size: 0.92rem !important;
+					line-height: 1.5 !important;
+				}
+			}
+
+			.features-grid {
+				grid-template-columns: 1fr !important;
+				gap: 1rem !important;
+			}
+
+			.feature-card {
+				padding: 1.4rem 1.2rem !important;
+				border-radius: 1rem !important;
+
+				.card-icon {
+					width: 2.8rem !important;
+					height: 2.8rem !important;
+					margin-bottom: 1rem !important;
+				}
+
+				h3 {
+					font-size: 1.15rem !important;
+					margin-bottom: 0.4rem !important;
+				}
+
+				p {
+					font-size: 0.88rem !important;
+					line-height: 1.5 !important;
+				}
+			}
+		}
+
+		/* Download Section on Mobile */
+		.download-section {
+			padding: 0 1.15rem !important;
+			margin-bottom: 3.5rem !important;
+
+			.section-head {
+				margin-bottom: 2rem !important;
+
+				.section-title {
+					font-size: clamp(1.65rem, 6.5vw, 2.15rem) !important;
+				}
+
+				.section-desc {
+					font-size: 0.92rem !important;
+				}
+			}
+
+			.download-cards-container {
+				grid-template-columns: 1fr !important;
+				gap: 1.25rem !important;
+			}
+
+			.platform-card {
+				padding: 1.75rem 1.25rem !important;
+				border-radius: 1.25rem !important;
+
+				h3 {
+					font-size: 1.45rem !important;
+				}
+
+				.card-summary {
+					font-size: 0.88rem !important;
+					margin-bottom: 1.25rem !important;
+				}
+
+				.platform-badge {
+					top: 1rem !important;
+					right: 1rem !important;
+					font-size: 0.68rem !important;
+					padding: 0.2rem 0.55rem !important;
+				}
+
+				.platform-icon {
+					width: 3.2rem !important;
+					height: 3.2rem !important;
+					margin-bottom: 1.15rem !important;
+				}
+
+				.apk-specs {
+					padding: 0.85rem 1rem !important;
+					margin-bottom: 1.5rem !important;
+
+					.spec-row {
+						font-size: 0.84rem !important;
+					}
+				}
+
+				.btn-block {
+					min-height: 3.4rem !important;
+					border-radius: 0.85rem !important;
+				}
+
+				.install-tips {
+					font-size: 0.8rem !important;
+				}
+			}
+		}
+
+		/* Footer on Mobile */
+		.landing-footer {
+			padding: 2.75rem 1.15rem 6.5rem !important; /* extra bottom padding for floating sticky bar */
+
+			.footer-content {
+				flex-direction: column !important;
+				gap: 2rem !important;
+				margin-bottom: 2rem !important;
+			}
+
+			.footer-brand-wrap {
+				max-width: 100% !important;
+
+				.footer-tagline {
+					font-size: 0.88rem !important;
+				}
+			}
+
+			.footer-links-group {
+				display: grid !important;
+				grid-template-columns: repeat(2, 1fr) !important;
+				gap: 1.5rem !important;
+			}
+
+			.footer-bottom {
+				padding-top: 1.5rem !important;
+
+				p {
+					font-size: 0.78rem !important;
+				}
+			}
+		}
+
+		/* Sticky Quick Action Floating Bar */
+		.mobile-sticky-bar {
+			display: flex !important;
+			position: fixed;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			z-index: 100050;
+			background: rgba(10, 12, 10, 0.88);
+			backdrop-filter: blur(20px);
+			-webkit-backdrop-filter: blur(20px);
+			border-top: 1px solid rgba(255, 255, 255, 0.12);
+			padding: 0.65rem 1rem max(0.75rem, env(safe-area-inset-bottom));
+			gap: 0.75rem;
+			box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.85);
+
+			.sticky-apk-btn {
+				flex: 1.35;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 0.5rem;
+				background: #1ed760;
+				color: #000;
+				font-weight: 800;
+				font-size: 0.88rem;
+				padding: 0.75rem 0.85rem;
+				border-radius: 9999px;
+				text-decoration: none;
+				box-shadow: 0 4px 16px rgba(30, 215, 96, 0.35);
+				white-space: nowrap;
+
+				&:active {
+					background: #22e366;
+					transform: scale(0.98);
+				}
+			}
+
+			.sticky-web-btn {
+				flex: 0.9;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				background: rgba(255, 255, 255, 0.1);
+				border: 1px solid rgba(255, 255, 255, 0.2);
+				color: #fff;
+				font-weight: 700;
+				font-size: 0.88rem;
+				padding: 0.75rem 0.85rem;
+				border-radius: 9999px;
+				text-decoration: none;
+				white-space: nowrap;
+
+				&:active {
+					background: rgba(255, 255, 255, 0.2);
+					transform: scale(0.98);
+				}
+			}
+		}
+	}
+
+	@media (max-width: 480px) {
+		.header-download-text {
+			display: none;
+		}
+
+		.hero-section .hero-highlights {
+			grid-template-columns: 1fr !important;
 		}
 	}
 </style>
