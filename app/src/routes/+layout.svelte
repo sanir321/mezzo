@@ -14,6 +14,7 @@
 	import { authModal } from "$lib/stores/auth-modal.svelte";
 	import { goto } from "$app/navigation";
 	import { page } from "$app/stores";
+	import { base } from "$app/paths";
 	import { useSharedSession } from "$lib/session.svelte";
 	import "../global/redesign/main.scss";
 
@@ -23,16 +24,20 @@
 	let sessionData = $state<{ data: any; isPending: boolean } | undefined>(undefined);
 	let sessionTimedOut = $state(false);
 
-	// Auto-unregister old service workers that no longer exist on the server
-	if (typeof window !== "undefined") {
-		navigator.serviceWorker.getRegistrations().then((registrations) => {
-			for (const reg of registrations) {
-				reg.unregister().catch(() => {});
-			}
-		}).catch(() => {});
-		navigator.serviceWorker.ready.then((registration) => {
-			registration.unregister().catch(() => {});
-		}).catch(() => {});
+	// Register the app shell service worker for offline support (production
+	// web only). Not available in the Capacitor WebView (no serviceWorker API).
+	if (
+		typeof window !== "undefined" &&
+		import.meta.env.PROD &&
+		"serviceWorker" in navigator &&
+		!(window as Window & { Capacitor?: unknown }).Capacitor
+	) {
+		navigator.serviceWorker
+			.register(`${base}/service-worker.js`)
+			.then((reg) => {
+				reg.update().catch(() => {});
+			})
+			.catch(() => {});
 	}
 
 	const unsub = sessionAtom.subscribe((value: any) => {

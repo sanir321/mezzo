@@ -1,5 +1,6 @@
 <script module lang="ts">
 	import { authModal } from "$lib/stores/auth-modal.svelte";
+	import { apiUrl, isServerStreamSrc } from "$lib/config";
 
 	export interface Track {
 		id: string;
@@ -34,15 +35,18 @@ export function streamUrl(idOrTrack: string | Track): string {
 		if (idOrTrack.stream_url) return idOrTrack.stream_url;
 		if ((idOrTrack as any).object_key?.startsWith("http")) return (idOrTrack as any).object_key;
 		if (idOrTrack.id?.startsWith("tidal_") || idOrTrack.id?.startsWith("saavn_")) {
-			return `/api/tracks/${idOrTrack.id}/stream`;
+			return apiUrl(`/api/tracks/${idOrTrack.id}/stream`);
 		}
 		return "";
 	}
-	if (idOrTrack.startsWith("http://") || idOrTrack.startsWith("https://") || idOrTrack.startsWith("/")) {
+	if (idOrTrack.startsWith("http://") || idOrTrack.startsWith("https://")) {
 		return idOrTrack;
 	}
+	if (idOrTrack.startsWith("/")) {
+		return apiUrl(idOrTrack);
+	}
 	if (idOrTrack.startsWith("tidal_") || idOrTrack.startsWith("saavn_")) {
-		return `/api/tracks/${idOrTrack}/stream`;
+		return apiUrl(`/api/tracks/${idOrTrack}/stream`);
 	}
 	return "";
 }
@@ -51,12 +55,15 @@ export function streamUrl(idOrTrack: string | Track): string {
 		if (typeof idOrTrack !== "string") {
 			if (idOrTrack.cover_url) return idOrTrack.cover_url;
 			if ((idOrTrack as any).cover_key?.startsWith("http")) return (idOrTrack as any).cover_key;
-			return `/api/tracks/${idOrTrack.id}/cover`;
+			return apiUrl(`/api/tracks/${idOrTrack.id}/cover`);
 		}
 		if (idOrTrack.startsWith("http://") || idOrTrack.startsWith("https://")) {
 			return idOrTrack;
 		}
-		return `/api/tracks/${idOrTrack}/cover`;
+		if (idOrTrack.startsWith("/")) {
+			return apiUrl(idOrTrack);
+		}
+		return apiUrl(`/api/tracks/${idOrTrack}/cover`);
 	}
 
 	export function formatDuration(sec: number | null | undefined): string {
@@ -421,8 +428,8 @@ export function streamUrl(idOrTrack: string | Track): string {
 	function preloadNextTrack(nextIndex: number) {
 		if (nextIndex >= 0 && nextIndex < queue.length && typeof window !== "undefined") {
 			const nextTrack = queue[nextIndex];
-			if (nextTrack && (!nextTrack.stream_url || nextTrack.stream_url.startsWith("/api/tracks/"))) {
-				fetch(`/api/tracks/${encodeURIComponent(nextTrack.id)}/stream?format=json`)
+			if (nextTrack && (!nextTrack.stream_url || isServerStreamSrc(nextTrack.stream_url, nextTrack.id))) {
+				fetch(apiUrl(`/api/tracks/${encodeURIComponent(nextTrack.id)}/stream?format=json`))
 					.then((r) => r.json())
 					.then((data: any) => {
 						if (data?.url) {
@@ -583,7 +590,7 @@ export function streamUrl(idOrTrack: string | Track): string {
 		try {
 			const existingIds = new Set(queue.map((t) => t.id));
 			const query = currentTrack.artist || currentTrack.genre || "Trending Hits";
-			const res = await fetch(`/api/online/search?q=${encodeURIComponent(query)}&limit=10`);
+			const res = await fetch(apiUrl(`/api/online/search?q=${encodeURIComponent(query)}&limit=10`));
 			if (res.ok) {
 				const data = await res.json();
 				if (Array.isArray(data.tracks)) {

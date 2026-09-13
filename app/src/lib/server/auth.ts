@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { bearer } from "better-auth/plugins/bearer";
 
 type Env = {
   BETTER_AUTH_SECRET?: string;
@@ -46,8 +47,16 @@ export function createAuth(platform: { env: Env } | null, url: string) {
       "https://mezzo-music.pages.dev",
       "https://mezzo-61d.pages.dev",
       "https://mezzo.zenosayz05.workers.dev",
+      "http://localhost",
+      "https://localhost",
+      "app://localhost",
+      "capacitor://localhost",
     ],
     secret: env.BETTER_AUTH_SECRET || "mezzo-dev-super-secret-key-32chars-min!",
+    // Converts `Authorization: Bearer <session-token>` into the session cookie,
+    // so the Capacitor app (which cannot use cookies against this host) can
+    // authenticate with the token persisted from sign-in/sign-up.
+    plugins: [bearer()],
     database: dbBinding ?? (undefined as unknown as D1Database),
     emailAndPassword: {
       enabled: true,

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { page } from "$app/stores";
-	import { signOut } from "$lib/auth-client";
+	import { signOut, clearAuthToken } from "$lib/auth-client";
 	import { useSharedSession } from "$lib/session.svelte";
 	import { authModal } from "$lib/stores/auth-modal.svelte";
 
@@ -117,6 +117,7 @@
 			await signOut({
 				fetchOptions: {
 					onSuccess: () => {
+						clearAuthToken();
 						if (typeof window !== "undefined") {
 							window.location.href = "/";
 						}

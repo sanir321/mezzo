@@ -34,6 +34,7 @@
 	import { equalizerStore } from "$lib/stores/equalizer.svelte";
 	import { offlineStore } from "$lib/services/offline.svelte";
 	import { shareTrack } from "$lib/utils/share";
+	import { apiUrl, isServerStreamSrc } from "$lib/config";
 	import QueueDrawer from "$lib/components/QueueDrawer.svelte";
 	import ShortcutsModal from "$lib/components/ShortcutsModal.svelte";
 	import AddToPlaylistModal from "$lib/components/AddToPlaylistModal.svelte";
@@ -138,8 +139,8 @@
 	function applyServerFallback() {
 		const track = playerCurrentTrack.value;
 		if (!audioEl || !track) return;
-		const serverFallback = `/api/tracks/${track.id}/stream`;
-		if (!audioEl.src.includes(serverFallback)) {
+		const serverFallback = apiUrl(`/api/tracks/${track.id}/stream`);
+		if (!isServerStreamSrc(audioEl.src, track.id)) {
 			console.warn("Stream error on external URL, falling back to server stream:", audioEl.src);
 			const savedTime = audioEl.currentTime || playerCurrentTime.value || 0;
 			audioEl.src = serverFallback;
@@ -175,7 +176,7 @@
 		stallTimer = setTimeout(() => {
 			const track = playerCurrentTrack.value;
 			// Only fall back if we got no playback data at all, not mid-song buffer
-			if (track && !audioEl.src.includes(`/api/tracks/${track.id}/stream`)) {
+			if (track && !isServerStreamSrc(audioEl.src, track.id)) {
 				console.warn("Stream stalled without data, forcing server re-resolution");
 				applyServerFallback();
 			} else {
@@ -221,10 +222,10 @@
 				track &&
 				finalSrc &&
 				!finalSrc.startsWith("blob:") &&
-				(finalSrc.startsWith("/api/tracks/") || !finalSrc.startsWith("http"))
+				(isServerStreamSrc(finalSrc, track.id) || !finalSrc.startsWith("http"))
 			) {
 				try {
-					const res = await fetch(`/api/tracks/${encodeURIComponent(track.id)}/stream?format=json`);
+					const res = await fetch(apiUrl(`/api/tracks/${encodeURIComponent(track.id)}/stream?format=json`));
 					if (res.ok && active) {
 						const data = (await res.json()) as any;
 						if (data?.url) {

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
-	import { signIn } from "$lib/auth-client";
+	import { signIn, persistAuthToken } from "$lib/auth-client";
 	import { useSharedSession } from "$lib/session.svelte";
 
 	const sessionAtom = useSharedSession();
@@ -26,6 +26,7 @@
 		try {
 			const r = await signIn.email({ email, password });
 			if (r.error) throw new Error(r.error.message ?? "Incorrect email or password.");
+			persistAuthToken(r);
 			goto("/");
 		} catch (err: any) {
 			authError = err.message ?? "Login failed. Please check your credentials.";

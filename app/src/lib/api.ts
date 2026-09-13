@@ -1,4 +1,9 @@
 import type { Playlist, Track } from "$lib/stores/player.svelte";
+import { apiUrl } from "$lib/config";
+
+function apiFetch(path: string, init?: RequestInit): Promise<Response> {
+  return fetch(apiUrl(path), init);
+}
 
 async function j<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -13,21 +18,21 @@ export async function getLibrary(): Promise<{
   sorted: Track[];
   playlists: Playlist[];
 }> {
-  return j(await fetch("/api/library"));
+  return j(await apiFetch("/api/library"));
 }
 
 export async function getTracks(): Promise<{ tracks: Track[] }> {
-  return j(await fetch("/api/tracks"));
+  return j(await apiFetch("/api/tracks"));
 }
 
 export async function getPlaylists(): Promise<{ playlists: Playlist[] }> {
-  return j(await fetch("/api/playlists"));
+  return j(await apiFetch("/api/playlists"));
 }
 
 export async function getPlaylist(
   id: string,
 ): Promise<{ playlist: Playlist; tracks: Track[] }> {
-  return j(await fetch(`/api/playlists/${id}`));
+  return j(await apiFetch(`/api/playlists/${id}`));
 }
 
 export async function createPlaylist(
@@ -35,7 +40,7 @@ export async function createPlaylist(
   description?: string,
 ): Promise<{ id: string }> {
   return j(
-    await fetch("/api/playlists", {
+    await apiFetch("/api/playlists", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, description }),
@@ -44,7 +49,7 @@ export async function createPlaylist(
 }
 
 export async function deletePlaylist(id: string): Promise<{ ok: boolean }> {
-  return j(await fetch(`/api/playlists/${id}`, { method: "DELETE" }));
+  return j(await apiFetch(`/api/playlists/${id}`, { method: "DELETE" }));
 }
 
 export async function addTrackToPlaylist(
@@ -56,7 +61,7 @@ export async function addTrackToPlaylist(
       ? { trackId: trackOrId }
       : { trackId: trackOrId.id, track: trackOrId };
   return j(
-    await fetch(`/api/playlists/${playlistId}/tracks`, {
+    await apiFetch(`/api/playlists/${playlistId}/tracks`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -69,7 +74,7 @@ export async function removeTrackFromPlaylist(
   trackId: string,
 ): Promise<{ ok: boolean }> {
   return j(
-    await fetch(
+    await apiFetch(
       `/api/playlists/${playlistId}/tracks?trackId=${encodeURIComponent(trackId)}`,
       { method: "DELETE" },
     ),
@@ -77,7 +82,7 @@ export async function removeTrackFromPlaylist(
 }
 
 export async function deleteTrack(id: string): Promise<{ ok: boolean }> {
-  return j(await fetch(`/api/tracks/${id}`, { method: "DELETE" }));
+  return j(await apiFetch(`/api/tracks/${id}`, { method: "DELETE" }));
 }
 
 export async function toggleLikeTrack(
@@ -85,7 +90,7 @@ export async function toggleLikeTrack(
   track?: Track,
 ): Promise<{ liked: boolean }> {
   return j(
-    await fetch(`/api/tracks/${id}/like`, {
+    await apiFetch(`/api/tracks/${id}/like`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(track ? { track } : {}),
@@ -97,7 +102,7 @@ export async function getLikedTracks(): Promise<{
   tracks: Track[];
   likedIds: string[];
 }> {
-  return j(await fetch("/api/library/liked"));
+  return j(await apiFetch("/api/library/liked"));
 }
 
 export async function updateTrack(
@@ -111,7 +116,7 @@ export async function updateTrack(
   },
 ): Promise<{ ok: boolean }> {
   return j(
-    await fetch(`/api/tracks/${id}`, {
+    await apiFetch(`/api/tracks/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -124,7 +129,7 @@ export async function getOnlineTrending(
 ): Promise<{ tracks: Track[] }> {
   // Try high quality 320kbps server trending endpoint
   try {
-    const res = await fetch(`/api/online/trending?limit=${limit}`);
+    const res = await apiFetch(`/api/online/trending?limit=${limit}`);
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data.tracks) && data.tracks.length > 0) {
@@ -189,7 +194,7 @@ export async function searchOnlineMusic(
 
   // 1. Server search (resolves full-length 320kbps JioSaavn tracks, artists, playlists, and albums)
   try {
-    const res = await fetch(
+    const res = await apiFetch(
       `/api/online/search?q=${encodeURIComponent(trimmed)}&limit=${limit}`,
     );
     if (res.ok) {
@@ -220,7 +225,7 @@ export async function getSearchSuggestions(query: string): Promise<string[]> {
   const trimmed = query.trim();
   if (!trimmed) return [];
   try {
-    const res = await fetch(
+    const res = await apiFetch(
       `/api/online/suggestions?q=${encodeURIComponent(trimmed)}`,
     );
     if (res.ok) {

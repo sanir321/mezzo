@@ -1,5 +1,10 @@
-import adapter from "@sveltejs/adapter-cloudflare";
+import cloudflareAdapter from "@sveltejs/adapter-cloudflare";
+import staticAdapter from "@sveltejs/adapter-static";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
+
+// STATIC_BUILD=1 produces a SPA bundle for the Capacitor Android app
+// (webDir: build/). Everything else deploys to Cloudflare Pages.
+const isStatic = process.env.STATIC_BUILD === "1";
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -10,12 +15,14 @@ const config = {
   }),
 
   kit: {
-    adapter: adapter(),
+    adapter: isStatic
+      ? staticAdapter({ fallback: "index.html" })
+      : cloudflareAdapter(),
     alias: {
       $lib: "./src/lib",
       $components: "./src/lib/components",
     },
-    prerender: { concurrency: 3 },
+    prerender: isStatic ? { entries: [] } : { concurrency: 3 },
     files: {
       assets: "static",
       lib: "src/lib",

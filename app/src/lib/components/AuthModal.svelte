@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { signIn, signUp } from "$lib/auth-client";
+	import { signIn, signUp, persistAuthToken } from "$lib/auth-client";
 	import { authModal } from "$lib/stores/auth-modal.svelte";
 
 	interface Props {
@@ -39,9 +39,11 @@
 			if (authMode === "login") {
 				const r = await signIn.email({ email, password });
 				if (r.error) throw new Error(r.error.message ?? "Incorrect email or password.");
+				persistAuthToken(r);
 			} else {
 				const r = await signUp.email({ email, password, name: name.trim() || email.split("@")[0] });
 				if (r.error) throw new Error(r.error.message ?? "Registration failed. Please try again.");
+				persistAuthToken(r);
 			}
 			closeModal();
 			onSuccess?.();
