@@ -13,6 +13,7 @@
 		});
 	});
 
+	let showLogin = $state(false);
 	let email = $state("");
 	let password = $state("");
 	let showPassword = $state(false);
@@ -47,116 +48,145 @@
 			authBusy = false;
 		}
 	}
+
+	function backToEntry() {
+		showLogin = false;
+		authError = "";
+	}
 </script>
 
 <svelte:head>
-	<title>Log in — Mezzo Web Player</title>
+	<title>Mezzo — Music without the noise</title>
 </svelte:head>
 
 <div class="auth-page">
-	<header class="auth-header">
-		<a href="/" class="brand-link" aria-label="Mezzo Home">
-			<img src="/logo.svg" alt="Mezzo" class="brand-logo" />
-			<span class="brand-text">MEZZO</span>
-		</a>
-	</header>
-
 	<main class="auth-main">
 		<div class="auth-card">
-			<div class="card-header">
-				<h1 class="auth-title">Log in to Mezzo</h1>
-				<p class="auth-subtitle">Welcome back! Sign in to access your saved music & playlists.</p>
-			</div>
-
-			<div class="social-list">
-				<button type="button" class="google-login-btn" onclick={handleGoogleLogin} disabled={authBusy}>
-					<svg viewBox="0 0 24 24" width="1.3rem" height="1.3rem" class="social-icon">
-						<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-						<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-						<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
-						<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
-					</svg>
-					<span>Continue with Google</span>
-				</button>
-			</div>
-
-			<div class="auth-divider-wrap">
-				<span class="divider-line"></span>
-				<span class="divider-text">or existing password account</span>
-				<span class="divider-line"></span>
-			</div>
-
-			<form onsubmit={handleLogin} class="auth-form">
-				{#if authError}
-					<div class="error-banner">
-						<svg viewBox="0 0 24 24" width="1.1rem" height="1.1rem" fill="none" stroke="currentColor" stroke-width="2">
-							<circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-						</svg>
-						<span>{authError}</span>
-					</div>
-				{/if}
-				<div class="form-group">
-					<label for="login-email">Email address</label>
-					<input
-						id="login-email"
-						bind:value={email}
-						type="email"
-						placeholder="name@domain.com"
-						class="auth-input"
-						required
-					/>
+			<div class="entry-hero">
+				<div class="big-logo-wrap">
+					<img src="/logo.svg" alt="Mezzo" class="big-logo" />
 				</div>
+				<h1 class="entry-title">Music without the noise.</h1>
+				<p class="entry-tagline">
+					Your personal streaming library.<br />
+					Lossless audio. Zero clutter. Free.
+				</p>
+			</div>
 
-				<div class="form-group">
-					<label for="login-password">Password</label>
-					<div class="password-wrap">
-						<input
-							id="login-password"
-							bind:value={password}
-							type={showPassword ? "text" : "password"}
-							placeholder="Enter your password"
-							class="auth-input"
-							required
-							minlength="6"
-						/>
-						<button
-							type="button"
-							class="eye-btn"
-							onclick={() => (showPassword = !showPassword)}
-							aria-label={showPassword ? "Hide password" : "Show password"}
-						>
-							{#if showPassword}
-								<svg viewBox="0 0 24 24" width="1.25rem" height="1.25rem" fill="none" stroke="currentColor" stroke-width="2">
-									<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-									<line x1="1" y1="1" x2="23" y2="23" />
-								</svg>
-							{:else}
-								<svg viewBox="0 0 24 24" width="1.25rem" height="1.25rem" fill="none" stroke="currentColor" stroke-width="2">
-									<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-									<circle cx="12" cy="12" r="3" />
-								</svg>
-							{/if}
-						</button>
-					</div>
-				</div>
-
-				<button type="submit" class="auth-submit" disabled={authBusy}>
-					{#if authBusy}
-						<span class="spinner"></span>
-						<span>Logging in...</span>
-					{:else}
-						<span>Log In with Password</span>
-						<svg viewBox="0 0 24 24" width="1.15rem" height="1.15rem" fill="none" stroke="currentColor" stroke-width="2.5">
+			{#if !showLogin}
+				<div class="entry-actions">
+					<a href="/signup" class="btn btn-primary">
+						Sign up for free
+						<svg viewBox="0 0 24 24" width="1.1rem" height="1.1rem" fill="none" stroke="currentColor" stroke-width="2.5">
 							<line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
 						</svg>
-					{/if}
-				</button>
-			</form>
+					</a>
+					<button type="button" class="btn btn-secondary" onclick={() => (showLogin = true)}>
+						Log in
+					</button>
+				</div>
+			{:else}
+				<div class="login-head">
+					<button type="button" class="back-btn" onclick={backToEntry} aria-label="Back to entry">
+						<svg viewBox="0 0 24 24" width="1.1rem" height="1.1rem" fill="none" stroke="currentColor" stroke-width="2.5">
+							<line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
+						</svg>
+						<span>Back</span>
+					</button>
+					<h2 class="login-title">Log in to Mezzo</h2>
+					<p class="login-subtitle">Welcome back! Sign in to access your saved music & playlists.</p>
+				</div>
 
-			<div class="toggle-footer">
-				<p>Don't have an account?</p>
-				<a href="/signup" class="toggle-link">Sign up with Google</a>
-			</div>
+				<div class="social-list">
+					<button type="button" class="google-login-btn" onclick={handleGoogleLogin} disabled={authBusy}>
+						<svg viewBox="0 0 24 24" width="1.3rem" height="1.3rem" class="social-icon">
+							<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+							<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+							<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+							<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+						</svg>
+						<span>Continue with Google</span>
+					</button>
+				</div>
+
+				<div class="auth-divider-wrap">
+					<span class="divider-line"></span>
+					<span class="divider-text">or existing password account</span>
+					<span class="divider-line"></span>
+				</div>
+
+				<form onsubmit={handleLogin} class="auth-form">
+					{#if authError}
+						<div class="error-banner">
+							<svg viewBox="0 0 24 24" width="1.1rem" height="1.1rem" fill="none" stroke="currentColor" stroke-width="2">
+								<circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+							</svg>
+							<span>{authError}</span>
+						</div>
+					{/if}
+					<div class="form-group">
+						<label for="login-email">Email address</label>
+						<input
+							id="login-email"
+							bind:value={email}
+							type="email"
+							placeholder="name@domain.com"
+							class="auth-input"
+							required
+						/>
+					</div>
+
+					<div class="form-group">
+						<label for="login-password">Password</label>
+						<div class="password-wrap">
+							<input
+								id="login-password"
+								bind:value={password}
+								type={showPassword ? "text" : "password"}
+								placeholder="Enter your password"
+								class="auth-input"
+								required
+								minlength="6"
+							/>
+							<button
+								type="button"
+								class="eye-btn"
+								onclick={() => (showPassword = !showPassword)}
+								aria-label={showPassword ? "Hide password" : "Show password"}
+							>
+								{#if showPassword}
+									<svg viewBox="0 0 24 24" width="1.25rem" height="1.25rem" fill="none" stroke="currentColor" stroke-width="2">
+										<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+										<line x1="1" y1="1" x2="23" y2="23" />
+									</svg>
+								{:else}
+									<svg viewBox="0 0 24 24" width="1.25rem" height="1.25rem" fill="none" stroke="currentColor" stroke-width="2">
+										<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+										<circle cx="12" cy="12" r="3" />
+									</svg>
+								{/if}
+							</button>
+						</div>
+					</div>
+
+					<button type="submit" class="auth-submit" disabled={authBusy}>
+						{#if authBusy}
+							<span class="spinner"></span>
+							<span>Logging in...</span>
+						{:else}
+							<span>Log In with Password</span>
+							<svg viewBox="0 0 24 24" width="1.15rem" height="1.15rem" fill="none" stroke="currentColor" stroke-width="2.5">
+								<line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+							</svg>
+						{/if}
+					</button>
+				</form>
+
+				<div class="toggle-footer">
+					<p>Don't have an account?</p>
+					<a href="/signup" class="toggle-link">Sign up for free</a>
+				</div>
+			{/if}
 		</div>
 	</main>
 
@@ -167,41 +197,11 @@
 
 <style lang="scss">
 	.auth-page {
-		min-height: 100vh;
+		min-height: 100%;
 		background: #000000;
 		color: #ffffff;
 		display: flex;
 		flex-direction: column;
-	}
-
-	.auth-header {
-		padding: 2rem;
-		display: flex;
-		justify-content: center;
-
-		.brand-link {
-			display: flex;
-			align-items: center;
-			gap: 0.75rem;
-			text-decoration: none;
-			color: #ffffff;
-			transition: opacity 150ms ease;
-
-			&:hover {
-				opacity: 0.85;
-			}
-
-			.brand-logo {
-				width: 2.25rem;
-				height: 2.25rem;
-			}
-
-			.brand-text {
-				font-size: 1.4rem;
-				font-weight: 900;
-				letter-spacing: 0.08em;
-			}
-		}
 	}
 
 	.auth-main {
@@ -209,7 +209,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 1.5rem 1rem 3rem;
+		padding: 1.75rem 1rem 2rem;
 	}
 
 	.auth-card {
@@ -231,19 +231,133 @@
 		}
 	}
 
-	.card-header {
+	.entry-hero {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 		text-align: center;
+		gap: 0.9rem;
 		margin-bottom: 1.75rem;
 
-		.auth-title {
-			font-size: 1.75rem;
+		.big-logo-wrap {
+			width: 5.5rem;
+			height: 5.5rem;
+			border-radius: 1.4rem;
+			overflow: hidden;
+			box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+			margin-bottom: 0.35rem;
+
+			.big-logo {
+				width: 100%;
+				height: 100%;
+				display: block;
+			}
+		}
+
+		.entry-title {
+			font-size: 1.85rem;
+			font-weight: 900;
+			letter-spacing: -0.03em;
+			margin: 0;
+			color: #ffffff;
+		}
+
+		.entry-tagline {
+			color: #9a9a9a;
+			font-size: 0.92rem;
+			line-height: 1.5;
+			margin: 0;
+		}
+	}
+
+	.entry-actions {
+		display: flex;
+		flex-direction: column;
+		gap: 0.7rem;
+
+		.btn {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			gap: 0.5rem;
+			border-radius: 9999px;
+			padding: 0.95rem 1.5rem;
+			font-size: 1rem;
+			font-weight: 800;
+			letter-spacing: -0.01em;
+			cursor: pointer;
+			transition: all 150ms cubic-bezier(0.16, 1, 0.3, 1);
+			border: none;
+			text-decoration: none;
+			box-sizing: border-box;
+
+			&.btn-primary {
+				background: #1ed760;
+				color: #000000;
+				box-shadow: 0 6px 20px rgba(30, 215, 96, 0.25);
+
+				&:hover {
+					background: #22e065;
+					transform: scale(1.02);
+					box-shadow: 0 8px 28px rgba(30, 215, 96, 0.35);
+				}
+			}
+
+			&.btn-secondary {
+				background: transparent;
+				color: #ffffff;
+				border: 1px solid rgba(255, 255, 255, 0.35);
+
+				&:hover {
+					background: rgba(255, 255, 255, 0.1);
+					border-color: #ffffff;
+					transform: scale(1.02);
+				}
+			}
+
+			&:active {
+				transform: scale(0.98);
+			}
+		}
+	}
+
+	.login-head {
+		text-align: center;
+		margin-bottom: 1.5rem;
+		position: relative;
+
+		.back-btn {
+			position: absolute;
+			left: 0;
+			top: 0.2rem;
+			display: inline-flex;
+			align-items: center;
+			gap: 0.3rem;
+			background: none;
+			border: none;
+			color: #a7a7a7;
+			font-size: 0.82rem;
+			font-weight: 700;
+			cursor: pointer;
+			padding: 0.3rem 0.5rem;
+			border-radius: 9999px;
+			transition: all 150ms ease;
+
+			&:hover {
+				color: #ffffff;
+				background: rgba(255, 255, 255, 0.08);
+			}
+		}
+
+		.login-title {
+			font-size: 1.6rem;
 			font-weight: 900;
 			letter-spacing: -0.03em;
 			margin: 0 0 0.4rem;
 			color: #ffffff;
 		}
 
-		.auth-subtitle {
+		.login-subtitle {
 			color: #a7a7a7;
 			font-size: 0.88rem;
 			margin: 0;

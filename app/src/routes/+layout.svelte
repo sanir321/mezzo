@@ -73,7 +73,17 @@
 
 	const pathname = $derived($page.url.pathname);
 	const isAuthPage = $derived(pathname === "/login" || pathname === "/signup");
-	const showLanding = $derived(pathname === "/" && !isLoggedIn);
+
+	// Detect running inside the Capacitor Android WebView app. There we skip
+	// the web landing page and route straight to the login/signup entry screen.
+	const isNativeApp = $derived.by(() => {
+		if (typeof window === "undefined") return false;
+		const cap = (window as Window & { Capacitor?: { getPlatform?: () => string; isNativePlatform?: () => boolean } }).Capacitor;
+		if (!cap) return false;
+		return cap.getPlatform?.() !== "web" || cap.isNativePlatform?.() === true;
+	});
+
+	const showLanding = $derived(pathname === "/" && !isLoggedIn && !isNativeApp);
 
 	// Require account login or sign up to use Mezzo protected pages
 	$effect(() => {
