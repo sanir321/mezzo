@@ -13,7 +13,7 @@ export async function startSocialAuth(provider: "google" | "github"): Promise<vo
 	if (isNativeApp()) {
 		const { Browser } = await import("@capacitor/browser");
 		const base = API_BASE || "https://mezzo-music.pages.dev";
-		const startUrl = `${base}/api/auth/social-login?provider=${provider}&native=1`;
+		const startUrl = `${base}/api/social-login?provider=${provider}&native=1`;
 		await Browser.open({
 			url: startUrl,
 			windowName: "_blank",

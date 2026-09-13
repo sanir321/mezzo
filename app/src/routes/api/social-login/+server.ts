@@ -1,7 +1,7 @@
 import { createAuth, getBaseUrl } from "$lib/server/auth";
 import type { RequestHandler } from "@sveltejs/kit";
 
-export const GET: RequestHandler = async ({ url, platform, request }) => {
+export const GET: RequestHandler = async ({ url, platform }) => {
 	const provider = (url.searchParams.get("provider") || "google") as "google" | "github";
 	const native = url.searchParams.get("native") === "1";
 
@@ -24,7 +24,7 @@ export const GET: RequestHandler = async ({ url, platform, request }) => {
 			const headers = new Headers();
 			headers.set("Location", location);
 
-			// Forward all Set-Cookie headers so OAuth state & verifier cookies are stored directly in Chrome
+			// Forward all Set-Cookie headers so OAuth state & PKCE code verifier are stored in Chrome
 			const cookies = res.headers.getSetCookie?.() ?? [];
 			if (cookies.length > 0) {
 				for (const cookie of cookies) {
