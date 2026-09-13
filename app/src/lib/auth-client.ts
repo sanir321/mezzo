@@ -1,6 +1,6 @@
 import { createAuthClient } from "better-auth/svelte";
 import { API_BASE, apiUrl } from "$lib/config";
-import { getAuthToken, setAuthToken, clearAuthToken } from "$lib/auth-token";
+import { getAuthToken, setAuthToken, clearAuthToken, getCachedUser, setCachedUser } from "$lib/auth-token";
 
 // Web (same-origin): use the current origin so OAuth redirects always go to
 // the right host (localhost in dev, the deployed URL in production).
@@ -42,11 +42,13 @@ export const authClient = createAuthClient({
 
 export const { signIn, signUp, signOut, useSession } = authClient;
 
-export { clearAuthToken, getAuthToken, setAuthToken };
+export { clearAuthToken, getAuthToken, setAuthToken, getCachedUser, setCachedUser };
 
-// Persists the session token returned by email/password sign-in or sign-up so
-// the Capacitor build can authenticate with `Authorization: Bearer` instead of
-// cookies. On the web this is a harmless no-op (cookies stay authoritative).
-export function persistAuthToken(response: { data?: { token?: string | null } }): void {
+// Persists the session token and user profile returned by sign-in or sign-up so
+// offline launches and mobile builds remain authenticated without requiring network round-trips.
+export function persistAuthToken(response: { data?: { token?: string | null; user?: any } }): void {
   setAuthToken(response?.data?.token);
+  if (response?.data?.user) {
+    setCachedUser(response.data.user);
+  }
 }

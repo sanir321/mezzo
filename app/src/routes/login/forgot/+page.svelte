@@ -1,11 +1,8 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
-	import { signIn, persistAuthToken } from "$lib/auth-client";
 	import { useSharedSession } from "$lib/session.svelte";
-	import { isNativeApp } from "$lib/native";
 
 	const sessionAtom = useSharedSession();
-	const native = isNativeApp();
 
 	$effect(() => {
 		return sessionAtom.subscribe((value: any) => {
@@ -16,38 +13,48 @@
 	});
 
 	let email = $state("");
-	let password = $state("");
+	let name = $state("");
+	let newPassword = $state("");
+	let confirmPassword = $state("");
 	let showPassword = $state(false);
 	let authError = $state("");
 	let authBusy = $state(false);
+	let success = $state(false);
 
-	async function handleLogin(e: Event) {
+	async function handleReset(e: Event) {
 		e.preventDefault();
 		authError = "";
-		authBusy = true;
-		try {
-			const r = await signIn.email({ email, password });
-			if (r.error) throw new Error(r.error.message ?? "Incorrect email or password.");
-			persistAuthToken(r);
-			goto("/");
-		} catch (err: any) {
-			authError = err.message ?? "Login failed. Please check your credentials.";
-		} finally {
-			authBusy = false;
-		}
-	}
 
-	async function handleGoogleLogin() {
-		authError = "";
+		if (newPassword.length < 6) {
+			authError = "Password must be at least 6 characters long.";
+			return;
+		}
+
+		if (newPassword !== confirmPassword) {
+			authError = "Passwords do not match. Please re-enter.";
+			return;
+		}
+
 		authBusy = true;
 		try {
-			const r = await signIn.social({
-				provider: "google",
-				...(native ? { callbackURL: "https://localhost/oauth/google-callback" } : {}),
+			const res = await fetch("/api/auth/reset-password-direct", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					email: email.trim(),
+					name: name.trim(),
+					newPassword,
+				}),
 			});
-			if (r.error) throw new Error(r.error.message ?? "Google sign in failed");
+
+			const data = await res.json();
+			if (!res.ok || !data.ok) {
+				throw new Error(data.message || "Failed to reset password. Please verify your details.");
+			}
+
+			success = true;
 		} catch (err: any) {
-			authError = err.message ?? "Google sign in failed";
+			authError = err.message || "Password reset failed. Please check your credentials.";
 		} finally {
 			authBusy = false;
 		}
@@ -55,7 +62,7 @@
 </script>
 
 <svelte:head>
-	<title>Log in — Mezzo</title>
+	<title>Reset Password — Mezzo</title>
 </svelte:head>
 
 <div class="auth-page">
@@ -64,106 +71,125 @@
 			<a href="/" class="brand-link" aria-label="Mezzo Home">
 				<img src="/logo.svg" alt="Mezzo" class="brand-logo" />
 			</a>
-			<h1 class="auth-title">Log in to Mezzo</h1>
+			<h1 class="auth-title">Reset your password</h1>
+			<p class="auth-subtitle">Verify your account details to set a new password</p>
 		</header>
 
-		<div class="auth-actions">
-			<button type="button" class="google-btn" onclick={handleGoogleLogin} disabled={authBusy}>
-				<svg viewBox="0 0 24 24" width="1.25rem" height="1.25rem" class="google-icon">
-					<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-					<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-					<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
-					<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
-				</svg>
-				<span>Continue with Google</span>
-			</button>
-		</div>
-
-		<div class="divider">
-			<span class="divider-line"></span>
-			<span class="divider-text">or</span>
-			<span class="divider-line"></span>
-		</div>
-
-		{#if authError}
-			<div class="error-banner">
-				<svg viewBox="0 0 24 24" width="1.1rem" height="1.1rem" fill="none" stroke="currentColor" stroke-width="2">
-					<circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-				</svg>
-				<span>{authError}</span>
+		{#if success}
+			<div class="success-view">
+				<div class="success-icon">
+					<svg viewBox="0 0 24 24" width="2rem" height="2rem" fill="none" stroke="#1ed760" stroke-width="2.5">
+						<polyline points="20 6 9 17 4 12" />
+					</svg>
+				</div>
+				<h2>Password Updated!</h2>
+				<p>Your password has been successfully reset. You can now log in with your new credentials.</p>
+				<a href="/login" class="btn-green">Go to Log In</a>
 			</div>
-		{/if}
+		{:else}
+			{#if authError}
+				<div class="error-banner">
+					<svg viewBox="0 0 24 24" width="1.1rem" height="1.1rem" fill="none" stroke="currentColor" stroke-width="2">
+						<circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+					</svg>
+					<span>{authError}</span>
+				</div>
+			{/if}
 
-		<form onsubmit={handleLogin} class="auth-form">
-			<div class="form-group">
-				<label for="login-email">Email or username</label>
-				<input
-					id="login-email"
-					bind:value={email}
-					type="email"
-					placeholder="Email or username"
-					class="auth-input"
-					required
-					autocomplete="email"
-				/>
-			</div>
-
-			<div class="form-group">
-				<label for="login-password">Password</label>
-				<div class="password-wrap">
+			<form onsubmit={handleReset} class="auth-form">
+				<div class="form-group">
+					<label for="reset-email">Registered email address</label>
 					<input
-						id="login-password"
-						bind:value={password}
-						type={showPassword ? "text" : "password"}
-						placeholder="Password"
+						id="reset-email"
+						bind:value={email}
+						type="email"
+						placeholder="name@domain.com"
 						class="auth-input"
 						required
-						minlength="6"
-						autocomplete="current-password"
+						autocomplete="email"
 					/>
-					<button
-						type="button"
-						class="eye-btn"
-						onclick={() => (showPassword = !showPassword)}
-						aria-label={showPassword ? "Hide password" : "Show password"}
-					>
-						{#if showPassword}
-							<svg viewBox="0 0 24 24" width="1.25rem" height="1.25rem" fill="none" stroke="currentColor" stroke-width="2">
-								<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-								<line x1="1" y1="1" x2="23" y2="23" />
-							</svg>
-						{:else}
-							<svg viewBox="0 0 24 24" width="1.25rem" height="1.25rem" fill="none" stroke="currentColor" stroke-width="2">
-								<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z" />
-								<circle cx="12" cy="12" r="3" />
-							</svg>
-						{/if}
-					</button>
 				</div>
+
+				<div class="form-group">
+					<label for="reset-name">Your profile name</label>
+					<input
+						id="reset-name"
+						bind:value={name}
+						type="text"
+						placeholder="Enter your account profile name"
+						class="auth-input"
+						required
+						autocomplete="name"
+					/>
+				</div>
+
+				<div class="form-group">
+					<label for="reset-password">New password</label>
+					<div class="password-wrap">
+						<input
+							id="reset-password"
+							bind:value={newPassword}
+							type={showPassword ? "text" : "password"}
+							placeholder="At least 6 characters"
+							class="auth-input"
+							required
+							minlength="6"
+							autocomplete="new-password"
+						/>
+						<button
+							type="button"
+							class="eye-btn"
+							onclick={() => (showPassword = !showPassword)}
+							aria-label={showPassword ? "Hide password" : "Show password"}
+						>
+							{#if showPassword}
+								<svg viewBox="0 0 24 24" width="1.25rem" height="1.25rem" fill="none" stroke="currentColor" stroke-width="2">
+									<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+									<line x1="1" y1="1" x2="23" y2="23" />
+								</svg>
+							{:else}
+								<svg viewBox="0 0 24 24" width="1.25rem" height="1.25rem" fill="none" stroke="currentColor" stroke-width="2">
+									<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z" />
+									<circle cx="12" cy="12" r="3" />
+								</svg>
+							{/if}
+						</button>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label for="reset-confirm-password">Confirm new password</label>
+					<div class="password-wrap">
+						<input
+							id="reset-confirm-password"
+							bind:value={confirmPassword}
+							type={showPassword ? "text" : "password"}
+							placeholder="Re-type your new password"
+							class="auth-input"
+							required
+							minlength="6"
+							autocomplete="new-password"
+						/>
+					</div>
+				</div>
+
+				<button type="submit" class="btn-green" disabled={authBusy}>
+					{#if authBusy}
+						<span class="spinner"></span>
+						<span>Updating password...</span>
+					{:else}
+						<span>Reset Password</span>
+					{/if}
+				</button>
+			</form>
+
+			<div class="bottom-divider"></div>
+
+			<div class="auth-switch">
+				<p>Remembered your password?</p>
+				<a href="/login" class="switch-link">Back to log in</a>
 			</div>
-
-			<button type="submit" class="btn-green" disabled={authBusy}>
-				{#if authBusy}
-					<span class="spinner"></span>
-					<span>Logging in...</span>
-				{:else}
-					<span>Log In</span>
-				{/if}
-			</button>
-		</form>
-
-		<div class="forgot-wrap">
-			<a href="/login/forgot" class="forgot-link">
-				Forgot your password?
-			</a>
-		</div>
-
-		<div class="bottom-divider"></div>
-
-		<div class="auth-switch">
-			<p>Don't have an account?</p>
-			<a href="/signup" class="switch-link">Sign up for Mezzo</a>
-		</div>
+		{/if}
 	</div>
 </div>
 
@@ -218,76 +244,17 @@
 			font-size: 1.85rem;
 			font-weight: 800;
 			letter-spacing: -0.03em;
-			margin: 0;
+			margin: 0 0 0.4rem;
 			color: #ffffff;
 			text-align: center;
 		}
-	}
 
-	.auth-actions {
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-		margin-bottom: 1.5rem;
-		width: 100%;
-	}
-
-	.google-btn {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 0.75rem;
-		background: transparent;
-		border: 1.5px solid rgba(255, 255, 255, 0.35);
-		border-radius: 9999px;
-		color: #ffffff;
-		font-size: 0.95rem;
-		font-weight: 700;
-		padding: 0.85rem 1.5rem;
-		cursor: pointer;
-		width: 100%;
-		box-sizing: border-box;
-		transition: border-color 150ms ease, transform 120ms ease, background-color 150ms ease;
-
-		&:hover:not(:disabled) {
-			border-color: #ffffff;
-			background: rgba(255, 255, 255, 0.08);
-			transform: scale(1.01);
-		}
-
-		&:active:not(:disabled) {
-			transform: scale(0.99);
-		}
-
-		&:disabled {
-			opacity: 0.5;
-			cursor: default;
-		}
-
-		.google-icon {
-			flex-shrink: 0;
-		}
-	}
-
-	.divider {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-		margin-bottom: 1.5rem;
-		width: 100%;
-
-		.divider-line {
-			flex: 1;
-			height: 1px;
-			background: #292929;
-		}
-
-		.divider-text {
+		.auth-subtitle {
+			font-size: 0.9rem;
 			color: #a7a7a7;
-			font-size: 0.8rem;
-			font-weight: 700;
-			text-transform: uppercase;
-			letter-spacing: 0.08em;
+			margin: 0;
+			text-align: center;
+			line-height: 1.4;
 		}
 	}
 
@@ -308,6 +275,43 @@
 
 		svg {
 			flex-shrink: 0;
+		}
+	}
+
+	.success-view {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		gap: 1rem;
+		padding: 1rem 0;
+
+		.success-icon {
+			width: 4rem;
+			height: 4rem;
+			border-radius: 50%;
+			background: rgba(30, 215, 96, 0.15);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		h2 {
+			font-size: 1.5rem;
+			font-weight: 800;
+			color: #ffffff;
+			margin: 0;
+		}
+
+		p {
+			color: #a7a7a7;
+			font-size: 0.95rem;
+			line-height: 1.5;
+			margin: 0 0 0.5rem;
+		}
+
+		.btn-green {
+			width: 100%;
 		}
 	}
 
@@ -458,24 +462,6 @@
 			border-top-color: #000000;
 			border-radius: 50%;
 			animation: spin 600ms linear infinite;
-		}
-	}
-
-	.forgot-wrap {
-		display: flex;
-		justify-content: center;
-		margin-top: 1.25rem;
-
-		.forgot-link {
-			color: #ffffff;
-			font-size: 0.875rem;
-			font-weight: 700;
-			text-decoration: underline;
-			transition: color 150ms ease;
-
-			&:hover {
-				color: #1ed760;
-			}
 		}
 	}
 

@@ -58,9 +58,19 @@ import { offlineStore } from "$lib/services/offline.svelte";
 
 	$effect(() => {
 		if (isLoggedIn) {
-			loadLibrary();
+			if (typeof navigator !== "undefined" && !navigator.onLine) {
+				loading = false;
+				if (offlineStore.downloadedTracks.length > 0 && view === "songs") {
+					view = "downloaded";
+				}
+			} else {
+				loadLibrary();
+			}
 		} else {
 			loading = false;
+			if (offlineStore.downloadedTracks.length > 0) {
+				view = "downloaded";
+			}
 		}
 	});
 

@@ -18,12 +18,15 @@
 	import { useSharedSession } from "$lib/session.svelte";
 	import { initNativeIntegration } from "$lib/native-integration";
 	import { syncNativeRoot } from "$lib/stores/native-back.svelte";
+	import { getCachedUser, setCachedUser } from "$lib/auth-token";
+	import { offlineStore } from "$lib/services/offline.svelte";
 	import "../global/redesign/main.scss";
 
 	let { children }: { children?: Snippet } = $props();
 
 	const sessionAtom = useSharedSession();
 	let sessionData = $state<{ data: any; isPending: boolean } | undefined>(undefined);
+	let cachedUser = $state<any>(getCachedUser());
 	let sessionTimedOut = $state(false);
 
 	// Register the app shell service worker for offline support (production
@@ -54,7 +57,12 @@
 
 	const unsub = sessionAtom.subscribe((value: any) => {
 		sessionData = value;
-		const isAuthed = Boolean(value?.data?.user);
+		if (value?.data?.user) {
+			cachedUser = value.data.user;
+			setCachedUser(value.data.user);
+		}
+		const effectiveUser = value?.data?.user ?? cachedUser;
+		const isAuthed = Boolean(effectiveUser);
 		setPlayerAuth(isAuthed);
 		if (isAuthed) {
 			likedStore.init();
@@ -66,22 +74,26 @@
 	});
 
 	// Fail-safe: never leave users stuck on the "Verifying session..." screen.
-	// If the session request hangs (e.g. a stale profile with a broken stored
-	// state), treat it as logged out after a short grace period.
+	// If the session request hangs or is offline, fall back to cached session immediately.
 	$effect(() => {
 		if (typeof window === "undefined" || sessionTimedOut) return;
+		const delay = (typeof navigator !== "undefined" && !navigator.onLine) || cachedUser ? 300 : 4000;
 		const t = setTimeout(() => {
 			sessionTimedOut = true;
-			sessionData = sessionData ?? { data: null, isPending: false };
-		}, 5000);
+			sessionData = sessionData ?? { data: cachedUser ? { user: cachedUser } : null, isPending: false };
+		}, delay);
 		return () => clearTimeout(t);
 	});
 
 	const isSessionLoading = $derived(
-		!sessionTimedOut && (sessionData === undefined || sessionData.isPending),
+		!sessionTimedOut &&
+		(sessionData === undefined || sessionData.isPending) &&
+		!cachedUser &&
+		(typeof navigator === "undefined" || navigator.onLine),
 	);
-	const user = $derived(sessionData?.data?.user ?? null);
-	const isLoggedIn = $derived(user != null);
+	const user = $derived(sessionData?.data?.user ?? cachedUser);
+	const hasOfflineTracks = $derived(offlineStore.downloadedTracks.length > 0);
+	const isLoggedIn = $derived(user != null || (typeof navigator !== "undefined" && !navigator.onLine && hasOfflineTracks));
 
 	const pathname = $derived($page.url.pathname);
 
@@ -89,7 +101,7 @@
 		if (typeof window === "undefined") return;
 		syncNativeRoot(pathname);
 	});
-	const isAuthPage = $derived(pathname === "/login" || pathname === "/signup");
+	const isAuthPage = $derived(pathname === "/login" || pathname.startsWith("/login/") || pathname === "/signup");
 
 	// OAuth completion routes (/oauth/*) finish the social sign-in themselves
 	// (getSession -> persist token). Never bounce them to /login first.
@@ -99,6 +111,9 @@
 	$effect(() => {
 		if (typeof window !== "undefined" && !isSessionLoading) {
 			if (!isLoggedIn && !isAuthPage && !isOAuthPage) {
+				if (!navigator.onLine && (user != null || hasOfflineTracks)) {
+					return;
+				}
 				goto("/login");
 			}
 		}
