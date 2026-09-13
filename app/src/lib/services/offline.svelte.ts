@@ -1,3 +1,4 @@
+import { nativeLog } from "$lib/native-debug";
 import type { Track } from "$lib/stores/player.svelte";
 
 const CACHE_NAME = "mezzo-offline-v1";
@@ -69,14 +70,16 @@ class OfflineStore {
       const cache = await caches.open(CACHE_NAME);
 
       // 1. Fetch & cache audio stream
-      const audioReq = new Request(audioUrl, { mode: "cors" });
+      const audioReq = new Request(audioUrl, { mode: "no-cors" });
       const audioRes = await fetch(audioReq);
-      if (!audioRes.ok) {
+      if (!audioRes.ok && audioRes.status !== 0) {
+        nativeLog("offline-dl", "audio fetch failed", track.title, "status=" + audioRes.status);
         throw new Error(
           `Failed to fetch audio stream: status ${audioRes.status}`,
         );
       }
       await cache.put(`offline-audio-${track.id}`, audioRes.clone());
+      nativeLog("offline-dl", "audio cached", track.title);
 
       // 2. Fetch & cache cover if present
       if (track.cover_url) {
@@ -94,8 +97,10 @@ class OfflineStore {
         ...this.downloadedTracks.filter((t) => t.id !== track.id),
       ];
       this.saveMetadata();
+      nativeLog("offline-dl", "download complete", track.title);
       return true;
     } catch (err) {
+      nativeLog("offline-dl", "download failed", track.title, String(err));
       console.error("Failed to download track offline:", err);
       return false;
     } finally {
