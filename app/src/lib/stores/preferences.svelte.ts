@@ -732,20 +732,23 @@ class UserPreferencesStore {
   public isUserOnboarded(userKey?: string): boolean {
     if (typeof localStorage === "undefined") return true;
     if (this._onboardingCompleted) return true;
-    if (this._favoriteArtists.length > 0) return true;
     const key = userKey || this._activeUserKey;
-    if (key) {
-      if (
-        localStorage.getItem(`mezzo_onboarding_completed_${key}`) === "true" ||
-        localStorage.getItem(`mezzo_onboarded_${key}`) === "true"
-      ) {
-        return true;
-      }
-    }
     if (
       localStorage.getItem("mezzo_onboarding_completed") === "true" ||
       localStorage.getItem("mezzo_onboarded_v1") === "true"
     ) {
+      this._onboardingCompleted = true;
+      return true;
+    }
+    if (key && (
+      localStorage.getItem(`mezzo_onboarding_completed_${key}`) === "true" ||
+      localStorage.getItem(`mezzo_onboarded_${key}`) === "true"
+    )) {
+      this._onboardingCompleted = true;
+      return true;
+    }
+    if (this._favoriteArtists.length > 0) {
+      this._onboardingCompleted = true;
       return true;
     }
     return this._onboardingCompleted;
@@ -859,7 +862,17 @@ class UserPreferencesStore {
   completeOnboarding(userKey?: string) {
     this._onboardingCompleted = true;
     this.showOnboarding = false;
-    this.saveToStorage(userKey);
+    const key = userKey || this._activeUserKey;
+    if (typeof localStorage !== "undefined") {
+      try {
+        localStorage.setItem("mezzo_onboarding_completed", "true");
+        localStorage.setItem("mezzo_onboarded_v1", "true");
+        if (key) {
+          localStorage.setItem(`mezzo_onboarding_completed_${key}`, "true");
+        }
+      } catch {}
+    }
+    this.saveToStorage(key);
   }
 
   resetPreferences() {

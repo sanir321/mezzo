@@ -61,13 +61,17 @@
 		untrack(() => {
 			if (userKey) {
 				userPreferences.loadFromStorage(userKey);
-				const alreadyDone =
-					userPreferences.isUserOnboarded(userKey) ||
-					userPreferences.favoriteArtists.length > 0 ||
-					(typeof localStorage !== "undefined" && localStorage.getItem("mezzo_onboarding_completed") === "true");
-				if (!alreadyDone) {
-					userPreferences.openOnboarding();
-				}
+			}
+			const alreadyDone =
+				userPreferences.isUserOnboarded(userKey) ||
+				userPreferences.favoriteArtists.length > 0 ||
+				(typeof localStorage !== "undefined" && (
+					localStorage.getItem("mezzo_onboarding_completed") === "true" ||
+					localStorage.getItem("mezzo_onboarded_v1") === "true" ||
+					(userKey ? localStorage.getItem(`mezzo_onboarding_completed_${userKey}`) === "true" : false)
+				));
+			if (!alreadyDone) {
+				userPreferences.openOnboarding();
 			}
 		});
 		preferencesReady = true;
