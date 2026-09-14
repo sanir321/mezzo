@@ -52,12 +52,92 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <svelte:head>
-	<title>Mezzo — Free & Lossless Music Streaming</title>
+	<title>Mezzo — Free Spotify Alternative | Lossless Music Streaming &amp; Offline Player</title>
 	<meta
 		name="description"
-		content="High-fidelity music streaming with zero ads. 24-bit FLAC audio, synchronized lyrics, 10-band studio EQ, offline caching, and cross-device sync."
+		content="Mezzo is the free, ad-free Spotify alternative. Stream millions of tracks in 24-bit Lossless FLAC, sing along with synchronized lyrics, sculpt sound with a 10-band EQ, and download offline music on Android, iOS &amp; Web."
 	/>
+	<meta
+		name="keywords"
+		content="free spotify alternative, spotify premium free alternative, ad-free music streaming, lossless flac music, offline music downloader, backup offline music, synchronized karaoke lyrics, 10-band equalizer, mezzo music, android music apk"
+	/>
+	<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+	<link rel="canonical" href="https://mezzo-music.pages.dev/landing" />
+
+	<!-- OpenGraph Tags -->
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content="https://mezzo-music.pages.dev/landing" />
+	<meta property="og:title" content="Mezzo — Free Spotify Alternative | Lossless Music, Zero Ads &amp; Offline Mode" />
+	<meta property="og:description" content="Discover Mezzo: 100% free music streaming with lossless 24-bit audio, synced lyrics, 10-band studio EQ, and 1-click offline downloads." />
+	<meta property="og:image" content="https://mezzo-music.pages.dev/android/android-launchericon-512-512.png" />
+	<meta property="og:site_name" content="Mezzo Music" />
+
+	<!-- Twitter Card -->
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:url" content="https://mezzo-music.pages.dev/landing" />
+	<meta name="twitter:title" content="Mezzo — Free Spotify Alternative | Lossless Audio &amp; Offline Downloads" />
+	<meta name="twitter:description" content="Stream millions of songs ad-free in studio FLAC quality with synchronized lyrics, 10-band EQ, and offline backup on Web &amp; Android." />
+	<meta name="twitter:image" content="https://mezzo-music.pages.dev/android/android-launchericon-512-512.png" />
+
 	<meta name="theme-color" content="#030305" />
+
+	<!-- FAQPage Structured Data (JSON-LD) for Google Rich Snippets -->
+	{@html `<script type="application/ld+json">
+	{
+		"@context": "https://schema.org",
+		"@type": "FAQPage",
+		"mainEntity": [
+			{
+				"@type": "Question",
+				"name": "Is Mezzo really 100% free with zero ads?",
+				"acceptedAnswer": {
+					"@type": "Answer",
+					"text": "Yes! Mezzo is open-source and completely free. There are no audio commercials, banner ads, tracking cookies, or subscription paywalls. All features are fully unlocked forever."
+				}
+			},
+			{
+				"@type": "Question",
+				"name": "What audio quality does Mezzo stream?",
+				"acceptedAnswer": {
+					"@type": "Answer",
+					"text": "Mezzo delivers true lossless Hi-Res audio up to 24-bit / 192kHz FLAC via intelligent multi-source routing. You can also switch between Data Saver, High (320kbps), and Master Lossless quality in settings."
+				}
+			},
+			{
+				"@type": "Question",
+				"name": "Can I download tracks and playlists for offline listening?",
+				"acceptedAnswer": {
+					"@type": "Answer",
+					"text": "Absolutely. With 1 click, you can save individual tracks, albums, or full playlists for offline listening. Audio is cached locally to high-speed IndexedDB on web/desktop and native storage on Android."
+				}
+			},
+			{
+				"@type": "Question",
+				"name": "How do synchronized karaoke lyrics work?",
+				"acceptedAnswer": {
+					"@type": "Answer",
+					"text": "Mezzo fetches synchronized LRC lyrics in real-time. As the track plays, each lyric line lights up dynamically with smooth auto-scrolling. You can even click or tap any line to jump directly to that point in the song."
+				}
+			},
+			{
+				"@type": "Question",
+				"name": "How do I install Mezzo on Android, iOS, or PC?",
+				"acceptedAnswer": {
+					"@type": "Answer",
+					"text": "On Android, download and install the direct APK. On iOS, open Mezzo in Safari, tap Share → 'Add to Home Screen' for a fullscreen app experience. On Windows, Mac, or Linux, click the install icon in Chrome/Edge or use the web app."
+				}
+			},
+			{
+				"@type": "Question",
+				"name": "How does playlist sync work across devices?",
+				"acceptedAnswer": {
+					"@type": "Answer",
+					"text": "Log in with your free Mezzo account (backed by secure Better-Auth) and your custom playlists, liked tracks, equalizer profiles, and play history sync in real time across phone, tablet, and PC."
+				}
+			}
+		]
+	}
+	</script>`}
 </svelte:head>
 
 <div class="landing">

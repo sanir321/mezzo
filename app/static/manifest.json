@@ -1,11 +1,12 @@
 {
 	"background_color": "#000000",
 	"theme_color": "#000000",
-	"name": "Mezzo",
+	"name": "Mezzo — Free Spotify Alternative & Lossless Music",
 	"short_name": "Mezzo",
 	"display": "standalone",
 	"orientation": "portrait",
-	"description": "Your personal music streaming library.",
+	"description": "Free Spotify alternative with lossless FLAC audio, zero ads, synced lyrics, and offline downloads.",
+	"categories": ["music", "entertainment", "audio"],
 	"start_url": "/",
 	"scope": "/",
 	"shortcuts": [
