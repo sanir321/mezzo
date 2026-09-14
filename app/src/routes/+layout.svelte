@@ -158,10 +158,8 @@
 			</div>
 		</div>
 
-		<!-- Audio PlayerBar is mounted so streaming audio playback works seamlessly for logged-in users (hidden while onboarding is active) -->
-		{#if !userPreferences.showOnboarding}
-			<PlayerBar />
-		{/if}
+		<!-- Audio PlayerBar is always mounted so streaming audio playback is never destroyed -->
+		<PlayerBar />
 
 		<nav class="mobile-bottom-nav" aria-label="Mobile Navigation">
 			<a href="/" class="mobile-nav-item" class:active={pathname === "/"}>

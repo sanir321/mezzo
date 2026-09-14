@@ -12,7 +12,7 @@
 	import type { Track, Playlist } from "$lib/stores/player.svelte";
 	import { userPreferences, getArtistMeta, POPULAR_ARTISTS, LANGUAGE_SEARCH_TERMS } from "$lib/stores/preferences.svelte";
 	import { getOnlineTrending, searchOnlineMusic, getPlaylists, getPlaylist } from "$lib/api";
-	import TrackRow from "$lib/components/TrackRow.svelte";
+	import { likedStore } from "$lib/stores/liked.svelte";
 	import { FEATURED_PLAYLISTS } from "$lib/featured-playlists";
 	import { DEFAULT_ALBUM_COVER, DEFAULT_PLAYLIST_COVER, handleImageError, handlePlaylistImageError } from "$lib/utils/image";
 
@@ -76,13 +76,45 @@
 		return "Good evening";
 	});
 
-	// Dynamic User Taste Profile derived directly from tracks the user actually listens to and likes
+	// Dynamic Spotify-Grade Taste Profile derived directly from:
+	// 1. Tracks the user actually plays & listens to (Recently Played)
+	// 2. Songs the user likes (Liked Tracks)
+	// 3. User's onboarding favorite artists
+	// 4. User's selected languages
+	// 5. Neutral global spread
 	const activeArtists = $derived.by(() => {
-		// 1. Explicit favorite artists from onboarding settings
-		if (userPreferences.favoriteArtists.length > 0) {
-			return userPreferences.favoriteArtists.slice(0, 4);
+		const counts = new Map<string, number>();
+
+		// 1. Give highest priority to artists from listening history
+		for (const t of playerRecentlyPlayed.value) {
+			if (t.artist) {
+				const primary = t.artist.split(",")[0].split("&")[0].trim();
+				if (primary) counts.set(primary, (counts.get(primary) || 0) + 4);
+			}
 		}
-		// 2. Match top artists according to user's selected languages
+
+		// 2. Give strong priority to liked songs
+		for (const t of likedStore.tracks) {
+			if (t.artist) {
+				const primary = t.artist.split(",")[0].split("&")[0].trim();
+				if (primary) counts.set(primary, (counts.get(primary) || 0) + 3);
+			}
+		}
+
+		// 3. User's chosen onboarding artists
+		for (const a of userPreferences.favoriteArtists) {
+			counts.set(a, (counts.get(a) || 0) + 2);
+		}
+
+		const sortedFromTaste = Array.from(counts.entries())
+			.sort((a, b) => b[1] - a[1])
+			.map(([name]) => name);
+
+		if (sortedFromTaste.length > 0) {
+			return sortedFromTaste.slice(0, 4);
+		}
+
+		// 4. Match top artists according to user's selected languages
 		const userLangs = userPreferences.languages.map((l) => l.toLowerCase());
 		const matchedFromLangs = POPULAR_ARTISTS
 			.filter((a) => a.languages.some((l) => userLangs.includes(l.toLowerCase())))
@@ -90,7 +122,8 @@
 		if (matchedFromLangs.length > 0) {
 			return matchedFromLangs.slice(0, 4);
 		}
-		// 3. Diverse global and multi-genre spread (neutral global defaults)
+
+		// 5. Diverse global and multi-genre spread (neutral global defaults)
 		return ["The Weeknd", "Taylor Swift", "Drake", "Billie Eilish"];
 	});
 

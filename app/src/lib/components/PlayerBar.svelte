@@ -295,12 +295,12 @@
 				? finalSrc
 				: (finalSrc.startsWith("http") ? finalSrc : `${origin}${finalSrc.startsWith("/") ? "" : "/"}${finalSrc}`);
 
-			// Only reload audio if track changed or the source URL actually changed
-			const isDifferentTrack = track && track.id !== lastLoadedTrackId;
-			const isDifferentSrc = currentLoadedSrc !== targetUrl;
+			// Only reload audio if track changed or audio element has no source loaded
+			const isDifferentTrack = Boolean(track && track.id !== lastLoadedTrackId);
+			const hasNoSource = !audioEl.src || !currentLoadedSrc;
 
-			if (isDifferentTrack || isDifferentSrc) {
-				const isSameTrack = track && track.id === lastLoadedTrackId;
+			if (isDifferentTrack || hasNoSource) {
+				const isSameTrack = Boolean(track && track.id === lastLoadedTrackId);
 				lastLoadedTrackId = track?.id || "";
 				currentLoadedSrc = targetUrl;
 				audioEl.src = finalSrc;
