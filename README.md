@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <a href="https://mezzo-music.pages.dev/apk/Mezzo-1.0.apk">
+  <a href="https://mezzo-music.pages.dev/Mezzo-1.0.apk">
     <img src="https://img.shields.io/badge/Android%20APK-Download%20v1.0-1ed760?style=for-the-badge&logo=android&logoColor=black" alt="Download Android APK" />
   </a>
   <a href="https://mezzo-music.pages.dev">
@@ -83,7 +83,7 @@ Whether you're streaming the latest global chart-toppers on your phone or enjoyi
 ### 📱 Android Application (v1.0 Release)
 Get the standalone APK directly for your smartphone, tablet, or Android media player:
 
-- **Download Link**: [https://mezzo-music.pages.dev/apk/Mezzo-1.0.apk](https://mezzo-music.pages.dev/apk/Mezzo-1.0.apk)
+- **Download Link**: [https://mezzo-music.pages.dev/Mezzo-1.0.apk](https://mezzo-music.pages.dev/Mezzo-1.0.apk)
 - **Version**: `1.0.0 (Release)`
 - **File Size**: `3.4 MB`
 - **Compatibility**: Android 7.0 (Nougat) through Android 15
@@ -135,7 +135,7 @@ Access Mezzo instantly from any modern web browser without installing anything:
 
 - **Official Web Player**: [https://mezzo-music.pages.dev](https://mezzo-music.pages.dev)
 - **Product Landing Page**: [https://mezzo-music.pages.dev/landing](https://mezzo-music.pages.dev/landing)
-- **Android APK Download**: [https://mezzo-music.pages.dev/apk/Mezzo-1.0.apk](https://mezzo-music.pages.dev/apk/Mezzo-1.0.apk)
+- **Android APK Download**: [https://mezzo-music.pages.dev/Mezzo-1.0.apk](https://mezzo-music.pages.dev/Mezzo-1.0.apk)
 
 ---
 
