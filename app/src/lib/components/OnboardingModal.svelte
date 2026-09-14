@@ -423,7 +423,11 @@
 		.search-icon {
 			position: absolute;
 			left: 1rem;
+			top: 50%;
+			transform: translateY(-50%);
+			z-index: 2;
 			pointer-events: none;
+			flex-shrink: 0;
 		}
 
 		.search-input {
@@ -431,11 +435,22 @@
 			background: transparent;
 			border: none;
 			outline: none;
-			padding: 0.8rem 1rem 0.8rem 2.75rem;
+			padding: 0.85rem 1rem 0.85rem 2.85rem;
 			font-size: 0.95rem;
 			color: #121212;
 			font-weight: 500;
 			border-radius: 0.75rem;
+			box-sizing: border-box;
+			-webkit-appearance: none;
+			appearance: none;
+
+			&::-webkit-search-decoration,
+			&::-webkit-search-cancel-button,
+			&::-webkit-search-results-button,
+			&::-webkit-search-results-decoration {
+				-webkit-appearance: none;
+				display: none;
+			}
 
 			&::placeholder {
 				color: #6b7280;

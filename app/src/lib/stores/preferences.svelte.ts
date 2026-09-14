@@ -730,10 +730,23 @@ class UserPreferencesStore {
   }
 
   public isUserOnboarded(userKey?: string): boolean {
-    if (typeof localStorage === "undefined") return this._onboardingCompleted;
+    if (typeof localStorage === "undefined") return true;
+    if (this._onboardingCompleted) return true;
+    if (this._favoriteArtists.length > 0) return true;
     const key = userKey || this._activeUserKey;
     if (key) {
-      return localStorage.getItem(`mezzo_onboarding_completed_${key}`) === "true";
+      if (
+        localStorage.getItem(`mezzo_onboarding_completed_${key}`) === "true" ||
+        localStorage.getItem(`mezzo_onboarded_${key}`) === "true"
+      ) {
+        return true;
+      }
+    }
+    if (
+      localStorage.getItem("mezzo_onboarding_completed") === "true" ||
+      localStorage.getItem("mezzo_onboarded_v1") === "true"
+    ) {
+      return true;
     }
     return this._onboardingCompleted;
   }

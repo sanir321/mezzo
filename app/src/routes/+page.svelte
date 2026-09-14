@@ -61,7 +61,11 @@
 		untrack(() => {
 			if (userKey) {
 				userPreferences.loadFromStorage(userKey);
-				if (!userPreferences.isUserOnboarded(userKey)) {
+				const alreadyDone =
+					userPreferences.isUserOnboarded(userKey) ||
+					userPreferences.favoriteArtists.length > 0 ||
+					(typeof localStorage !== "undefined" && localStorage.getItem("mezzo_onboarding_completed") === "true");
+				if (!alreadyDone) {
 					userPreferences.openOnboarding();
 				}
 			}
