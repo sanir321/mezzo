@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { page } from "$app/stores";
-	import { signOut, clearAuthToken } from "$lib/auth-client";
+	import { performLogout } from "$lib/auth-client";
 	import { useSharedSession } from "$lib/session.svelte";
 	import { authModal } from "$lib/stores/auth-modal.svelte";
 
@@ -113,22 +113,7 @@
 
 	async function handleLogout() {
 		userMenuOpen = false;
-		try {
-			await signOut({
-				fetchOptions: {
-					onSuccess: () => {
-						clearAuthToken();
-						if (typeof window !== "undefined") {
-							window.location.href = "/";
-						}
-					}
-				}
-			});
-		} catch {
-			if (typeof window !== "undefined") {
-				window.location.href = "/";
-			}
-		}
+		await performLogout();
 	}
 </script>
 

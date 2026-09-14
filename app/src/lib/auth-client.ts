@@ -52,3 +52,28 @@ export function persistAuthToken(response: { data?: { token?: string | null; use
     setCachedUser(response.data.user);
   }
 }
+
+/**
+ * Robust, instant single-click logout function:
+ * 1. Synchronously wipes local cache, tokens, and active user session.
+ * 2. Emits auth changed event to immediately clear in-memory stores.
+ * 3. Notifies the BetterAuth server endpoint to clear cookies/session.
+ * 4. Navigates cleanly to landing / login.
+ */
+export async function performLogout(): Promise<void> {
+  if (typeof window !== "undefined") {
+    clearAuthToken();
+    try {
+      localStorage.removeItem("mezzo_cached_user");
+      localStorage.removeItem("mezzo_auth_token");
+      localStorage.removeItem("mezzo_recently_played");
+      localStorage.removeItem("mezzo_cached_playlists");
+    } catch {}
+  }
+  try {
+    await (signOut as any)({}).catch(() => {});
+  } catch {}
+  if (typeof window !== "undefined") {
+    window.location.href = "/";
+  }
+}

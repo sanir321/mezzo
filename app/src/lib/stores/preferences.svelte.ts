@@ -17,14 +17,6 @@ export interface LanguageOption {
   category: "South Asian" | "International";
 }
 
-function arraysEqual(a: string[], b: string[]): boolean {
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) return false;
-  }
-  return true;
-}
-
 export const POPULAR_LANGUAGES: LanguageOption[] = [
   {
     code: "hi",
@@ -670,6 +662,7 @@ class UserPreferencesStore {
   private _favoriteArtists = $state<string[]>([]);
   private _customArtists = $state<Record<string, PopularArtist>>({});
   private _onboardingCompleted = $state<boolean>(false);
+  private _activeUserKey = $state<string>("");
   public showOnboarding = $state<boolean>(false);
 
   constructor() {
@@ -678,50 +671,59 @@ class UserPreferencesStore {
 
   public loadFromStorage(userKey?: string) {
     if (typeof localStorage === "undefined") return;
+    this._activeUserKey = userKey || "";
     try {
-      // Check user-specific onboarding record
       if (userKey) {
-        const userDone = localStorage.getItem(
-          `mezzo_onboarding_completed_${userKey}`,
-        );
-        if (userDone === "true") {
-          this._onboardingCompleted = true;
+        const userDone = localStorage.getItem(`mezzo_onboarding_completed_${userKey}`);
+        this._onboardingCompleted = userDone === "true";
+
+        const userSaved = localStorage.getItem(`${PREF_STORAGE_KEY}_${userKey}`);
+        if (userSaved) {
+          const parsed = JSON.parse(userSaved);
+          if (Array.isArray(parsed.languages) && parsed.languages.length > 0) {
+            this._languages = parsed.languages;
+          } else {
+            this._languages = ["English"];
+          }
+          if (Array.isArray(parsed.favoriteArtists)) {
+            this._favoriteArtists = parsed.favoriteArtists;
+          } else {
+            this._favoriteArtists = [];
+          }
+          if (parsed.customArtists && typeof parsed.customArtists === "object") {
+            this._customArtists = parsed.customArtists;
+          } else {
+            this._customArtists = {};
+          }
+          if (typeof parsed.onboardingCompleted === "boolean") {
+            this._onboardingCompleted = parsed.onboardingCompleted;
+          }
+          return;
+        } else {
+          // Fresh user with no saved preferences
+          this._languages = ["English"];
+          this._favoriteArtists = [];
+          this._customArtists = {};
+          this._onboardingCompleted = false;
+          return;
         }
       }
-      const globalDone = localStorage.getItem("mezzo_onboarding_completed");
-      if (globalDone === "true") {
-        this._onboardingCompleted = true;
-      }
 
+      // Guest / Fallback
       const saved = localStorage.getItem(PREF_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (
-          Array.isArray(parsed.languages) &&
-          parsed.languages.length > 0 &&
-          !arraysEqual(parsed.languages, this._languages)
-        ) {
+        if (Array.isArray(parsed.languages) && parsed.languages.length > 0) {
           this._languages = parsed.languages;
         }
-        if (
-          Array.isArray(parsed.favoriteArtists) &&
-          !arraysEqual(parsed.favoriteArtists, this._favoriteArtists)
-        ) {
+        if (Array.isArray(parsed.favoriteArtists)) {
           this._favoriteArtists = parsed.favoriteArtists;
         }
         if (parsed.customArtists && typeof parsed.customArtists === "object") {
-          const curKeys = Object.keys(this._customArtists || {}).sort();
-          const newKeys = Object.keys(parsed.customArtists).sort();
-          if (
-            curKeys.length !== newKeys.length ||
-            curKeys.some((k, i) => k !== newKeys[i])
-          ) {
-            this._customArtists = parsed.customArtists;
-          }
+          this._customArtists = parsed.customArtists;
         }
         if (typeof parsed.onboardingCompleted === "boolean") {
-          this._onboardingCompleted =
-            this._onboardingCompleted || parsed.onboardingCompleted;
+          this._onboardingCompleted = parsed.onboardingCompleted;
         }
       }
     } catch {
@@ -730,18 +732,12 @@ class UserPreferencesStore {
   }
 
   public isUserOnboarded(userKey?: string): boolean {
-    if (this._onboardingCompleted) return true;
-    if (typeof localStorage === "undefined") return false;
-    try {
-      if (localStorage.getItem("mezzo_onboarding_completed") === "true")
-        return true;
-      if (
-        userKey &&
-        localStorage.getItem(`mezzo_onboarding_completed_${userKey}`) === "true"
-      )
-        return true;
-    } catch {}
-    return false;
+    if (typeof localStorage === "undefined") return this._onboardingCompleted;
+    const key = userKey || this._activeUserKey;
+    if (key) {
+      return localStorage.getItem(`mezzo_onboarding_completed_${key}`) === "true";
+    }
+    return this._onboardingCompleted;
   }
 
   public openOnboarding() {
@@ -754,6 +750,7 @@ class UserPreferencesStore {
 
   private saveToStorage(userKey?: string) {
     if (typeof localStorage === "undefined") return;
+    const key = userKey || this._activeUserKey;
     try {
       const payload: UserPreferencesState = {
         languages: this._languages,
@@ -761,11 +758,15 @@ class UserPreferencesStore {
         customArtists: this._customArtists,
         onboardingCompleted: this._onboardingCompleted,
       };
-      localStorage.setItem(PREF_STORAGE_KEY, JSON.stringify(payload));
-      if (this._onboardingCompleted) {
-        localStorage.setItem("mezzo_onboarding_completed", "true");
-        if (userKey) {
-          localStorage.setItem(`mezzo_onboarding_completed_${userKey}`, "true");
+      if (key) {
+        localStorage.setItem(`${PREF_STORAGE_KEY}_${key}`, JSON.stringify(payload));
+        if (this._onboardingCompleted) {
+          localStorage.setItem(`mezzo_onboarding_completed_${key}`, "true");
+        }
+      } else {
+        localStorage.setItem(PREF_STORAGE_KEY, JSON.stringify(payload));
+        if (this._onboardingCompleted) {
+          localStorage.setItem("mezzo_onboarding_completed", "true");
         }
       }
     } catch {

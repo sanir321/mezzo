@@ -16,10 +16,21 @@ export function useSharedSession() {
 
   if (!sharedSession) {
     const rawSession = authClient.useSession();
-    
+    const subscribers = new Set<(val: any) => void>();
+
+    window.addEventListener("mezzo:auth-changed", (e: any) => {
+      if (e.detail?.user === null || (e.detail?.token === null && e.detail?.user === null)) {
+        const nullVal = { data: null, isPending: false, error: null };
+        for (const sub of subscribers) {
+          sub(nullVal);
+        }
+      }
+    });
+
     sharedSession = {
       subscribe: (subscriber: (val: any) => void) => {
-        return rawSession.subscribe((val: any) => {
+        subscribers.add(subscriber);
+        const unsub = rawSession.subscribe((val: any) => {
           if (val?.data?.user) {
             setCachedUser(val.data.user);
             subscriber(val);
@@ -36,19 +47,23 @@ export function useSharedSession() {
             }
           }
         });
+        return () => {
+          subscribers.delete(subscriber);
+          unsub();
+        };
       },
       get: () => {
+        const cached = getCachedUser();
+        if (!cached) {
+          return { data: null, isPending: false, error: null };
+        }
         const val = rawSession.get() as any;
         if (val?.data?.user) return val;
-        const cached = getCachedUser();
-        if (cached) {
-          return {
-            data: { user: cached, session: { user: cached } },
-            isPending: false,
-            error: null,
-          };
-        }
-        return val;
+        return {
+          data: { user: cached, session: { user: cached } },
+          isPending: false,
+          error: null,
+        };
       },
     };
   }

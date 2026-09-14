@@ -1,5 +1,5 @@
 <script lang="ts">
-import { signOut, clearAuthToken } from "$lib/auth-client";
+import { performLogout } from "$lib/auth-client";
 import { useSharedSession } from "$lib/session.svelte";
 import { authModal } from "$lib/stores/auth-modal.svelte";
 import { userPreferences, POPULAR_LANGUAGES, POPULAR_ARTISTS } from "$lib/stores/preferences.svelte";
@@ -79,22 +79,7 @@ function clearPlayerState() {
 }
 
 async function handleLogout() {
-	try {
-		await signOut({
-			fetchOptions: {
-				onSuccess: () => {
-					clearAuthToken();
-					if (typeof window !== "undefined") {
-						window.location.href = "/";
-					}
-				}
-			}
-		});
-	} catch {
-		if (typeof window !== "undefined") {
-			window.location.href = "/";
-		}
-	}
+	await performLogout();
 }
 </script>
 

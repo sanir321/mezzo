@@ -60,9 +60,9 @@
 		untrack(() => {
 			if (userKey) {
 				userPreferences.loadFromStorage(userKey);
-				// Logged-in user should not be interrupted with onboarding
-				userPreferences.completeOnboarding(userKey);
-				userPreferences.showOnboarding = false;
+				if (!userPreferences.isUserOnboarded(userKey)) {
+					userPreferences.openOnboarding();
+				}
 			}
 		});
 		preferencesReady = true;
