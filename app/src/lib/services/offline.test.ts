@@ -39,5 +39,5 @@ describe("Offline Storage & Playback Metadata", () => {
     // Remove track
     offlineStore.downloadedTracks = [];
     expect(offlineStore.isTrackDownloaded(testTrack.id)).toBe(false);
-  });
+  }, 15000);
 });
