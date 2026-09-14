@@ -68,6 +68,7 @@
 					const parsed = JSON.parse(localTracksRaw);
 					if (Array.isArray(parsed) && parsed.length > 0) {
 						tracks = parsed;
+						loading = false;
 					}
 				}
 				const plListRaw = localStorage.getItem("mezzo_cached_playlists");
@@ -77,6 +78,7 @@
 						const found = parsedList.find((p: Playlist) => p.id === playlistId);
 						if (found) {
 							playlist = found;
+							loading = false;
 						}
 					}
 				}
@@ -124,6 +126,11 @@
 			try {
 				const res = await searchOnlineMusic(featuredMeta.query, 30);
 				tracks = res.tracks ?? [];
+				if (typeof window !== "undefined") {
+					try {
+						localStorage.setItem(`mezzo_pl_tracks_${playlistId}`, JSON.stringify(tracks));
+					} catch {}
+				}
 			} catch {
 				// retain cached tracks if any
 			} finally {
@@ -156,6 +163,11 @@
 			try {
 				const res = await searchOnlineMusic(cleanName, 30);
 				tracks = res.tracks ?? [];
+				if (typeof window !== "undefined") {
+					try {
+						localStorage.setItem(`mezzo_pl_tracks_${playlistId}`, JSON.stringify(tracks));
+					} catch {}
+				}
 			} catch {
 				// retain cached tracks if any
 			} finally {
@@ -203,6 +215,18 @@
 				}
 			}
 		} finally {
+			// Fail-safe fallback so the user is never stuck in an infinite loading spinner
+			if (!playlist) {
+				const fallbackName = playlistId.replace(/^(local_|saavn_pl_|online_pl_|saavn_alb_|online_alb_|radio_|mix_)/, "").replace(/[_-]/g, " ");
+				playlist = {
+					id: playlistId,
+					name: fallbackName ? fallbackName.charAt(0).toUpperCase() + fallbackName.slice(1) : "Playlist",
+					description: "Playlist",
+					cover_key: null,
+					createdAt: Date.now(),
+					updatedAt: Date.now(),
+				};
+			}
 			loading = false;
 		}
 	}

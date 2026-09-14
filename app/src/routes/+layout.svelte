@@ -290,7 +290,7 @@
 		}
 
 		@media screen and (max-width: 1024px) {
-			padding: 0.35rem 0.75rem calc(7.5rem + env(safe-area-inset-bottom)) !important;
+			padding: 0.35rem 0.75rem calc(8.5rem + env(safe-area-inset-bottom, 0px)) !important;
 			-webkit-overflow-scrolling: touch !important;
 			touch-action: pan-y !important;
 			scrollbar-width: none !important;
@@ -310,17 +310,17 @@
 		bottom: 0;
 		left: 0;
 		right: 0;
-		height: calc(3.1rem + env(safe-area-inset-bottom));
-		padding-bottom: env(safe-area-inset-bottom);
-		background: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, rgba(10, 10, 10, 0.75) 40%, rgba(0, 0, 0, 0.92) 100%);
-		backdrop-filter: blur(24px) saturate(180%);
-		-webkit-backdrop-filter: blur(24px) saturate(180%);
-		border-top: 1px solid rgba(255, 255, 255, 0.06);
+		height: calc(3.75rem + env(safe-area-inset-bottom, 0px));
+		padding-bottom: env(safe-area-inset-bottom, 0px);
+		background: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(12, 12, 12, 0.88) 40%, rgba(0, 0, 0, 0.98) 100%);
+		backdrop-filter: blur(28px) saturate(200%);
+		-webkit-backdrop-filter: blur(28px) saturate(200%);
+		border-top: 1px solid rgba(255, 255, 255, 0.08);
 		z-index: 2200;
 		align-items: center;
 		justify-content: space-around;
-		padding-left: 0.5rem;
-		padding-right: 0.5rem;
+		padding-left: 0.75rem;
+		padding-right: 0.75rem;
 
 		@media screen and (max-width: 1024px) {
 			display: flex;
@@ -331,17 +331,19 @@
 			flex-direction: column;
 			align-items: center;
 			justify-content: center;
-			gap: 0.15rem;
+			gap: 0.25rem;
 			color: #a7a7a7;
 			text-decoration: none;
-			font-size: 0.65rem;
+			font-size: 0.72rem;
 			font-weight: 600;
-			transition: color 150ms ease;
-			padding: 0.3rem 0.75rem;
+			letter-spacing: 0.01em;
+			transition: color 150ms ease, transform 120ms ease;
+			padding: 0.35rem 0.85rem;
+			min-width: 4rem;
 
 			svg {
-				width: 1.15rem;
-				height: 1.15rem;
+				width: 1.45rem;
+				height: 1.45rem;
 			}
 
 			&:hover,

@@ -8,13 +8,17 @@ async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
   const headers = new Headers(init?.headers);
   const token = getAuthToken();
   if (token) headers.set("Authorization", `Bearer ${token}`);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 7500);
   try {
-    return await fetch(apiUrl(path), { ...init, headers });
+    return await fetch(apiUrl(path), { ...init, headers, signal: init?.signal || controller.signal });
   } catch (err: any) {
     if (typeof navigator !== "undefined" && !navigator.onLine) {
       throw new Error("You are offline. Connect to the internet to access online features.");
     }
     throw err;
+  } finally {
+    clearTimeout(timer);
   }
 }
 

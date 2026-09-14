@@ -1169,7 +1169,7 @@
 
 		@media screen and (max-width: 1024px) {
 			position: fixed !important;
-			bottom: calc(3.1rem + env(safe-area-inset-bottom) + 6px) !important;
+			bottom: calc(3.75rem + env(safe-area-inset-bottom, 0px) + 6px) !important;
 			left: 10px !important;
 			right: 10px !important;
 			transform: none !important;
