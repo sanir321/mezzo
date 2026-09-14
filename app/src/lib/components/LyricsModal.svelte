@@ -610,22 +610,6 @@
 						<line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
 					</svg>
 				</button>
-
-				<button
-					class="top-icon-btn"
-					disabled={!playerCurrentTrack.value || isDownloading}
-					onclick={handleDownload}
-					title="Download Track"
-					aria-label="Download Track"
-				>
-					{#if isDownloading}
-						<div class="top-spin"></div>
-					{:else}
-						<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2">
-							<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-						</svg>
-					{/if}
-				</button>
 			</div>
 		</header>
 
