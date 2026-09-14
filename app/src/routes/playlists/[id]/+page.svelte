@@ -230,16 +230,16 @@
 
 	async function handleRemoveTrack(track: Track) {
 		if (isLikedPlaylist) return;
+		tracks = tracks.filter((t) => t.id !== track.id);
+		if (typeof window !== "undefined") {
+			try {
+				localStorage.setItem(`mezzo_pl_tracks_${playlistId}`, JSON.stringify(tracks));
+			} catch {}
+		}
 		try {
 			await removeTrackFromPlaylist(playlistId, track.id);
-			tracks = tracks.filter((t) => t.id !== track.id);
-			if (typeof window !== "undefined") {
-				try {
-					localStorage.setItem(`mezzo_pl_tracks_${playlistId}`, JSON.stringify(tracks));
-				} catch {}
-			}
 		} catch (e: any) {
-			alert(e.message ?? "Failed to remove track");
+			console.warn("Remove track from playlist remote error:", e);
 		}
 	}
 
