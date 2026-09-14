@@ -16,7 +16,6 @@
 	import { FEATURED_PLAYLISTS } from "$lib/featured-playlists";
 	import { DEFAULT_ALBUM_COVER, DEFAULT_PLAYLIST_COVER, handleImageError, handlePlaylistImageError } from "$lib/utils/image";
 
-	import { likedStore } from "$lib/stores/liked.svelte";
 
 	const sessionAtom = useSharedSession();
 	let sessionData = $state<{ data: any; isPending: boolean } | undefined>(undefined);
@@ -61,19 +60,9 @@
 		untrack(() => {
 			if (userKey) {
 				userPreferences.loadFromStorage(userKey);
-			}
-
-			const isDone = userPreferences.isUserOnboarded(userKey);
-			const hasExistingData =
-				likedStore.tracks.length > 0 ||
-				userPlaylists.length > 0 ||
-				playerRecentlyPlayed.value.length > 0;
-
-			if (isDone || hasExistingData) {
+				// Logged-in user should not be interrupted with onboarding
 				userPreferences.completeOnboarding(userKey);
 				userPreferences.showOnboarding = false;
-			} else if (userKey) {
-				userPreferences.openOnboarding();
 			}
 		});
 		preferencesReady = true;
