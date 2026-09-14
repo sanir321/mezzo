@@ -513,15 +513,14 @@ async function handleLogout() {
 	}
 
 	.settings-card {
-		background: rgba(20, 24, 33, 0.7);
-		backdrop-filter: blur(16px);
+		background: #181818;
 		border: 1px solid rgba(255, 255, 255, 0.08);
-		border-radius: 1.25rem;
+		border-radius: 1rem;
 		padding: 1.5rem;
 		display: flex;
 		flex-direction: column;
 		gap: 1.25rem;
-		box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 
 		&.full-width {
 			grid-column: 1 / -1;
@@ -730,8 +729,8 @@ async function handleLogout() {
 			max-width: 250px;
 
 			option {
-				background: #181b24;
-				color: #fff;
+				background: #242424;
+				color: #ffffff;
 			}
 		}
 

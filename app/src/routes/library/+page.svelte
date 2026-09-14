@@ -164,7 +164,7 @@ import { handleImageError } from "$lib/utils/image";
 	<title>Library — Mezzo</title>
 </svelte:head>
 
-{#if !isLoggedIn && view !== "downloaded"}
+{#if !isLoggedIn && offlineStore.downloadedTracks.length === 0 && view !== "downloaded"}
 	<div class="guest-hero">
 		<div class="hero-content">
 			<h1>Your Music Library</h1>

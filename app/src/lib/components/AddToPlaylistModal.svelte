@@ -173,24 +173,25 @@
 	.modal-backdrop {
 		position: fixed;
 		inset: 0;
-		background: rgba(0, 0, 0, 0.75);
-		backdrop-filter: blur(8px);
-		z-index: 10015;
+		background: rgba(0, 0, 0, 0.82);
+		backdrop-filter: blur(16px);
+		-webkit-backdrop-filter: blur(16px);
+		z-index: 10050;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 1.5em;
+		padding: 1.25rem;
 		animation: fadeIn 150ms ease-out;
 	}
 
 	.modal-card {
 		width: 100%;
 		max-width: 24rem;
-		background: #141720;
-		border: 1px solid rgba(255, 255, 255, 0.12);
-		border-radius: 1.15rem;
-		padding: 1.5em;
-		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+		background: #181818;
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 1rem;
+		padding: 1.5rem;
+		box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85);
 		display: flex;
 		flex-direction: column;
 		max-height: 80vh;
@@ -200,17 +201,18 @@
 		display: flex;
 		align-items: flex-start;
 		justify-content: space-between;
-		margin-bottom: 1.25em;
+		margin-bottom: 1.25rem;
 
 		h3 {
 			margin: 0;
-			font-size: 1.15em;
-			color: #fff;
+			font-size: 1.15rem;
+			font-weight: 700;
+			color: #ffffff;
 		}
 
 		.track-title {
-			margin: 0.2em 0 0;
-			font-size: 0.82em;
+			margin: 0.25rem 0 0;
+			font-size: 0.82rem;
 			color: rgba(255, 255, 255, 0.5);
 			white-space: nowrap;
 			overflow: hidden;
@@ -222,15 +224,16 @@
 	.close-btn {
 		background: transparent;
 		border: none;
-		color: rgba(255, 255, 255, 0.4);
+		color: rgba(255, 255, 255, 0.5);
 		cursor: pointer;
 		display: flex;
-		padding: 0.25em;
+		padding: 0.35rem;
 		border-radius: 50%;
+		transition: all 120ms ease;
 
 		&:hover {
-			color: #fff;
-			background: rgba(255, 255, 255, 0.08);
+			color: #ffffff;
+			background: rgba(255, 255, 255, 0.1);
 		}
 	}
 
@@ -238,41 +241,42 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 0.5em;
-		background: rgba(30, 215, 96, 0.12);
-		border: 1px dashed rgba(30, 215, 96, 0.4);
+		gap: 0.5rem;
+		background: rgba(30, 215, 96, 0.1);
+		border: 1px dashed rgba(30, 215, 96, 0.35);
 		color: #1ed760;
-		border-radius: 0.6rem;
-		padding: 0.65em;
-		font-weight: 500;
-		font-size: 0.88em;
+		border-radius: 9999px;
+		padding: 0.65rem 1rem;
+		font-weight: 600;
+		font-size: 0.88rem;
 		cursor: pointer;
-		margin-bottom: 1em;
-		transition: all 120ms;
+		margin-bottom: 1rem;
+		transition: all 140ms ease;
 
 		&:hover {
-			background: rgba(30, 215, 96, 0.2);
+			background: rgba(30, 215, 96, 0.18);
 			border-color: #1ed760;
-			color: #fff;
+			color: #ffffff;
 		}
 	}
 
 	.create-form {
 		display: flex;
 		flex-direction: column;
-		gap: 0.6em;
-		background: rgba(255, 255, 255, 0.04);
-		padding: 0.85em;
-		border-radius: 0.6rem;
-		margin-bottom: 1em;
+		gap: 0.75rem;
+		background: #242424;
+		padding: 1rem;
+		border-radius: 0.75rem;
+		margin-bottom: 1rem;
+		border: 1px solid rgba(255, 255, 255, 0.08);
 
 		input {
-			background: rgba(0, 0, 0, 0.3);
-			border: 1px solid rgba(255, 255, 255, 0.15);
-			border-radius: 0.4rem;
-			padding: 0.5em 0.75em;
-			color: #fff;
-			font-size: 0.9em;
+			background: #181818;
+			border: 1px solid rgba(255, 255, 255, 0.12);
+			border-radius: 9999px;
+			padding: 0.55rem 0.95rem;
+			color: #ffffff;
+			font-size: 0.88rem;
 			outline: none;
 
 			&:focus {
@@ -284,16 +288,17 @@
 	.create-actions {
 		display: flex;
 		justify-content: flex-end;
-		gap: 0.5em;
+		gap: 0.5rem;
 	}
 
 	.cancel-btn, .confirm-btn {
 		border: none;
-		border-radius: 0.4rem;
-		padding: 0.4em 0.8em;
-		font-size: 0.82em;
-		font-weight: 500;
+		border-radius: 9999px;
+		padding: 0.45rem 1rem;
+		font-size: 0.82rem;
+		font-weight: 600;
 		cursor: pointer;
+		transition: all 120ms ease;
 	}
 
 	.cancel-btn {
@@ -301,17 +306,19 @@
 		color: rgba(255, 255, 255, 0.6);
 
 		&:hover {
-			color: #fff;
+			color: #ffffff;
+			background: rgba(255, 255, 255, 0.08);
 		}
 	}
 
 	.confirm-btn {
 		background: #1ed760;
-		color: #000;
+		color: #000000;
 		font-weight: 700;
 
 		&:hover {
 			background: #1fdf64;
+			transform: scale(1.02);
 		}
 	}
 
@@ -320,8 +327,9 @@
 		overflow-y: auto;
 		display: flex;
 		flex-direction: column;
-		gap: 0.25em;
+		gap: 0.35rem;
 		max-height: 14rem;
+		scrollbar-width: thin;
 	}
 
 	.pl-row {

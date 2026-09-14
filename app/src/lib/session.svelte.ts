@@ -1,24 +1,57 @@
 import { authClient } from "$lib/auth-client";
+import { getCachedUser, setCachedUser } from "$lib/auth-token";
 
-let sharedSession: ReturnType<typeof authClient.useSession> | null = null;
+let sharedSession: any = null;
 
-/**
- * Shared session subscription. `authClient.useSession()` creates a fresh
- * nanostore atom (and a fresh /api/auth/get-session request) on every call,
- * so 17 components calling it = 17 network round-trips on every load.
- *
- * By caching the atom here, every component subscribes to the SAME store and
- * exactly one session fetch happens per page load.
- */
 export function useSharedSession() {
   if (typeof window === "undefined") {
     return {
-      subscribe: () => () => {},
-      get: () => null,
-    } as unknown as ReturnType<typeof authClient.useSession>;
+      subscribe: (fn: (val: any) => void) => {
+        fn({ data: null, isPending: false, error: null });
+        return () => {};
+      },
+      get: () => ({ data: null, isPending: false, error: null }),
+    };
   }
+
   if (!sharedSession) {
-    sharedSession = authClient.useSession();
+    const rawSession = authClient.useSession();
+    
+    sharedSession = {
+      subscribe: (subscriber: (val: any) => void) => {
+        return rawSession.subscribe((val: any) => {
+          if (val?.data?.user) {
+            setCachedUser(val.data.user);
+            subscriber(val);
+          } else {
+            const cached = getCachedUser();
+            if (cached && (val?.error || !val?.isPending || (typeof navigator !== "undefined" && !navigator.onLine))) {
+              subscriber({
+                data: { user: cached, session: { user: cached } },
+                isPending: false,
+                error: null,
+              });
+            } else {
+              subscriber(val);
+            }
+          }
+        });
+      },
+      get: () => {
+        const val = rawSession.get() as any;
+        if (val?.data?.user) return val;
+        const cached = getCachedUser();
+        if (cached) {
+          return {
+            data: { user: cached, session: { user: cached } },
+            isPending: false,
+            error: null,
+          };
+        }
+        return val;
+      },
+    };
   }
+
   return sharedSession;
 }

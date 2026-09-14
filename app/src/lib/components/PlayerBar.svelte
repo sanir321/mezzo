@@ -41,7 +41,7 @@
 	import QueueDrawer from "$lib/components/QueueDrawer.svelte";
 	import ShortcutsModal from "$lib/components/ShortcutsModal.svelte";
 	import AddToPlaylistModal from "$lib/components/AddToPlaylistModal.svelte";
-	import { initNativeMediaListeners, syncNativeMediaSession } from "$lib/native-media";
+	import { initNativeMediaListeners, syncNativeMediaSession, stopNativeMediaSession } from "$lib/native-media";
 
 	let audioEl: HTMLAudioElement | null = $state(null);
 	let seekInput = $state(playerCurrentTime.value || 0);
@@ -455,7 +455,10 @@
 	// Sync native media session state whenever track or playback state changes
 	$effect(() => {
 		const tr = playerCurrentTrack.value;
-		if (!tr) return;
+		if (!tr) {
+			stopNativeMediaSession();
+			return;
+		}
 		const artworkUrl = coverUrl(tr);
 		syncNativeMediaSession({
 			title: tr.title,
