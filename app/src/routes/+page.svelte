@@ -170,6 +170,30 @@
 			loading = true;
 		}
 		try {
+			// 0. Contextual Time-of-Day Vibe (Morning / Afternoon / Evening / Night)
+			const hour = new Date().getHours();
+			let timeTitle = "Sunset Melodies & Acoustic";
+			let timeKicker = "EVENING VIBES";
+			let timeQuery = "Sunset Chill Acoustic";
+			if (hour >= 5 && hour < 12) {
+				timeTitle = "Morning Coffee & Acoustic Hits";
+				timeKicker = "START YOUR DAY";
+				timeQuery = "Morning Acoustic Coffee Hits";
+			} else if (hour >= 12 && hour < 17) {
+				timeTitle = "Focus Flow & Pop Energy";
+				timeKicker = "AFTERNOON FLOW";
+				timeQuery = "Focus Deep Work Pop Hits";
+			} else if (hour >= 22 || hour < 5) {
+				timeTitle = "Late Night Lo-Fi & Deep R&B";
+				timeKicker = "MIDNIGHT MOOD";
+				timeQuery = "Late Night Lo-Fi R&B";
+			}
+			const timePromise = searchOnlineMusic(timeQuery, 8).then((res) => ({
+				title: timeTitle,
+				kicker: timeKicker,
+				tracks: res.tracks ?? [],
+			})).catch(() => ({ title: timeTitle, kicker: timeKicker, tracks: [] }));
+
 			// 1. Fetch Global Trending tracks
 			const trPromise = getOnlineTrending(15).catch(() => ({ tracks: [] }));
 
@@ -211,7 +235,8 @@
 			// 4. User playlists if authed
 			const plPromise = getPlaylists().catch(() => ({ playlists: [] }));
 
-			const [tr, mixes, genreRes, plRes] = await Promise.all([
+			const [timeSection, tr, mixes, genreRes, plRes] = await Promise.all([
+				timePromise,
 				trPromise,
 				Promise.all(artistPromises),
 				Promise.all(genrePromises),
@@ -221,7 +246,10 @@
 			if (tr.tracks?.length) trendingTracks = tr.tracks;
 			const validMixes = mixes.filter((m) => m.tracks.length > 0);
 			if (validMixes.length) artistMixTracks = validMixes;
-			const validSections = genreRes.filter((s) => s.tracks.length > 0);
+			const validSections = [
+				...(timeSection.tracks.length > 0 ? [timeSection] : []),
+				...genreRes.filter((s) => s.tracks.length > 0)
+			];
 			if (validSections.length) recommendedSections = validSections;
 			if (plRes.playlists) userPlaylists = plRes.playlists;
 

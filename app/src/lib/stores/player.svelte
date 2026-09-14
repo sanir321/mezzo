@@ -619,21 +619,36 @@ export function streamUrl(idOrTrack: string | Track): string {
 		isRadioFetching = true;
 		try {
 			const existingIds = new Set(queue.map((t) => t.id));
-			const query = currentTrack.artist || currentTrack.genre || "Trending Hits";
-			const res = await fetch(apiUrl(`/api/online/search?q=${encodeURIComponent(query)}&limit=10`));
-			if (res.ok) {
-				const data = await res.json();
-				if (Array.isArray(data.tracks)) {
-					const fresh = data.tracks.filter((t: Track) => !existingIds.has(t.id));
-					if (fresh.length > 0) {
-						const toAdd = fresh.slice(0, 5);
-						queue = [...queue, ...toAdd];
-						savePlayerState();
-						if (position < queue.length - 1) {
-							gotoIndex(position + 1);
-							return true;
+			const artist = currentTrack.artist || "";
+			const queryList = [
+				artist ? `${artist} radio` : "",
+				artist ? `${artist} hits` : "",
+				currentTrack.genre ? `${currentTrack.genre} hits` : "",
+				"Popular Trending Hits"
+			].filter(Boolean);
+
+			let foundTracks: Track[] = [];
+			for (const q of queryList) {
+				const res = await fetch(apiUrl(`/api/online/search?q=${encodeURIComponent(q)}&limit=12`)).catch(() => null);
+				if (res && res.ok) {
+					const data = await res.json().catch(() => null);
+					if (Array.isArray(data?.tracks)) {
+						const fresh = data.tracks.filter((t: Track) => !existingIds.has(t.id));
+						if (fresh.length > 0) {
+							foundTracks = fresh;
+							break;
 						}
 					}
+				}
+			}
+
+			if (foundTracks.length > 0) {
+				const toAdd = foundTracks.slice(0, 6);
+				queue = [...queue, ...toAdd];
+				savePlayerState();
+				if (position < queue.length - 1) {
+					gotoIndex(position + 1);
+					return true;
 				}
 			}
 		} catch (e) {
