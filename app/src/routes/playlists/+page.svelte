@@ -1,4 +1,5 @@
 <script lang="ts">
+import { untrack } from "svelte";
 	import { useSharedSession } from "$lib/session.svelte";
 	import { goto } from "$app/navigation";
 	import type { Playlist } from "$lib/stores/player.svelte";
@@ -10,7 +11,7 @@
 	import { DEFAULT_PLAYLIST_COVER, handlePlaylistImageError } from "$lib/utils/image";
 
 	const sessionAtom = useSharedSession();
-	let sessionData = $state<{ data: any; isPending: boolean } | undefined>(undefined);
+	let sessionData = $state<{ data: any; isPending: boolean } | undefined>(sessionAtom.get());
 
 	$effect(() => {
 		return sessionAtom.subscribe((value) => {
@@ -48,6 +49,7 @@
 	let newName = $state("");
 	let newDescription = $state("");
 	let creating = $state(false);
+	let lastLoadedUser = $state<string | null>(null);
 
 	async function loadPlaylists() {
 		error = "";
@@ -69,8 +71,17 @@
 	}
 
 	$effect(() => {
-		if (isLoggedIn) loadPlaylists();
-		else loading = false;
+		const userKey = sessionData?.data?.user?.id || (isLoggedIn ? "logged_in" : "guest");
+		if (userKey !== lastLoadedUser) {
+			lastLoadedUser = userKey;
+			untrack(() => {
+				if (isLoggedIn) {
+					loadPlaylists();
+				} else {
+					loading = false;
+				}
+			});
+		}
 	});
 
 	async function handleCreate(e: Event) {

@@ -1,4 +1,5 @@
 <script lang="ts">
+import { untrack } from "svelte";
 import { goto } from "$app/navigation";
 import { useSharedSession } from "$lib/session.svelte";
 import {
@@ -92,21 +93,29 @@ import { handleImageError } from "$lib/utils/image";
 		}
 	}
 
+	let lastLoadedUser = $state<string | null>(null);
+
 	$effect(() => {
-		if (isLoggedIn) {
-			if (typeof navigator !== "undefined" && !navigator.onLine) {
-				loading = false;
-				if (offlineStore.downloadedTracks.length > 0 && tracks.length === 0) {
-					view = "downloaded";
+		const userKey = sessionData?.data?.user?.id || (isLoggedIn ? "logged_in" : "guest");
+		if (userKey !== lastLoadedUser) {
+			lastLoadedUser = userKey;
+			untrack(() => {
+				if (isLoggedIn) {
+					if (typeof navigator !== "undefined" && !navigator.onLine) {
+						loading = false;
+						if (offlineStore.downloadedTracks.length > 0 && tracks.length === 0) {
+							view = "downloaded";
+						}
+					} else {
+						loadLibrary();
+					}
+				} else {
+					loading = false;
+					if (offlineStore.downloadedTracks.length > 0) {
+						view = "downloaded";
+					}
 				}
-			} else {
-				loadLibrary();
-			}
-		} else {
-			loading = false;
-			if (offlineStore.downloadedTracks.length > 0) {
-				view = "downloaded";
-			}
+			});
 		}
 	});
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from "svelte";
 	import { page } from "$app/stores";
 	import { goto } from "$app/navigation";
 	import { useSharedSession } from "$lib/session.svelte";
@@ -233,7 +234,7 @@
 
 	$effect(() => {
 		if (playlistId) {
-			loadData();
+			untrack(() => loadData());
 		}
 	});
 
