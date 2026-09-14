@@ -140,10 +140,11 @@
 	// (getSession -> persist token). Never bounce them to /login first.
 	const isOAuthPage = $derived(pathname.startsWith("/oauth/"));
 
-	// On native Android app only: if opened fresh without an account or offline tracks, guide to login.
+	// Require account login or sign up to use Mezzo.
+	// Any unauthenticated visitor trying to access protected player pages is guided directly to /login.
 	$effect(() => {
 		if (typeof window !== "undefined" && !isSessionLoading) {
-			if (isNativeApp() && !isLoggedIn && !isAuthPage && !isOAuthPage) {
+			if (!isLoggedIn && !isAuthPage && !isOAuthPage && !isLandingPage) {
 				if (!navigator.onLine && (user != null || hasOfflineTracks)) {
 					return;
 				}

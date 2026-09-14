@@ -176,7 +176,7 @@ async function handleLogout() {
 				</div>
 			{:else}
 				<div class="guest-banner">
-					<p>You are currently listening in guest mode. Sign in or create a free account to create custom playlists, save your favorite tracks, and sync preferences.</p>
+					<p>Sign in or create a free account to sync playlists, liked tracks, and personalized music recommendations across all your devices.</p>
 					<button class="primary-btn" onclick={() => authModal.open()}>
 						Sign In / Create Account
 					</button>
