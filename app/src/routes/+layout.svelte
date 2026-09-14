@@ -23,7 +23,6 @@
 	import { syncNativeRoot } from "$lib/stores/native-back.svelte";
 	import { getCachedUser, setCachedUser } from "$lib/auth-token";
 	import { offlineStore } from "$lib/services/offline.svelte";
-	import { isNativeApp } from "$lib/native";
 	import "../global/redesign/main.scss";
 
 	let { children }: { children?: Snippet } = $props();

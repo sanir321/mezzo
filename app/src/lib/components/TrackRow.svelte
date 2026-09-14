@@ -223,7 +223,18 @@
 					</span>
 				{/if}
 			</span>
-			<span class="artist" title={track.artist ?? "Unknown Artist"}>
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<span
+				class="artist"
+				title={track.artist ? `View ${track.artist}` : "Unknown Artist"}
+				onclick={(e) => {
+					if (track.artist) {
+						e.stopPropagation();
+						goto(`/artist/${encodeURIComponent(track.artist)}`);
+					}
+				}}
+			>
 				{track.artist ?? "Unknown Artist"}
 			</span>
 		</div>
@@ -509,6 +520,7 @@
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
+			cursor: pointer;
 
 			&:hover {
 				color: #ffffff;

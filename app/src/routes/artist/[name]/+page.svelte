@@ -11,7 +11,7 @@
 	import { useSharedSession } from "$lib/session.svelte";
 	import { authModal } from "$lib/stores/auth-modal.svelte";
 	import { userPreferences, getArtistMeta } from "$lib/stores/preferences.svelte";
-	import { searchOnlineMusic, getOnlineTrending } from "$lib/api";
+	import { getOnlineArtist, getOnlineTrending } from "$lib/api";
 	import TrackRow from "$lib/components/TrackRow.svelte";
 
 	const sessionAtom = useSharedSession();
@@ -26,15 +26,28 @@
 	const isLoggedIn = $derived(sessionData?.data?.user != null);
 	const artistName = $derived(decodeURIComponent($page.params.name || "The Weeknd"));
 	const artistMeta = $derived(getArtistMeta(artistName));
+	let onlineArtistObj = $state<{ name: string; image: string; bio?: string; followers?: string } | null>(null);
 	let tracks = $state<Track[]>([]);
 	let relatedTracks = $state<Track[]>([]);
 	let loading = $state(true);
 	let isFollowing = $state(false);
 
 	const heroImage = $derived(
-		artistMeta.image && !artistMeta.image.includes("unsplash.com")
-			? artistMeta.image
-			: tracks[0]?.cover_url || artistMeta.image
+		onlineArtistObj?.image && !onlineArtistObj.image.includes("unsplash.com")
+			? onlineArtistObj.image
+			: artistMeta.image && !artistMeta.image.includes("unsplash.com")
+				? artistMeta.image
+				: tracks[0]?.cover_url || artistMeta.image
+	);
+
+	const displayListeners = $derived(
+		onlineArtistObj?.followers
+			? `${Number(onlineArtistObj.followers).toLocaleString()} followers`
+			: `${artistMeta.monthlyListeners} monthly listeners`
+	);
+
+	const displayBio = $derived(
+		onlineArtistObj?.bio || artistMeta.bio
 	);
 
 	$effect(() => {
@@ -46,11 +59,19 @@
 	async function loadArtistData() {
 		loading = true;
 		try {
-			const [searchRes, trendRes] = await Promise.all([
-				searchOnlineMusic(artistName, 15).catch(() => ({ tracks: [] })),
+			const [artistRes, trendRes] = await Promise.all([
+				getOnlineArtist(artistName).catch(() => ({ artist: null, tracks: [], bio: "", followers: "" })),
 				getOnlineTrending(6).catch(() => ({ tracks: [] })),
 			]);
-			tracks = searchRes.tracks ?? [];
+			if (artistRes.artist) {
+				onlineArtistObj = {
+					name: artistRes.artist.name,
+					image: artistRes.artist.image,
+					bio: artistRes.bio,
+					followers: artistRes.followers,
+				};
+			}
+			tracks = artistRes.tracks ?? [];
 			relatedTracks = trendRes.tracks ?? [];
 		} catch {
 			tracks = [];
@@ -90,7 +111,7 @@
 				<span>Verified Artist</span>
 			</div>
 			<h1 class="artist-hero-name">{artistName}</h1>
-			<p class="hero-listeners">{artistMeta.monthlyListeners} monthly listeners</p>
+			<p class="hero-listeners">{displayListeners}</p>
 		</div>
 	</div>
 
@@ -164,13 +185,13 @@
 	<!-- About Artist Card -->
 	<section class="artist-section">
 		<h2 class="section-title">About</h2>
-		<div class="about-card" style="background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(24, 24, 24, 0.95) 100%), url('{artistMeta.image}');">
+		<div class="about-card" style="background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(24, 24, 24, 0.95) 100%), url('{heroImage}');">
 			<div class="about-card-body">
 				<div class="about-stat">
-					<span class="stat-number">{artistMeta.monthlyListeners}</span>
-					<span class="stat-label">MONTHLY LISTENERS</span>
+					<span class="stat-number">{displayListeners}</span>
+					<span class="stat-label">AUDIENCE</span>
 				</div>
-				<p class="about-bio">{artistMeta.bio}</p>
+				<p class="about-bio">{displayBio}</p>
 				<span class="about-genre-tag">{artistMeta.genre}</span>
 			</div>
 		</div>

@@ -42,6 +42,26 @@ describe("Online Music Streaming Service", () => {
     expect(cleanSearchQuery("starboy feat. daft punk")).toBe(
       "starboy daft punk",
     );
-    expect(cleanSearchQuery("victory lap official video")).toBe("victory lap");
+    expect(cleanSearchQuery("The Realfreedom profile")).toBe("The Realfreedom");
+    expect(cleanSearchQuery("realfreedom profile")).toBe("realfreedom");
+    expect(cleanSearchQuery("aise kaise jaane doon song")).toBe("aise kaise jaane doon");
   });
+
+  it("finds The Realfreedom and Aise Kaise Jaane Doon with tracks and artists", async () => {
+    const artistRes = await searchOnlineMusic("The Realfreedom", 15);
+    expect(artistRes.tracks.length).toBeGreaterThan(0);
+    expect(artistRes.tracks.some(t => t.artist?.includes("The Realfreedom"))).toBe(true);
+    expect(artistRes.artists.some(a => a.name.includes("The Realfreedom"))).toBe(true);
+
+    const songRes = await searchOnlineMusic("Aise Kaise Jaane Doon", 15);
+    expect(songRes.tracks.length).toBeGreaterThan(0);
+    expect(songRes.tracks[0].title.toLowerCase()).toBe("aise kaise jaane doon");
+
+    const { getArtistOnlineDetails } = await import("./music");
+    const artistDetails = await getArtistOnlineDetails("The Realfreedom");
+    expect(artistDetails.artist.name).toBe("The Realfreedom");
+    expect(artistDetails.tracks.length).toBeGreaterThanOrEqual(5);
+    expect(artistDetails.tracks.every(t => t.artist?.includes("The Realfreedom"))).toBe(true);
+    console.log("ARTIST DETAILS TRACKS:", artistDetails.tracks.map(t => t.title));
+  }, 20000);
 });

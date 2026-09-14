@@ -216,9 +216,15 @@ export async function searchOnlineMusic(
     );
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data.tracks) && data.tracks.length > 0) {
+      const hasContent =
+        (Array.isArray(data.tracks) && data.tracks.length > 0) ||
+        (Array.isArray(data.artists) && data.artists.length > 0) ||
+        (Array.isArray(data.playlists) && data.playlists.length > 0) ||
+        (Array.isArray(data.albums) && data.albums.length > 0);
+
+      if (hasContent) {
         return {
-          tracks: data.tracks,
+          tracks: Array.isArray(data.tracks) ? data.tracks : [],
           artists: Array.isArray(data.artists) ? data.artists : [],
           playlists: Array.isArray(data.playlists) ? data.playlists : [],
           albums: Array.isArray(data.albums) ? data.albums : [],
@@ -236,6 +242,31 @@ export async function searchOnlineMusic(
     albums: [],
     isFallback: false,
   };
+}
+
+export async function getOnlineArtist(name: string): Promise<{
+  artist: SearchArtistOnline | null;
+  tracks: Track[];
+  bio?: string;
+  followers?: string;
+}> {
+  const trimmed = name.trim();
+  if (!trimmed) return { artist: null, tracks: [] };
+  try {
+    const res = await apiFetch(
+      `/api/online/artist?name=${encodeURIComponent(trimmed)}`,
+    );
+    if (res.ok) {
+      const data = await res.json();
+      return {
+        artist: data.artist || null,
+        tracks: Array.isArray(data.tracks) ? data.tracks : [],
+        bio: data.bio || "",
+        followers: data.followers || "",
+      };
+    }
+  } catch {}
+  return { artist: null, tracks: [] };
 }
 
 export async function getSearchSuggestions(query: string): Promise<string[]> {

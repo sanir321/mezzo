@@ -142,17 +142,29 @@ export interface OnlineSearchResult {
 // Clean and normalize conversational filler phrases while preserving actual artist and title words
 export function cleanSearchQuery(q: string): string {
   const trimmed = q.trim();
+  if (!trimmed) return "";
+
+  // For 2 words or fewer, only strip filler like "profile", "artist", "official", "video", "audio", "lyrics"
+  // (Preserves genuine short track titles like "Song 2", "Music", etc.)
   const words = trimmed.split(/\s+/);
   if (words.length <= 2) {
-    return trimmed
+    const shortCleaned = trimmed
+      .replace(/\b(profile|artist|official|audio|video|lyrics)\b/gi, " ")
       .replace(/[^\w\s\.\-]/gi, " ")
       .replace(/\s+/g, " ")
       .trim();
+    return (
+      shortCleaned ||
+      trimmed
+        .replace(/[^\w\s\.\-]/gi, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+    );
   }
 
   const cleaned = trimmed
     .replace(
-      /\b(official video|official audio|full video|music video|lyric video|lyrics|video song|audio song)\b/gi,
+      /\b(official video|official audio|full video|music video|lyric video|lyrics|video song|audio song|artist profile|profile|all songs|songs|song|tracks|track|discography|full album)\b/gi,
       " ",
     )
     .replace(/\b(feat|featuring|ft)\b\.?/gi, " ")
@@ -160,7 +172,14 @@ export function cleanSearchQuery(q: string): string {
     .replace(/\s+/g, " ")
     .trim();
 
-  return cleaned || trimmed;
+  // If user searched exclusively for a keyword that got stripped (e.g. "song" or "music"), fallback to trimmed
+  return (
+    cleaned ||
+    trimmed
+      .replace(/[^\w\s\.\-]/gi, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+  );
 }
 
 function rankTracks(tracks: Track[], query: string): Track[] {
@@ -176,26 +195,48 @@ function rankTracks(tracks: Track[], query: string): Track[] {
     const bTitle = b.title.toLowerCase();
     const bArtist = (b.artist || "").toLowerCase();
 
-    // Exact match on title
-    if (aTitle === qLower) scoreA += 100;
-    if (bTitle === qLower) scoreB += 100;
+    // 1. Exact match on title
+    if (aTitle === qLower) scoreA += 120;
+    if (bTitle === qLower) scoreB += 120;
 
-    // Title starts with query
-    if (aTitle.startsWith(qLower)) scoreA += 50;
-    if (bTitle.startsWith(qLower)) scoreB += 50;
+    // 2. Exact match on artist (or primary artist)
+    const aPrimary = aArtist.split(/[,&/]|(?:feat)/i)[0].trim();
+    const bPrimary = bArtist.split(/[,&/]|(?:feat)/i)[0].trim();
+    if (aArtist === qLower || aPrimary === qLower) scoreA += 140;
+    if (bArtist === qLower || bPrimary === qLower) scoreB += 140;
 
-    // Combined title & artist contains all query tokens
+    // 3. Title starts with query
+    if (aTitle.startsWith(qLower)) scoreA += 60;
+    if (bTitle.startsWith(qLower)) scoreB += 60;
+
+    // 4. Artist starts with query or query starts with artist
+    if (
+      aArtist.startsWith(qLower) ||
+      (qLower.length > 3 && aPrimary && qLower.startsWith(aPrimary))
+    )
+      scoreA += 70;
+    if (
+      bArtist.startsWith(qLower) ||
+      (qLower.length > 3 && bPrimary && qLower.startsWith(bPrimary))
+    )
+      scoreB += 70;
+
+    // 5. Combined title & artist contains all query tokens
     const aBoth = `${aTitle} ${aArtist}`;
     const bBoth = `${bTitle} ${bArtist}`;
 
     const aMatchTokens = tokens.filter((t) => aBoth.includes(t)).length;
     const bMatchTokens = tokens.filter((t) => bBoth.includes(t)).length;
-    scoreA += aMatchTokens * 25;
-    scoreB += bMatchTokens * 25;
+    scoreA += aMatchTokens * 20;
+    scoreB += bMatchTokens * 20;
 
-    // Bonus if title contains query keywords
-    if (tokens.every((t) => aTitle.includes(t))) scoreA += 30;
-    if (tokens.every((t) => bTitle.includes(t))) scoreB += 30;
+    // 6. Bonus if title contains ALL query keywords
+    if (tokens.length > 0 && tokens.every((t) => aTitle.includes(t))) scoreA += 35;
+    if (tokens.length > 0 && tokens.every((t) => bTitle.includes(t))) scoreB += 35;
+
+    // 7. Bonus if artist contains ALL query keywords (artist searches)
+    if (tokens.length > 0 && tokens.every((t) => aArtist.includes(t))) scoreA += 60;
+    if (tokens.length > 0 && tokens.every((t) => bArtist.includes(t))) scoreB += 60;
 
     // Bonus for popularity / play count
     scoreA += Math.min(10, (a.play_count || 0) / 10000);
@@ -682,16 +723,11 @@ export async function searchOnlineMusic(
   const saavnTracks: Track[] =
     saavnTracksRes.status === "fulfilled" ? saavnTracksRes.value : [];
 
-  // Merge tracks: Prioritize based on search intent (Indian regional -> Saavn first; Western / Global -> Tidal first)
+  // Merge tracks from both providers (JioSaavn full 320kbps + Tidal catalog)
   const trackMap = new Map<string, Track>();
-  const primaryTracks = isRegionalIndian ? saavnTracks : tidalTracks;
-  const secondaryTracks = isRegionalIndian ? tidalTracks : saavnTracks;
+  const allTracks = [...saavnTracks, ...tidalTracks];
 
-  for (const t of primaryTracks) {
-    const key = `${t.title.toLowerCase().replace(/[^a-z0-9]/g, "")}_${(t.artist || "").split(/[,&/]/)[0].toLowerCase().trim()}`;
-    trackMap.set(key, t);
-  }
-  for (const t of secondaryTracks) {
+  for (const t of allTracks) {
     // Filter out Western cafe/lounge false-positives for Indian searches
     if (
       isRegionalIndian &&
@@ -706,29 +742,29 @@ export async function searchOnlineMusic(
     } else {
       // Attach direct 320kbps Akamai CDN stream URL to track for instant playback
       const existing = trackMap.get(key)!;
-      if (t.stream_url && t.stream_url.startsWith("http")) {
+      if (t.stream_url && t.stream_url.startsWith("http") && !existing.stream_url.startsWith("http")) {
         existing.stream_url = t.stream_url;
       }
     }
   }
 
-  let tracks: Track[] = Array.from(trackMap.values())
-    .filter((t) => !isJunkTrack(t))
-    .slice(0, limit);
+  // Filter junk and rank the entire merged collection against the user query
+  let tracks: Track[] = rankTracks(
+    Array.from(trackMap.values()).filter((t) => !isJunkTrack(t)),
+    cleaned || trimmed,
+  ).slice(0, limit);
 
-  // Merge Artists
+  // Merge Artists: prioritize Saavn for direct artist IDs and CDNs
   const tidalArtists: SearchArtist[] =
     tidalArtistsRes.status === "fulfilled" ? tidalArtistsRes.value : [];
   const saavnArtists: SearchArtist[] =
     saavnArtistsRes.status === "fulfilled" ? saavnArtistsRes.value : [];
   const artistMap = new Map<string, SearchArtist>();
-  const primaryArtists = isRegionalIndian ? saavnArtists : tidalArtists;
-  const secondaryArtists = isRegionalIndian ? tidalArtists : saavnArtists;
 
-  for (const a of primaryArtists) {
+  for (const a of saavnArtists) {
     artistMap.set(a.name.toLowerCase(), a);
   }
-  for (const a of secondaryArtists) {
+  for (const a of tidalArtists) {
     if (!artistMap.has(a.name.toLowerCase())) {
       artistMap.set(a.name.toLowerCase(), a);
     }
@@ -763,7 +799,23 @@ export async function searchOnlineMusic(
       }
     }
   }
-  let artists: SearchArtist[] = Array.from(artistMap.values()).slice(0, 15);
+  let artists: SearchArtist[] = Array.from(artistMap.values());
+  // Prioritize exact artist name matches to query
+  const queryCleanLower = cleaned.toLowerCase();
+  artists.sort((a, b) => {
+    const aName = a.name.toLowerCase();
+    const bName = b.name.toLowerCase();
+    const aExact = aName === queryCleanLower || aName === lowerTrimmed;
+    const bExact = bName === queryCleanLower || bName === lowerTrimmed;
+    if (aExact && !bExact) return -1;
+    if (!aExact && bExact) return 1;
+    const aStarts = aName.startsWith(queryCleanLower);
+    const bStarts = bName.startsWith(queryCleanLower);
+    if (aStarts && !bStarts) return -1;
+    if (!aStarts && bStarts) return 1;
+    return (b.trackCount || 0) - (a.trackCount || 0);
+  });
+  artists = artists.slice(0, 15);
 
   // Merge Albums
   const tidalAlbums: SearchAlbum[] =
@@ -904,3 +956,128 @@ export async function getTrendingOnlineTracks(limit = 25): Promise<Track[]> {
   // 3. Upstream flaky: serve last good batch (even if stale) instead of empty
   return trendingCache.tracks;
 }
+
+// Fetch Comprehensive Artist Profile & Discography
+export async function getArtistOnlineDetails(artistName: string): Promise<{
+  artist: SearchArtist;
+  tracks: Track[];
+  bio?: string;
+  followers?: string;
+}> {
+  const trimmed = artistName.trim();
+  const cleaned = cleanSearchQuery(trimmed) || trimmed;
+
+  // 1. Search JioSaavn artists to get verified artist ID & high-res portrait
+  const saavnArtists = await searchJioSaavnArtists(cleaned, 5);
+  const matchedSaavn =
+    saavnArtists.find((a) => a.name.toLowerCase() === cleaned.toLowerCase()) ||
+    saavnArtists.find((a) => a.name.toLowerCase().includes(cleaned.toLowerCase())) ||
+    saavnArtists[0];
+
+  let artistObj: SearchArtist = matchedSaavn || {
+    id: `art_${encodeURIComponent(trimmed)}`,
+    name: trimmed,
+    image: DEFAULT_TRACK_ART,
+    role: "Artist",
+  };
+
+  let tracks: Track[] = [];
+  let bio = "";
+  let followers = "";
+
+  // 2. Try fetching artist discography & bio directly from JioSaavn page endpoint
+  if (matchedSaavn?.id) {
+    const artistId = matchedSaavn.id.replace(/^saavn_art_/, "");
+    try {
+      const url = `https://www.jiosaavn.com/api.php?__call=artist.getArtistPageDetails&artistId=${artistId}&_format=json&ctx=web6dot0&n_song=30`;
+      const res = await safeFetch(url, { headers: SAAVN_HEADERS }, 5000);
+      if (res.ok) {
+        const text = await res.text();
+        let clean = text.trim();
+        if (clean.startsWith("/**/") || clean.startsWith("//")) {
+          clean = clean.substring(clean.indexOf("{"));
+        }
+        if (clean.startsWith("{")) {
+          const data = JSON.parse(clean);
+          if (data.name) artistObj.name = decodeHtmlEntities(data.name);
+          if (data.image) {
+            const highRes = data.image
+              .replace("150x150", "500x500")
+              .replace("50x50", "500x500")
+              .replace("http://", "https://");
+            if (!highRes.includes("artist-default-music")) {
+              artistObj.image = highRes;
+            }
+          }
+          if (data.follower_count || data.fan_count) {
+            followers = String(data.follower_count || data.fan_count);
+          }
+          if (data.bio) {
+            bio = decodeHtmlEntities(data.bio);
+          }
+
+          if (Array.isArray(data.topSongs) && data.topSongs.length > 0) {
+            for (let i = 0; i < data.topSongs.length; i++) {
+              const s = data.topSongs[i];
+              const streamUrl = decryptSaavnMediaUrl(
+                s.encrypted_media_url || s.encrypted_drm_media_url || "",
+              );
+              if (!streamUrl) continue;
+              const dur = parseInt(s.duration, 10) || 180;
+              const artwork = (s.image || "")
+                .replace("150x150", "500x500")
+                .replace("50x50", "500x500")
+                .replace("http://", "https://");
+
+              tracks.push({
+                id: `saavn_${s.id}`,
+                title: decodeHtmlEntities(s.song || "Unknown Title"),
+                artist: decodeHtmlEntities(
+                  s.primary_artists || s.singers || artistObj.name,
+                ),
+                album: decodeHtmlEntities(s.album || "Single"),
+                genre: s.language || "Music",
+                year: s.year ? parseInt(s.year, 10) : new Date().getFullYear(),
+                track_number: i + 1,
+                duration: dur,
+                format: "AAC 320kbps",
+                size: Math.round(dur * 40000),
+                date_added: Date.now(),
+                play_count: s.play_count ? parseInt(s.play_count, 10) : 50000,
+                stream_url: streamUrl,
+                cover_url: artwork || artistObj.image,
+              });
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Error fetching JioSaavn artist details:", err);
+    }
+  }
+
+  // 3. If tracks is empty or couldn't fetch from artist page, query search and filter by artist
+  if (tracks.length === 0) {
+    const searchRes = await searchOnlineMusic(trimmed, 30);
+    const artistLower = cleaned.toLowerCase();
+    const artistTracks = searchRes.tracks.filter((t) =>
+      (t.artist || "").toLowerCase().includes(artistLower),
+    );
+    tracks = artistTracks.length > 0 ? artistTracks : searchRes.tracks;
+
+    if (
+      (!artistObj.image || artistObj.image === DEFAULT_TRACK_ART) &&
+      tracks[0]?.cover_url
+    ) {
+      artistObj.image = tracks[0].cover_url;
+    }
+  }
+
+  return {
+    artist: artistObj,
+    tracks,
+    bio,
+    followers,
+  };
+}
+
