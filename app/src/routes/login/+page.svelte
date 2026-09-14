@@ -167,7 +167,7 @@
 		<div class="landing-switch">
 			<a href="/landing" class="subtle-link">← Back to Mezzo overview</a>
 			<span class="dot-sep">•</span>
-			<a href="/apk/Mezzo-1.0.apk" download="Mezzo-1.0.apk" class="subtle-link">Download Android App (.apk)</a>
+			<a href="/Mezzo-1.0.apk" download="Mezzo-1.0.apk" class="subtle-link">Download Android App (.apk)</a>
 		</div>
 	</div>
 </div>

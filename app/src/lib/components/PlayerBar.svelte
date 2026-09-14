@@ -244,19 +244,6 @@
 	});
 
 	$effect(() => {
-		const track = playerCurrentTrack.value;
-		if (track && lastLoadedTrackId && track.id !== lastLoadedTrackId) {
-			if (audioEl) {
-				audioEl.pause();
-				audioEl.currentTime = 0;
-			}
-			playerCurrentTime.value = 0;
-			seekInput = 0;
-			hasRestoredInitialPosition = true;
-		}
-	});
-
-	$effect(() => {
 		if (!audioEl) return;
 		const track = playerCurrentTrack.value;
 		const onlineSrc = playerSrc.value;
@@ -302,12 +289,17 @@
 
 			if (!active || !finalSrc || !audioEl) return;
 
-			// Normalize target URL to prevent relative vs absolute string comparison mismatch
+			// Normalize target URL using origin so path/route navigation never alters comparison
+			const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost";
 			const targetUrl = finalSrc.startsWith("blob:")
 				? finalSrc
-				: (typeof window !== "undefined" ? new URL(finalSrc, window.location.href).href : finalSrc);
+				: (finalSrc.startsWith("http") ? finalSrc : `${origin}${finalSrc.startsWith("/") ? "" : "/"}${finalSrc}`);
 
-			if (currentLoadedSrc !== targetUrl) {
+			// Only reload audio if track changed or the source URL actually changed
+			const isDifferentTrack = track && track.id !== lastLoadedTrackId;
+			const isDifferentSrc = currentLoadedSrc !== targetUrl;
+
+			if (isDifferentTrack || isDifferentSrc) {
 				const isSameTrack = track && track.id === lastLoadedTrackId;
 				lastLoadedTrackId = track?.id || "";
 				currentLoadedSrc = targetUrl;

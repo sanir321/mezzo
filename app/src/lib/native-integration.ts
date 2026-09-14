@@ -1,12 +1,16 @@
 import { browser } from "$app/environment";
 import { isNativeApp } from "./native";
 import { nativeRoot } from "$lib/stores/native-back.svelte";
-import { playerShowQueue, playerShowLyrics, playerShowVisualizer } from "$lib/stores/player.svelte";
+import { playerShowQueue, playerShowLyrics, playerShowVisualizer, playerPlaying } from "$lib/stores/player.svelte";
+import { equalizerStore } from "$lib/stores/equalizer.svelte";
+import { authModal } from "$lib/stores/auth-modal.svelte";
 
 type NativeOverlay =
-	| { key: "queue"; close: () => void }
 	| { key: "lyrics"; close: () => void }
-	| { key: "visualizer"; close: () => void };
+	| { key: "visualizer"; close: () => void }
+	| { key: "equalizer"; close: () => void }
+	| { key: "queue"; close: () => void }
+	| { key: "auth"; close: () => void };
 
 let registered = false;
 
@@ -35,10 +39,12 @@ async function setupStatusBar(opts?: { lightIcons?: boolean; backgroundColor?: s
 }
 
 function currentOverlay(): NativeOverlay | null {
-	if (playerShowQueue.value) return { key: "queue", close: () => (playerShowQueue.value = false) };
 	if (playerShowLyrics.value) return { key: "lyrics", close: () => (playerShowLyrics.value = false) };
 	if (playerShowVisualizer.value)
 		return { key: "visualizer", close: () => (playerShowVisualizer.value = false) };
+	if (equalizerStore.isOpen) return { key: "equalizer", close: () => equalizerStore.close() };
+	if (playerShowQueue.value) return { key: "queue", close: () => (playerShowQueue.value = false) };
+	if (authModal.isOpen) return { key: "auth", close: () => authModal.close() };
 	return null;
 }
 
@@ -46,33 +52,37 @@ async function setupBackButton() {
 	try {
 		const { App } = await import("@capacitor/app");
 		App.addListener("backButton", async ({ canGoBack }) => {
+			// 1. If any modal/overlay is open, close it first
 			const overlay = currentOverlay();
 			if (overlay) {
 				overlay.close();
 				return;
 			}
 
-			// Top-level screen: exit straight away, like a native app.
-			if (nativeRoot.value) {
+			// 2. If user is on a subpage (e.g. /settings, /playlists/..., /artist/...), navigate back smoothly
+			if (!nativeRoot.value) {
+				if (canGoBack && typeof window !== "undefined" && window.history.length > 1) {
+					window.history.back();
+				} else {
+					const { goto } = await import("$app/navigation");
+					goto("/");
+				}
+				return;
+			}
+
+			// 3. Top-level screen (e.g. Home):
+			// Minimize the app so background audio playback continues seamlessly without killing the process
+			try {
+				if (typeof (App as any).minimizeApp === "function") {
+					await (App as any).minimizeApp();
+					return;
+				}
+			} catch {}
+
+			// Fallback: If not playing, exit; otherwise keep audio playing
+			if (!playerPlaying.value) {
 				await App.exitApp();
-				return;
 			}
-
-			// Deeper page: pop SPA history. WebView history can be stale/looping,
-			// so if the route does not actually change within a short window,
-			// fall back to exiting instead of leaving the user stuck.
-			if (canGoBack) {
-				const before = window.location.pathname + window.location.search;
-				window.history.back();
-				window.setTimeout(() => {
-					if (currentOverlay()) return;
-					const now = window.location.pathname + window.location.search;
-					if (now === before) void App.exitApp();
-				}, 220);
-				return;
-			}
-
-			await App.exitApp();
 		});
 	} catch {
 		// back integration unavailable; WebView default (history) applies

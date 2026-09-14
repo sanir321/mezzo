@@ -160,7 +160,8 @@
 
 		<div class="actions">
 			<a
-				href="https://github.com/sanir321/mezzo/releases/latest/download/Mezzo-1.0.apk"
+				href="/Mezzo-1.0.apk"
+				download="Mezzo-1.0.apk"
 				class="btn-main"
 			>
 				<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -542,7 +543,8 @@
 				<p>High performance native package with lockscreen media controls, background playback, and instant local caching.</p>
 				<div class="card-actions">
 					<a
-						href="https://github.com/sanir321/mezzo/releases/latest/download/Mezzo-1.0.apk"
+						href="/Mezzo-1.0.apk"
+						download="Mezzo-1.0.apk"
 						class="platform-btn primary"
 					>
 						<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -651,7 +653,8 @@
 						Open Web Player
 					</a>
 					<a
-						href="https://github.com/sanir321/mezzo/releases/latest/download/Mezzo-1.0.apk"
+						href="/Mezzo-1.0.apk"
+						download="Mezzo-1.0.apk"
 						class="btn-alt cta-btn"
 					>
 						<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
