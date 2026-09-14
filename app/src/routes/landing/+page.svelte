@@ -129,12 +129,7 @@
 				<span class="desktop-only">Buy Me a Coffee</span>
 			</button>
 
-			{#if isLoggedIn}
-				<a href="/" class="nav-link">Open Player</a>
-			{:else}
-				<a href="/login" class="nav-link">Log in</a>
-				<a href="/signup" class="nav-link signup">Sign up</a>
-			{/if}
+			<a href="/" class="nav-link open-app">Open Web App</a>
 		</div>
 	</header>
 
@@ -171,7 +166,7 @@
 				</svg>
 				Download APK (Android)
 			</a>
-			<a href={isLoggedIn ? "/" : "/login"} class="btn-alt">
+			<a href="/" class="btn-alt">
 				Open Web Player
 				<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
 					<polyline points="9 18 15 12 9 6" />
@@ -576,7 +571,7 @@
 				<h3>iOS & iPadOS</h3>
 				<p>Open Mezzo in Safari, tap the <strong>Share</strong> button, and tap <strong>Add to Home Screen</strong> for a clean, borderless standalone app.</p>
 				<div class="card-actions">
-					<a href={isLoggedIn ? "/" : "/login"} class="platform-btn secondary">
+					<a href="/" class="platform-btn secondary">
 						Open in Safari
 					</a>
 				</div>
@@ -594,7 +589,7 @@
 				<h3>Desktop (Mac, Win, Linux)</h3>
 				<p>Stream in Chrome, Edge, Firefox, or Brave. Click the install icon in your address bar to run Mezzo as an ultra-fast desktop app.</p>
 				<div class="card-actions">
-					<a href={isLoggedIn ? "/" : "/login"} class="platform-btn secondary">
+					<a href="/" class="platform-btn secondary">
 						Launch Web Player
 					</a>
 				</div>
@@ -646,7 +641,7 @@
 				<p>Join thousands of music lovers enjoying ad-free music with high-fidelity sound and live lyrics.</p>
 				
 				<div class="cta-buttons">
-					<a href={isLoggedIn ? "/" : "/login"} class="btn-main cta-btn">
+					<a href="/" class="btn-main cta-btn">
 						<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
 							<polygon points="5 3 19 12 5 21 5 3" />
 						</svg>
@@ -1046,18 +1041,19 @@
 			color: #fff;
 		}
 
-		&.signup {
-			background: #fff;
-			color: #000;
+		&.open-app {
+			background: #1ed760;
+			color: #000000;
 			padding: 0.5rem 1.25rem;
 			border-radius: 9999px;
 			font-weight: 700;
 			transition: all 150ms ease;
 
 			&:hover {
-				background: #e5e5e5;
-				color: #000;
-				box-shadow: 0 0 16px rgba(255, 255, 255, 0.25);
+				background: #1fdf64;
+				color: #000000;
+				transform: translateY(-1px);
+				box-shadow: 0 4px 16px rgba(30, 215, 96, 0.4);
 			}
 		}
 	}
