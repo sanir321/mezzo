@@ -989,7 +989,7 @@ export async function getArtistOnlineDetails(artistName: string): Promise<{
   if (matchedSaavn?.id) {
     const artistId = matchedSaavn.id.replace(/^saavn_art_/, "");
     try {
-      const url = `https://www.jiosaavn.com/api.php?__call=artist.getArtistPageDetails&artistId=${artistId}&_format=json&ctx=web6dot0&n_song=30`;
+      const url = `https://www.jiosaavn.com/api.php?__call=artist.getArtistPageDetails&artistId=${artistId}&_format=json&ctx=web6dot0&n_song=50`;
       const res = await safeFetch(url, { headers: SAAVN_HEADERS }, 5000);
       if (res.ok) {
         const text = await res.text();
@@ -1016,38 +1016,73 @@ export async function getArtistOnlineDetails(artistName: string): Promise<{
             bio = decodeHtmlEntities(data.bio);
           }
 
-          if (Array.isArray(data.topSongs) && data.topSongs.length > 0) {
-            for (let i = 0; i < data.topSongs.length; i++) {
-              const s = data.topSongs[i];
-              const streamUrl = decryptSaavnMediaUrl(
-                s.encrypted_media_url || s.encrypted_drm_media_url || "",
-              );
-              if (!streamUrl) continue;
-              const dur = parseInt(s.duration, 10) || 180;
-              const artwork = (s.image || "")
-                .replace("150x150", "500x500")
-                .replace("50x50", "500x500")
-                .replace("http://", "https://");
+          let rawSongs: any[] = Array.isArray(data.topSongs)
+            ? data.topSongs
+            : Array.isArray(data.topSongs?.songs)
+              ? data.topSongs.songs
+              : Array.isArray(data.songs)
+                ? data.songs
+                : [];
 
-              tracks.push({
-                id: `saavn_${s.id}`,
-                title: decodeHtmlEntities(s.song || "Unknown Title"),
-                artist: decodeHtmlEntities(
-                  s.primary_artists || s.singers || artistObj.name,
-                ),
-                album: decodeHtmlEntities(s.album || "Single"),
-                genre: s.language || "Music",
-                year: s.year ? parseInt(s.year, 10) : new Date().getFullYear(),
-                track_number: i + 1,
-                duration: dur,
-                format: "AAC 320kbps",
-                size: Math.round(dur * 40000),
-                date_added: Date.now(),
-                play_count: s.play_count ? parseInt(s.play_count, 10) : 50000,
-                stream_url: streamUrl,
-                cover_url: artwork || artistObj.image,
-              });
-            }
+          // If getArtistPageDetails returned fewer than 15 songs, attempt getArtistMoreSong to get more discography
+          if (rawSongs.length < 15) {
+            try {
+              const moreUrl = `https://www.jiosaavn.com/api.php?__call=artist.getArtistMoreSong&artistId=${artistId}&p=0&n=50&_format=json&ctx=web6dot0`;
+              const moreRes = await safeFetch(moreUrl, { headers: SAAVN_HEADERS }, 4500);
+              if (moreRes.ok) {
+                const moreText = await moreRes.text();
+                let mClean = moreText.trim();
+                if (mClean.startsWith("/**/") || mClean.startsWith("//")) mClean = mClean.substring(mClean.indexOf("{"));
+                if (mClean.startsWith("{")) {
+                  const mData = JSON.parse(mClean);
+                  const moreList: any[] = Array.isArray(mData.topSongs)
+                    ? mData.topSongs
+                    : Array.isArray(mData.topSongs?.songs)
+                      ? mData.topSongs.songs
+                      : Array.isArray(mData.songs)
+                        ? mData.songs
+                        : [];
+                  if (moreList.length > rawSongs.length) {
+                    rawSongs = moreList;
+                  }
+                }
+              }
+            } catch {}
+          }
+
+          const seenIds = new Set<string>();
+          for (let i = 0; i < rawSongs.length; i++) {
+            const s = rawSongs[i];
+            if (!s || seenIds.has(s.id)) continue;
+            seenIds.add(s.id);
+            const streamUrl = decryptSaavnMediaUrl(
+              s.encrypted_media_url || s.encrypted_drm_media_url || "",
+            );
+            if (!streamUrl) continue;
+            const dur = parseInt(s.duration, 10) || 180;
+            const artwork = (s.image || "")
+              .replace("150x150", "500x500")
+              .replace("50x50", "500x500")
+              .replace("http://", "https://");
+
+            tracks.push({
+              id: `saavn_${s.id}`,
+              title: decodeHtmlEntities(s.song || "Unknown Title"),
+              artist: decodeHtmlEntities(
+                s.primary_artists || s.singers || artistObj.name,
+              ),
+              album: decodeHtmlEntities(s.album || "Single"),
+              genre: s.language || "Music",
+              year: s.year ? parseInt(s.year, 10) : new Date().getFullYear(),
+              track_number: i + 1,
+              duration: dur,
+              format: "AAC 320kbps",
+              size: Math.round(dur * 40000),
+              date_added: Date.now(),
+              play_count: s.play_count ? parseInt(s.play_count, 10) : 50000 - i * 500,
+              stream_url: streamUrl,
+              cover_url: artwork || artistObj.image,
+            });
           }
         }
       }
@@ -1058,7 +1093,7 @@ export async function getArtistOnlineDetails(artistName: string): Promise<{
 
   // 3. If tracks is empty or couldn't fetch from artist page, query search and filter by artist
   if (tracks.length === 0) {
-    const searchRes = await searchOnlineMusic(trimmed, 30);
+    const searchRes = await searchOnlineMusic(trimmed, 50);
     const artistLower = cleaned.toLowerCase();
     const artistTracks = searchRes.tracks.filter((t) =>
       (t.artist || "").toLowerCase().includes(artistLower),

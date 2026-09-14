@@ -31,6 +31,9 @@
 	let relatedTracks = $state<Track[]>([]);
 	let loading = $state(true);
 	let isFollowing = $state(false);
+	let showAllTracks = $state(false);
+
+	const displayedTracks = $derived(showAllTracks ? tracks : tracks.slice(0, 10));
 
 	const heroImage = $derived(
 		onlineArtistObj?.image && !onlineArtistObj.image.includes("unsplash.com")
@@ -156,8 +159,20 @@
 	</div>
 
 	<!-- Popular Section -->
+	<!-- Popular Section -->
 	<section class="artist-section">
-		<h2 class="section-title">Popular</h2>
+		<div class="section-heading-bar">
+			<h2 class="section-title">Popular</h2>
+			{#if tracks.length > 10}
+				<button
+					type="button"
+					class="view-more-btn"
+					onclick={() => (showAllTracks = !showAllTracks)}
+				>
+					{showAllTracks ? "Show less" : `See all (${tracks.length})`}
+				</button>
+			{/if}
+		</div>
 
 		{#if loading && tracks.length === 0}
 			<div class="section-loading">
@@ -170,7 +185,7 @@
 			</div>
 		{:else}
 			<div class="popular-tracks-list">
-				{#each tracks.slice(0, 10) as track, i (track.id)}
+				{#each displayedTracks as track, i (track.id)}
 					<TrackRow
 						{track}
 						index={i}
@@ -179,6 +194,18 @@
 					/>
 				{/each}
 			</div>
+
+			{#if tracks.length > 10}
+				<div class="show-more-row">
+					<button
+						type="button"
+						class="see-more-toggle"
+						onclick={() => (showAllTracks = !showAllTracks)}
+					>
+						{showAllTracks ? "Show fewer tracks" : `Show all ${tracks.length} tracks`}
+					</button>
+				</div>
+			{/if}
 		{/if}
 	</section>
 
@@ -370,6 +397,28 @@
 			padding: 0 1rem;
 		}
 
+		.section-heading-bar {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		}
+
+		.view-more-btn {
+			background: none;
+			border: none;
+			color: #b3b3b3;
+			font-size: 0.88rem;
+			font-weight: 700;
+			cursor: pointer;
+			padding: 0.25rem 0.5rem;
+			transition: color 150ms ease;
+
+			&:hover {
+				color: #ffffff;
+				text-decoration: underline;
+			}
+		}
+
 		.section-title {
 			color: #ffffff;
 			font-size: 1.5rem;
@@ -383,6 +432,27 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.2rem;
+	}
+
+	.show-more-row {
+		display: flex;
+		margin-top: 0.5rem;
+
+		.see-more-toggle {
+			background: none;
+			border: none;
+			color: #b3b3b3;
+			font-size: 0.88rem;
+			font-weight: 700;
+			cursor: pointer;
+			padding: 0.5rem 0.25rem;
+			letter-spacing: 0.02em;
+			transition: color 150ms ease;
+
+			&:hover {
+				color: #ffffff;
+			}
+		}
 	}
 
 	/* About Card */
