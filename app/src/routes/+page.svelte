@@ -12,6 +12,7 @@
 	import type { Track, Playlist } from "$lib/stores/player.svelte";
 	import { userPreferences, getArtistMeta, POPULAR_ARTISTS, LANGUAGE_SEARCH_TERMS } from "$lib/stores/preferences.svelte";
 	import { getOnlineTrending, searchOnlineMusic, getPlaylists, getPlaylist } from "$lib/api";
+	import TrackRow from "$lib/components/TrackRow.svelte";
 	import { likedStore } from "$lib/stores/liked.svelte";
 	import { FEATURED_PLAYLISTS } from "$lib/featured-playlists";
 	import { DEFAULT_ALBUM_COVER, DEFAULT_PLAYLIST_COVER, handleImageError, handlePlaylistImageError } from "$lib/utils/image";

@@ -1,21 +1,4 @@
 <script lang="ts">
-	import { useSharedSession } from "$lib/session.svelte";
-	import { getCachedUser } from "$lib/auth-token";
-
-	const sessionAtom = useSharedSession();
-	let sessionData = $state<{ data: any; isPending: boolean } | undefined>(undefined);
-	let cachedUser = $state<any>(getCachedUser());
-
-	sessionAtom.subscribe((val: any) => {
-		sessionData = val;
-		if (val?.data?.user) {
-			cachedUser = val.data.user;
-		}
-	});
-
-	const user = $derived(sessionData?.data?.user ?? cachedUser);
-	const isLoggedIn = $derived(Boolean(user));
-
 	let showSupportModal = $state(false);
 	let copied = $state(false);
 	let openFaq = $state<number | null>(0);

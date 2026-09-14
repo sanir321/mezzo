@@ -1,7 +1,7 @@
 import { browser } from "$app/environment";
 import { isNativeApp } from "./native";
 import { nativeRoot } from "$lib/stores/native-back.svelte";
-import { playerShowQueue, playerShowLyrics, playerShowVisualizer, playerPlaying } from "$lib/stores/player.svelte";
+import { playerShowQueue, playerShowLyrics, playerShowVisualizer } from "$lib/stores/player.svelte";
 import { equalizerStore } from "$lib/stores/equalizer.svelte";
 import { authModal } from "$lib/stores/auth-modal.svelte";
 
