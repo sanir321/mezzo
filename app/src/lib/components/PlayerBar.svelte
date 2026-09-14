@@ -111,6 +111,7 @@
 	const isCurrentLiked = $derived(playerCurrentTrack.value ? likedStore.isLiked(playerCurrentTrack.value.id) : false);
 
 	async function handleEnded() {
+		equalizerStore.resumeAudioContext();
 		if (playerRepeat.value === "one") {
 			if (audioEl) {
 				audioEl.currentTime = 0;

@@ -23,6 +23,9 @@ public class MainActivity extends BridgeActivity {
             WebView webView = bridge.getWebView();
             WebSettings settings = webView.getSettings();
             settings.setMediaPlaybackRequiresUserGesture(false);
+            settings.setDomStorageEnabled(true);
+            settings.setDatabaseEnabled(true);
+            webView.setKeepScreenOn(false);
         }
 
         // Request POST_NOTIFICATIONS permission on Android 13+ (API 33+)
@@ -30,6 +33,40 @@ public class MainActivity extends BridgeActivity {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
             }
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        // Prevent Chromium from pausing background audio or JavaScript timer loops
+        if (bridge != null && bridge.getWebView() != null) {
+            bridge.getWebView().resumeTimers();
+        }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        // Keep JavaScript execution and audio stream buffering when screen is locked or app is minimized
+        if (bridge != null && bridge.getWebView() != null) {
+            bridge.getWebView().resumeTimers();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (bridge != null && bridge.getWebView() != null) {
+            bridge.getWebView().resumeTimers();
+        }
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (bridge != null && bridge.getWebView() != null) {
+            bridge.getWebView().resumeTimers();
         }
     }
 
