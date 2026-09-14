@@ -28,6 +28,7 @@
 	import { shareTrack } from "$lib/utils/share";
 	import { offlineStore } from "$lib/services/offline.svelte";
 	import { DEFAULT_ALBUM_COVER, handleImageError } from "$lib/utils/image";
+	import AddToPlaylistModal from "$lib/components/AddToPlaylistModal.svelte";
 
 	let loading = $state(false);
 	let lyricsData = $state<LyricsData | null>(null);
@@ -40,6 +41,7 @@
 	let hideChrome = $state(false);
 	let lyricsVisible = $state(true);
 	let isDownloading = $state(false);
+	let showPlaylistModal = $state(false);
 	let mobileView = $state<"player" | "lyrics">("player");
 
 	// Swipe-down-to-dismiss gesture state (mobile)
@@ -607,6 +609,20 @@
 				<button
 					class="top-icon-btn"
 					disabled={!playerCurrentTrack.value}
+					onclick={(e) => { e.stopPropagation(); showPlaylistModal = true; }}
+					title="Add to Playlist"
+					aria-label="Add to Playlist"
+				>
+					<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+						<line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="16" y2="18" />
+						<line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
+						<line x1="19" y1="16" x2="19" y2="22" /><line x1="16" y1="19" x2="22" y2="19" />
+					</svg>
+				</button>
+
+				<button
+					class="top-icon-btn"
+					disabled={!playerCurrentTrack.value}
 					onclick={handleShare}
 					title="Share Track"
 					aria-label="Share Track"
@@ -916,6 +932,8 @@
 		</div>
 	</div>
 {/if}
+
+<AddToPlaylistModal bind:open={showPlaylistModal} track={playerCurrentTrack.value} />
 
 <style lang="scss">
 	.fullscreen-overlay {
