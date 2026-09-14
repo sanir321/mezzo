@@ -104,6 +104,61 @@ async function handleLogout() {
 	{/if}
 
 	<div class="settings-grid">
+		<!-- App Updates & Version Card (Prominent Top Level) -->
+		<section class="settings-card full-width">
+			<div class="card-header">
+				<svg viewBox="0 0 24 24" width="1.25rem" height="1.25rem" fill="none" stroke="currentColor" stroke-width="2" class="section-icon">
+					<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+					<polyline points="7 10 12 15 17 10" />
+					<line x1="12" y1="15" x2="12" y2="3" />
+				</svg>
+				<h2>App Version &amp; Updates</h2>
+			</div>
+
+			<div class="update-check-row">
+				<div class="update-info">
+					<span class="update-version-label">Current App Version: <strong>v{updateService.currentVersion}</strong></span>
+					{#if updateService.statusMessage}
+						<span class="update-status-text" class:has-update={updateService.updateAvailable}>
+							{updateService.statusMessage}
+						</span>
+					{:else}
+						<span class="update-status-text">Tap below to check GitHub for the latest release and APK build.</span>
+					{/if}
+				</div>
+				<div class="update-btn-wrap">
+					{#if updateService.updateAvailable}
+						<button
+							type="button"
+							class="btn-update-now"
+							onclick={() => {
+								triggerHaptic("medium");
+								updateService.openUpdateModal();
+							}}
+						>
+							🚀 Update Available!
+						</button>
+					{:else}
+						<button
+							type="button"
+							class="btn-check-updates"
+							disabled={updateService.isChecking}
+							onclick={() => {
+								triggerHaptic("light");
+								updateService.checkForUpdate(true);
+							}}
+						>
+							{#if updateService.isChecking}
+								Checking...
+							{:else}
+								Check for Updates
+							{/if}
+						</button>
+					{/if}
+				</div>
+			</div>
+		</section>
+
 		<!-- Account Section -->
 		<section class="settings-card">
 			<div class="card-header">
