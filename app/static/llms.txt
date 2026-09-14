@@ -1,0 +1,28 @@
+# Mezzo
+
+> Mezzo is a free, open-source, and ad-free music streaming platform and Android application that serves as a high-fidelity alternative to Spotify. It provides studio-grade lossless FLAC audio (up to 24-bit / 192kHz), real-time synchronized karaoke lyrics, a 10-band studio equalizer, and 1-click offline music downloads.
+
+## Core Features & Capabilities
+
+- **Lossless Hi-Res Streaming**: Uncompressed 24-bit / 192kHz FLAC, 320kbps AAC/MP3/OPUS streaming with zero ads and zero subscriptions.
+- **Offline Backup & Download**: Instant 1-click offline music caching to local storage (IndexedDB on Web, Native filesystem on Android).
+- **Synchronized Lyrics**: High-precision, real-time scrolling karaoke lyrics with interactive timecode seeking.
+- **10-Band Studio Equalizer**: Precision Web Audio API biquad equalizer with acoustic presets (Bass Boost, Vocal Booster, Lo-Fi, Rock, Pop, Classical).
+- **Personalized Music Discovery**: Multi-language support (Hindi, Punjabi, South Indian, English, Global Hits) with custom artist onboarding and mood feeds.
+- **Cross-Platform Availability**: 
+  - Android Native App (APK): ~3.4 MB lightweight native build.
+  - Progressive Web App (PWA): Standalone installable web player for macOS, Windows, Linux, and iOS.
+
+## Quick Links
+
+- Web Player: https://mezzo-music.pages.dev/
+- Landing Page: https://mezzo-music.pages.dev/landing
+- Android APK: https://mezzo-music.pages.dev/Mezzo-1.0.apk
+- GitHub Repository: https://github.com/sanir321/mezzo
+
+## Technical Architecture
+
+- Frontend: SvelteKit 5 (Runes), TailwindCSS, TypeScript.
+- Mobile Shell: Capacitor Native Android Bridge.
+- Edge Infrastructure: Cloudflare Workers, Cloudflare Pages, Cloudflare D1.
+- Audio Engine: HTML5 Web Audio API, Biquad Filter Nodes, MediaSession API.

@@ -1,7 +1,7 @@
 {
 	"background_color": "#000000",
 	"theme_color": "#000000",
-	"name": "Mezzo — Free Spotify Alternative & Lossless Music",
+	"name": "Mezzo",
 	"short_name": "Mezzo",
 	"display": "standalone",
 	"orientation": "portrait",

@@ -52,10 +52,10 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <svelte:head>
-	<title>Mezzo — Free Spotify Alternative | Lossless Music Streaming &amp; Offline Player</title>
+	<title>Mezzo — Free &amp; Lossless Music Streaming</title>
 	<meta
 		name="description"
-		content="Mezzo is the free, ad-free Spotify alternative. Stream millions of tracks in 24-bit Lossless FLAC, sing along with synchronized lyrics, sculpt sound with a 10-band EQ, and download offline music on Android, iOS &amp; Web."
+		content="Mezzo is a free, ad-free Spotify alternative for streaming millions of tracks in 24-bit Lossless FLAC, with synchronized lyrics, 10-band studio EQ, and offline music downloads."
 	/>
 	<meta
 		name="keywords"
@@ -67,7 +67,7 @@
 	<!-- OpenGraph Tags -->
 	<meta property="og:type" content="website" />
 	<meta property="og:url" content="https://mezzo-music.pages.dev/landing" />
-	<meta property="og:title" content="Mezzo — Free Spotify Alternative | Lossless Music, Zero Ads &amp; Offline Mode" />
+	<meta property="og:title" content="Mezzo — Free &amp; Lossless Music Streaming" />
 	<meta property="og:description" content="Discover Mezzo: 100% free music streaming with lossless 24-bit audio, synced lyrics, 10-band studio EQ, and 1-click offline downloads." />
 	<meta property="og:image" content="https://mezzo-music.pages.dev/android/android-launchericon-512-512.png" />
 	<meta property="og:site_name" content="Mezzo Music" />
@@ -75,7 +75,7 @@
 	<!-- Twitter Card -->
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta name="twitter:url" content="https://mezzo-music.pages.dev/landing" />
-	<meta name="twitter:title" content="Mezzo — Free Spotify Alternative | Lossless Audio &amp; Offline Downloads" />
+	<meta name="twitter:title" content="Mezzo — Free &amp; Lossless Music Streaming" />
 	<meta name="twitter:description" content="Stream millions of songs ad-free in studio FLAC quality with synchronized lyrics, 10-band EQ, and offline backup on Web &amp; Android." />
 	<meta name="twitter:image" content="https://mezzo-music.pages.dev/android/android-launchericon-512-512.png" />
 
