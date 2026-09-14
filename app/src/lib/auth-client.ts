@@ -69,6 +69,10 @@ export async function performLogout(): Promise<void> {
       localStorage.removeItem("mezzo_recently_played");
       localStorage.removeItem("mezzo_cached_playlists");
     } catch {}
+    try {
+      const { resetUser } = await import("$lib/services/posthog");
+      resetUser();
+    } catch {}
   }
   try {
     await (signOut as any)({}).catch(() => {});

@@ -55,6 +55,7 @@
     "@capacitor/status-bar": "^8.0.3",
     "@fontsource/commissioner": "^5.3.0",
     "crypto-js": "^4.2.0",
+    "posthog-js": "^1.431.1",
     "shaka-player": "^5.2.10"
   },
   "engines": {

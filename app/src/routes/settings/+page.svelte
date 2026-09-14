@@ -7,6 +7,7 @@ import { equalizerStore } from "$lib/stores/equalizer.svelte";
 import { playerCrossfade, playerAutoRadio } from "$lib/stores/player.svelte";
 import { offlineStore } from "$lib/services/offline.svelte";
 import { isHapticsEnabled, setHapticsEnabled, triggerHaptic } from "$lib/utils/haptics";
+import { updateService } from "$lib/services/updater.svelte";
 
 const sessionAtom = useSharedSession();
 let sessionData = $state<{ data: any; isPending: boolean } | undefined>(undefined);
@@ -410,6 +411,61 @@ async function handleLogout() {
 				<div class="shortcut-item">
 					<span class="shortcut-label">Quick Search</span>
 					<div class="kbd-wrap"><kbd>⌘</kbd> + <kbd>K</kbd></div>
+				</div>
+			</div>
+		</section>
+
+		<!-- App Updates & Version -->
+		<section class="settings-card full-width">
+			<div class="card-header">
+				<svg viewBox="0 0 24 24" width="1.25rem" height="1.25rem" fill="none" stroke="currentColor" stroke-width="2" class="section-icon">
+					<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+					<polyline points="7 10 12 15 17 10" />
+					<line x1="12" y1="15" x2="12" y2="3" />
+				</svg>
+				<h2>App Updates</h2>
+			</div>
+
+			<div class="update-check-row">
+				<div class="update-info">
+					<span class="update-version-label">Current Version: <strong>v{updateService.currentVersion}</strong></span>
+					{#if updateService.statusMessage}
+						<span class="update-status-text" class:has-update={updateService.updateAvailable}>
+							{updateService.statusMessage}
+						</span>
+					{:else}
+						<span class="update-status-text">Check GitHub for the latest release and APK build.</span>
+					{/if}
+				</div>
+				<div class="update-btn-wrap">
+					{#if updateService.updateAvailable}
+						<button
+							type="button"
+							class="btn-update-now"
+							onclick={() => {
+								triggerHaptic("medium");
+								updateService.openUpdateModal();
+							}}
+						>
+							Update Available!
+						</button>
+					{:else}
+						<button
+							type="button"
+							class="btn-check-updates"
+							disabled={updateService.isChecking}
+							onclick={() => {
+								triggerHaptic("light");
+								updateService.checkForUpdate(true);
+							}}
+						>
+							{#if updateService.isChecking}
+								Checking...
+							{:else}
+								Check for Updates
+							{/if}
+						</button>
+					{/if}
 				</div>
 			</div>
 		</section>
@@ -1012,6 +1068,104 @@ async function handleLogout() {
 						border-color: rgba(30, 215, 96, 0.35);
 						color: #1ed760;
 					}
+				}
+			}
+		}
+	}
+
+	.update-check-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1.25rem;
+		background: rgba(255, 255, 255, 0.02);
+		border: 1px solid rgba(255, 255, 255, 0.06);
+		padding: 1rem 1.25rem;
+		border-radius: 0.85rem;
+
+		@media (max-width: 600px) {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.85rem;
+		}
+
+		.update-info {
+			display: flex;
+			flex-direction: column;
+			gap: 0.25rem;
+
+			.update-version-label {
+				font-size: 0.95rem;
+				color: #ffffff;
+
+				strong {
+					color: #1ed760;
+				}
+			}
+
+			.update-status-text {
+				font-size: 0.82rem;
+				color: rgba(255, 255, 255, 0.5);
+
+				&.has-update {
+					color: #1ed760;
+					font-weight: 600;
+				}
+			}
+		}
+
+		.update-btn-wrap {
+			flex-shrink: 0;
+
+			@media (max-width: 600px) {
+				width: 100%;
+			}
+
+			.btn-check-updates {
+				background: rgba(255, 255, 255, 0.08);
+				border: 1px solid rgba(255, 255, 255, 0.15);
+				color: #ffffff;
+				font-size: 0.85rem;
+				font-weight: 600;
+				padding: 0.55rem 1.1rem;
+				border-radius: 9999px;
+				cursor: pointer;
+				transition: all 0.2s ease;
+
+				&:hover:not(:disabled) {
+					background: rgba(255, 255, 255, 0.16);
+					border-color: rgba(255, 255, 255, 0.3);
+				}
+
+				&:disabled {
+					opacity: 0.6;
+					cursor: not-allowed;
+				}
+
+				@media (max-width: 600px) {
+					width: 100%;
+				}
+			}
+
+			.btn-update-now {
+				background: #1ed760;
+				color: #000000;
+				border: none;
+				font-size: 0.85rem;
+				font-weight: 700;
+				padding: 0.55rem 1.25rem;
+				border-radius: 9999px;
+				cursor: pointer;
+				transition: all 0.2s ease;
+				box-shadow: 0 0 15px rgba(30, 215, 96, 0.3);
+
+				&:hover {
+					background: #22e668;
+					transform: translateY(-1px);
+				}
+
+				@media (max-width: 600px) {
+					width: 100%;
 				}
 			}
 		}

@@ -7,11 +7,14 @@
 	import LyricsModal from "$lib/components/LyricsModal.svelte";
 	import EqualizerModal from "$lib/components/EqualizerModal.svelte";
 	import OnboardingModal from "$lib/components/OnboardingModal.svelte";
+	import UpdateModal from "$lib/components/UpdateModal.svelte";
 	import InstallPrompt from "$lib/components/InstallPrompt.svelte";
 	import { likedStore } from "$lib/stores/liked.svelte";
 	import { setPlayerAuth } from "$lib/stores/player.svelte";
 	import { userPreferences } from "$lib/stores/preferences.svelte";
 	import { authModal } from "$lib/stores/auth-modal.svelte";
+	import { updateService } from "$lib/services/updater.svelte";
+	import { initPostHog, capturePageView, identifyUser } from "$lib/services/posthog";
 	import { goto } from "$app/navigation";
 	import { page } from "$app/stores";
 	import { base } from "$app/paths";
@@ -54,13 +57,24 @@
 				backgroundColor: "#000000",
 			},
 		});
+		updateService.checkSilentlyOnLaunch();
+		initPostHog();
 	}
+
+	$effect(() => {
+		const currentPath = $page.url.pathname;
+		capturePageView(currentPath);
+	});
 
 	const unsub = sessionAtom.subscribe((value: any) => {
 		sessionData = value;
 		if (value?.data?.user) {
 			cachedUser = value.data.user;
 			setCachedUser(value.data.user);
+			identifyUser(value.data.user.id || value.data.user.email, {
+				email: value.data.user.email,
+				name: value.data.user.name
+			});
 		}
 		const effectiveUser = value?.data?.user ?? cachedUser;
 		const isAuthed = Boolean(effectiveUser);
@@ -202,6 +216,7 @@
 		onclose={() => userPreferences.closeOnboarding()}
 		oncompleted={() => userPreferences.closeOnboarding()}
 	/>
+	<UpdateModal />
 {/if}
 
 <style lang="scss">
