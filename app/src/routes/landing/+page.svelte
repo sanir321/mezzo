@@ -15,7 +15,26 @@
 
 	const user = $derived(sessionData?.data?.user ?? cachedUser);
 	const isLoggedIn = $derived(Boolean(user));
+
+	let showSupportModal = $state(false);
+	let copied = $state(false);
+
+	function copyUpi() {
+		navigator.clipboard.writeText("venkatesant820@okaxis");
+		copied = true;
+		setTimeout(() => {
+			copied = false;
+		}, 2000);
+	}
+
+	function handleKeydown(e: KeyboardEvent) {
+		if (e.key === "Escape" && showSupportModal) {
+			showSupportModal = false;
+		}
+	}
 </script>
+
+<svelte:window onkeydown={handleKeydown} />
 
 <svelte:head>
 	<title>Mezzo — Stream Music Free & Lossless</title>
@@ -44,12 +63,12 @@
 				</svg>
 			</a>
 
-			<a href="https://buymeacoffee.com/samirkhadka" target="_blank" rel="noopener noreferrer" class="nav-btn-coffee" title="Support Mezzo on Buy Me a Coffee">
+			<button type="button" class="nav-btn-coffee" title="Support Mezzo on Buy Me a Coffee" onclick={() => (showSupportModal = true)}>
 				<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
 					<path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 5h-2V5h2v3zM2 19h20v2H2z" />
 				</svg>
 				<span class="desktop-only">Buy Me a Coffee</span>
-			</a>
+			</button>
 
 			{#if isLoggedIn}
 				<a href="/" class="nav-link">Open Player</a>
@@ -90,12 +109,12 @@
 				</svg>
 				GitHub Repo
 			</a>
-			<a href="https://buymeacoffee.com/samirkhadka" target="_blank" rel="noopener noreferrer" class="btn-coffee-hero">
+			<button type="button" class="btn-coffee-hero" onclick={() => (showSupportModal = true)}>
 				<svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor">
 					<path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 5h-2V5h2v3zM2 19h20v2H2z" />
 				</svg>
 				Buy Me a Coffee
-			</a>
+			</button>
 		</div>
 	</section>
 
@@ -237,16 +256,109 @@
 					GitHub
 				</a>
 				<a href="https://github.com/sanir321/mezzo/releases" target="_blank" rel="noopener noreferrer" class="foot-link">Releases</a>
-				<a href="https://buymeacoffee.com/samirkhadka" target="_blank" rel="noopener noreferrer" class="foot-link coffee-link">
+				<button type="button" class="foot-link coffee-link btn-reset" onclick={() => (showSupportModal = true)}>
 					<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
 						<path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 5h-2V5h2v3zM2 19h20v2H2z" />
 					</svg>
 					Buy Me a Coffee
-				</a>
+				</button>
 			</div>
 		</div>
 		<p class="foot-copy">© 2026 Mezzo Music · Crafted with ❤️ by Samir Khadka</p>
 	</footer>
+
+	<!-- Support / Buy Me a Coffee Modal -->
+	{#if showSupportModal}
+		<div
+			class="modal-backdrop"
+			role="button"
+			tabindex="0"
+			onclick={() => (showSupportModal = false)}
+			onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') showSupportModal = false; }}
+		>
+			<div
+				class="modal-card"
+				role="dialog"
+				aria-modal="true"
+				tabindex="0"
+				onclick={(e) => e.stopPropagation()}
+				onkeydown={(e) => e.stopPropagation()}
+			>
+				<div class="modal-header">
+					<div class="modal-title">
+						<div class="modal-title-icon">
+							<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+								<path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 5h-2V5h2v3zM2 19h20v2H2z" />
+							</svg>
+						</div>
+						<div>
+							<h3>Buy Me a Coffee</h3>
+							<p>Support Mezzo's open-source development & hosting</p>
+						</div>
+					</div>
+					<button
+						type="button"
+						class="btn-close"
+						onclick={() => (showSupportModal = false)}
+						aria-label="Close modal"
+					>
+						<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+							<line x1="18" y1="6" x2="6" y2="18" />
+							<line x1="6" y1="6" x2="18" y2="18" />
+						</svg>
+					</button>
+				</div>
+
+				<div class="modal-body">
+					<div class="qr-container">
+						<div class="qr-frame">
+							<img src="/upi-qr.png" alt="Scan UPI QR Code to pay" class="qr-image" />
+						</div>
+						<div class="qr-badge">Scan with GPay, PhonePe, Paytm, BHIM</div>
+					</div>
+
+					<div class="upi-box">
+						<div class="upi-info">
+							<span class="upi-label">UPI ID</span>
+							<span class="upi-value">venkatesant820@okaxis</span>
+						</div>
+						<button
+							type="button"
+							class="btn-copy"
+							onclick={copyUpi}
+							class:copied
+						>
+							{#if copied}
+								<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+									<polyline points="20 6 9 17 4 12" />
+								</svg>
+								Copied!
+							{:else}
+								<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+									<rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+									<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+								</svg>
+								Copy
+							{/if}
+						</button>
+					</div>
+
+					<div class="modal-actions">
+						<a
+							href="upi://pay?pa=venkatesant820@okaxis&pn=Mezzo%20Music&cu=INR"
+							class="btn-upi-app"
+						>
+							<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+								<rect x="5" y="2" width="14" height="20" rx="3" />
+								<line x1="12" y1="18" x2="12.01" y2="18" stroke-width="3" stroke-linecap="round" />
+							</svg>
+							Open UPI App
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	{/if}
 </div>
 
 <style lang="scss">
@@ -349,6 +461,9 @@
 		padding: 0.45rem 0.9rem;
 		border-radius: 9999px;
 		background: #ffdd00;
+		border: none;
+		cursor: pointer;
+		font-family: inherit;
 		transition: all 150ms ease;
 
 		&:hover {
@@ -496,6 +611,9 @@
 		gap: 0.5rem;
 		color: #000;
 		background: #ffdd00;
+		border: none;
+		cursor: pointer;
+		font-family: inherit;
 		padding: 0.75rem 1.4rem;
 		border-radius: 9999px;
 		font-size: 0.925rem;
@@ -827,6 +945,252 @@
 				justify-content: center;
 				box-sizing: border-box;
 			}
+		}
+	}
+	.btn-reset {
+		background: none;
+		border: none;
+		padding: 0;
+		font-family: inherit;
+		cursor: pointer;
+	}
+
+	/* ─── Modal ─── */
+	.modal-backdrop {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.78);
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 1000;
+		padding: 1rem;
+		animation: modalFadeIn 180ms cubic-bezier(0.16, 1, 0.3, 1);
+		cursor: default;
+	}
+
+	.modal-card {
+		background: #141414;
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		border-radius: 1.25rem;
+		width: 100%;
+		max-width: 24rem;
+		box-shadow: 0 24px 50px rgba(0, 0, 0, 0.7);
+		overflow: hidden;
+		animation: modalSlideUp 200ms cubic-bezier(0.16, 1, 0.3, 1);
+		outline: none;
+	}
+
+	.modal-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 1.25rem 1.25rem 1rem;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+	}
+
+	.modal-title {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+
+		h3 {
+			font-size: 1.05rem;
+			font-weight: 700;
+			margin: 0;
+			color: #fff;
+		}
+
+		p {
+			font-size: 0.75rem;
+			color: rgba(255, 255, 255, 0.5);
+			margin: 0.15rem 0 0;
+		}
+	}
+
+	.modal-title-icon {
+		width: 2.25rem;
+		height: 2.25rem;
+		border-radius: 50%;
+		background: rgba(255, 221, 0, 0.15);
+		color: #ffdd00;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+	}
+
+	.btn-close {
+		background: rgba(255, 255, 255, 0.06);
+		border: none;
+		color: rgba(255, 255, 255, 0.6);
+		width: 2rem;
+		height: 2rem;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		transition: all 150ms ease;
+		flex-shrink: 0;
+
+		&:hover {
+			background: rgba(255, 255, 255, 0.15);
+			color: #fff;
+		}
+	}
+
+	.modal-body {
+		padding: 1.25rem;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1.1rem;
+	}
+
+	.qr-container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.6rem;
+		width: 100%;
+	}
+
+	.qr-frame {
+		background: #fff;
+		padding: 0.6rem;
+		border-radius: 1rem;
+		box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.qr-image {
+		width: 13rem;
+		height: 13rem;
+		display: block;
+		object-fit: contain;
+		border-radius: 0.5rem;
+	}
+
+	.qr-badge {
+		font-size: 0.72rem;
+		color: rgba(255, 255, 255, 0.5);
+		text-align: center;
+	}
+
+	.upi-box {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		box-sizing: border-box;
+		background: rgba(255, 255, 255, 0.05);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 0.75rem;
+		padding: 0.6rem 0.85rem;
+		gap: 0.75rem;
+	}
+
+	.upi-info {
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+		min-width: 0;
+	}
+
+	.upi-label {
+		font-size: 0.68rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: rgba(255, 255, 255, 0.4);
+		font-weight: 600;
+	}
+
+	.upi-value {
+		font-size: 0.85rem;
+		color: #fff;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		font-weight: 600;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.btn-copy {
+		background: rgba(255, 255, 255, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		color: #fff;
+		padding: 0.45rem 0.75rem;
+		border-radius: 0.5rem;
+		font-size: 0.78rem;
+		font-weight: 600;
+		font-family: inherit;
+		cursor: pointer;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		transition: all 150ms ease;
+		flex-shrink: 0;
+
+		&:hover {
+			background: rgba(255, 255, 255, 0.18);
+			border-color: rgba(255, 255, 255, 0.25);
+		}
+
+		&.copied {
+			background: #1ed760;
+			border-color: #1ed760;
+			color: #000;
+		}
+	}
+
+	.modal-actions {
+		width: 100%;
+	}
+
+	.btn-upi-app {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		width: 100%;
+		box-sizing: border-box;
+		background: #ffdd00;
+		color: #000;
+		padding: 0.7rem 1rem;
+		border-radius: 9999px;
+		font-size: 0.88rem;
+		font-weight: 700;
+		text-decoration: none;
+		transition: all 160ms ease;
+
+		&:hover {
+			background: #ffe433;
+			transform: translateY(-1px);
+			box-shadow: 0 4px 14px rgba(255, 221, 0, 0.35);
+		}
+	}
+
+	@keyframes modalFadeIn {
+		from { opacity: 0; }
+		to { opacity: 1; }
+	}
+
+	@keyframes modalSlideUp {
+		from {
+			opacity: 0;
+			transform: scale(0.95) translateY(8px);
+		}
+		to {
+			opacity: 1;
+			transform: scale(1) translateY(0);
 		}
 	}
 </style>
