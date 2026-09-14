@@ -140,19 +140,14 @@
 	// (getSession -> persist token). Never bounce them to /login first.
 	const isOAuthPage = $derived(pathname.startsWith("/oauth/"));
 
-	// Require account login or sign up to use Mezzo protected pages.
-	// On native Android app, redirect to /login. On web, introduce users via /landing.
+	// On native Android app only: if opened fresh without an account or offline tracks, guide to login.
 	$effect(() => {
 		if (typeof window !== "undefined" && !isSessionLoading) {
-			if (!isLoggedIn && !isAuthPage && !isOAuthPage && !isLandingPage) {
+			if (isNativeApp() && !isLoggedIn && !isAuthPage && !isOAuthPage) {
 				if (!navigator.onLine && (user != null || hasOfflineTracks)) {
 					return;
 				}
-				if (isNativeApp()) {
-					goto("/login");
-				} else {
-					goto("/landing");
-				}
+				goto("/login");
 			}
 		}
 	});
