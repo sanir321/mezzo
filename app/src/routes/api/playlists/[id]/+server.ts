@@ -126,13 +126,19 @@ export const GET: RequestHandler = async ({
     });
   }
 
-  if (!platform) throw error(500, "No platform bindings");
-  const auth = createAuth(platform, url.origin);
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session?.user) throw error(401, "Not authenticated");
-  const data = await getPlaylist(platform.env.DB, session.user.id, params.id);
-  if (!data) throw error(404, "Playlist not found");
-  return json(data);
+  if (!platform?.env?.DB) throw error(404, "Playlist not found");
+  try {
+    const auth = createAuth(platform, url.origin);
+    const session = await auth.api.getSession({ headers: request.headers });
+    if (!session?.user) throw error(401, "Not authenticated");
+    const data = await getPlaylist(platform.env.DB, session.user.id, params.id);
+    if (!data) throw error(404, "Playlist not found");
+    return json(data);
+  } catch (err: any) {
+    if (err.status) throw err;
+    console.warn("[/api/playlists/[id]] Database error:", err?.message || err);
+    throw error(404, "Playlist temporarily unavailable");
+  }
 };
 
 export const PATCH: RequestHandler = async ({

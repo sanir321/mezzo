@@ -207,12 +207,11 @@
 				}
 			}
 		} catch (e: any) {
+			console.warn("[PlaylistDetail] Remote playlist error:", e?.message || e);
 			if (!playlist) {
 				const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
 				if (isOffline) {
 					error = "You're offline. Reconnect to stream or sync this playlist.";
-				} else {
-					error = e.message ?? "Failed to load playlist";
 				}
 			}
 		} finally {

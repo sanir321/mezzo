@@ -8,14 +8,19 @@ function generateId(): string {
 }
 
 export const GET: RequestHandler = async ({ request, url, platform }) => {
-  if (!platform) throw error(500, "No platform bindings");
-  const auth = createAuth(platform, url.origin);
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session?.user) {
+  if (!platform?.env?.DB) return json({ playlists: [] });
+  try {
+    const auth = createAuth(platform, url.origin);
+    const session = await auth.api.getSession({ headers: request.headers });
+    if (!session?.user) {
+      return json({ playlists: [] });
+    }
+    const playlists = await listPlaylists(platform.env.DB, session.user.id);
+    return json({ playlists: playlists || [] });
+  } catch (err: any) {
+    console.warn("[/api/playlists] Database error, fallback to empty list:", err?.message || err);
     return json({ playlists: [] });
   }
-  const playlists = await listPlaylists(platform.env.DB, session.user.id);
-  return json({ playlists });
 };
 
 export const POST: RequestHandler = async ({ request, url, platform }) => {

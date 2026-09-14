@@ -89,9 +89,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v1.0.3
-          name: "Mezzo Android Release v1.0.3"
-          body: "Official Mezzo Lossless Audio Streaming App for Android (.apk) - Full Artist Discography, Direct Profile Navigation & Enhanced Search"
+          tag_name: v1.0.4
+          name: "Mezzo Android Release v1.0.4"
+          body: "Official Mezzo Lossless Audio Streaming App for Android (.apk) - Resilient Offline & Playlist Fallbacks"
           draft: false
           prerelease: false
           files: dist-apk/Mezzo-1.0.apk

@@ -4,10 +4,15 @@ import { createAuth } from "$lib/server/auth";
 import { listTracks } from "$lib/server/db";
 
 export const GET: RequestHandler = async ({ request, url, platform }) => {
-  if (!platform) throw error(500, "No platform bindings");
-  const auth = createAuth(platform, url.origin);
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session?.user) throw error(401, "Not authenticated");
-  const tracks = await listTracks(platform.env.DB, session.user.id);
-  return json({ tracks });
+  if (!platform?.env?.DB) return json({ tracks: [] });
+  try {
+    const auth = createAuth(platform, url.origin);
+    const session = await auth.api.getSession({ headers: request.headers });
+    if (!session?.user) return json({ tracks: [] });
+    const tracks = await listTracks(platform.env.DB, session.user.id);
+    return json({ tracks: tracks || [] });
+  } catch (err: any) {
+    console.warn("[/api/tracks] Database error, fallback to empty array:", err?.message || err);
+    return json({ tracks: [] });
+  }
 };

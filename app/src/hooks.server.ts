@@ -121,7 +121,8 @@ export const handle: Handle = async ({ event, resolve }) => {
   return withCors(response, origin, event.request);
 };
 
-export const handleError: HandleServerError = ({ error }) => {
-  if (dev) console.error(error);
-  return { message: "An unexpected error occurred." };
+export const handleError: HandleServerError = ({ error, event }) => {
+  console.error("ServerError on", event.url.pathname, error);
+  const msg = (error as any)?.message || String(error);
+  return { message: msg || "An unexpected error occurred." };
 };

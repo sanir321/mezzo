@@ -58,12 +58,20 @@ import { untrack } from "svelte";
 		}
 		try {
 			const data = await getPlaylists();
-			playlists = data.playlists ?? [];
-			saveCachedPlaylists(playlists);
+			if (Array.isArray(data?.playlists) && data.playlists.length > 0) {
+				playlists = data.playlists;
+				saveCachedPlaylists(playlists);
+			} else {
+				const cached = getCachedPlaylists();
+				if (cached.length > 0) {
+					playlists = cached;
+				}
+			}
 		} catch (e: any) {
-			const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
-			if (playlists.length === 0 && !isOffline) {
-				error = e.message ?? "Failed to load playlists";
+			console.warn("[Playlists] Remote playlist fetch notice:", e?.message || e);
+			const cached = getCachedPlaylists();
+			if (cached.length > 0) {
+				playlists = cached;
 			}
 		} finally {
 			loading = false;
