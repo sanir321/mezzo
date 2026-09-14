@@ -8,21 +8,19 @@
 		playerPlaying,
 		playerShuffle,
 		formatDuration,
-		coverUrl,
 	} from "$lib/stores/player.svelte";
 	import type { Track, Playlist } from "$lib/stores/player.svelte";
-	import { DEFAULT_ALBUM_COVER, DEFAULT_PLAYLIST_COVER, handleImageError, handlePlaylistImageError } from "$lib/utils/image";
+	import { DEFAULT_PLAYLIST_COVER, handlePlaylistImageError } from "$lib/utils/image";
 	import TrackRow from "$lib/components/TrackRow.svelte";
 	import {
 		getPlaylist,
 		getLikedTracks,
-		addTrackToPlaylist as apiAddTrack,
 		removeTrackFromPlaylist,
 		deletePlaylist as apiDeletePlaylist,
 		searchOnlineMusic,
-		getOnlineTrending,
 	} from "$lib/api";
 	import { getFeaturedPlaylistById } from "$lib/featured-playlists";
+	import { likedStore } from "$lib/stores/liked.svelte";
 	import { authModal } from "$lib/stores/auth-modal.svelte";
 
 	const sessionAtom = useSharedSession();
@@ -57,20 +55,11 @@
 	let loading = $state(true);
 	let error = $state("");
 
-	// In-page search & suggestions
-	let searchQuery = $state("");
-	let searchResults = $state<Track[]>([]);
-	let recommendedTracks = $state<Track[]>([]);
-	let isSearching = $state(false);
-	let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
-	let addingId = $state("");
-	let addedTrackIds = $state<Set<string>>(new Set());
-
 	async function loadData() {
 		if (!playlistId) return;
 		error = "";
 
-		// Check local cache first
+		// 1. Check local cache first for instant display
 		if (typeof window !== "undefined") {
 			try {
 				const plTracksKey = `mezzo_pl_tracks_${playlistId}`;
@@ -81,7 +70,6 @@
 						tracks = parsed;
 					}
 				}
-				// Also check cached playlists for metadata
 				const plListRaw = localStorage.getItem("mezzo_cached_playlists");
 				if (plListRaw) {
 					const parsedList = JSON.parse(plListRaw);
@@ -95,12 +83,94 @@
 			} catch {}
 		}
 
+		// 2. Liked Songs playlist
+		if (isLikedPlaylist) {
+			playlist = {
+				id: "liked",
+				name: "Liked Songs",
+				description: "Your personal collection of favorited tracks",
+				cover_key: null,
+				createdAt: Date.now(),
+				updatedAt: Date.now(),
+			};
+			if (likedStore.tracks.length > 0) {
+				tracks = likedStore.tracks;
+				loading = false;
+				return;
+			}
+			try {
+				const likedRes = await getLikedTracks();
+				tracks = likedRes.tracks ?? [];
+			} catch {
+				tracks = likedStore.tracks;
+			} finally {
+				loading = false;
+			}
+			return;
+		}
+
+		// 3. Featured Curated Playlist (like today_top_hits, chill_vibes, etc.)
+		if (featuredMeta) {
+			playlist = {
+				id: featuredMeta.id,
+				name: featuredMeta.name,
+				description: featuredMeta.description,
+				cover_key: null,
+				cover_url: featuredMeta.cover,
+				createdAt: Date.now(),
+				updatedAt: Date.now(),
+			};
+			if (tracks.length === 0) loading = true;
+			try {
+				const res = await searchOnlineMusic(featuredMeta.query, 30);
+				tracks = res.tracks ?? [];
+			} catch {
+				// retain cached tracks if any
+			} finally {
+				loading = false;
+			}
+			return;
+		}
+
+		// 4. Online Search / Saavn / Radio Playlist
+		if (
+			playlistId.startsWith("saavn_pl_") ||
+			playlistId.startsWith("online_pl_") ||
+			playlistId.startsWith("saavn_alb_") ||
+			playlistId.startsWith("online_alb_") ||
+			playlistId.startsWith("radio_") ||
+			playlistId.startsWith("mix_")
+		) {
+			const cleanName = playlistId
+				.replace(/^(saavn_pl_|online_pl_|saavn_alb_|online_alb_|radio_|mix_)/, "")
+				.replace(/[_-]/g, " ");
+			playlist = {
+				id: playlistId,
+				name: cleanName ? cleanName.charAt(0).toUpperCase() + cleanName.slice(1) : "Playlist",
+				description: "Curated collection",
+				cover_key: null,
+				createdAt: Date.now(),
+				updatedAt: Date.now(),
+			};
+			if (tracks.length === 0) loading = true;
+			try {
+				const res = await searchOnlineMusic(cleanName, 30);
+				tracks = res.tracks ?? [];
+			} catch {
+				// retain cached tracks if any
+			} finally {
+				loading = false;
+			}
+			return;
+		}
+
+		// 5. Local Playlist (created offline)
 		if (playlistId.startsWith("local_")) {
 			loading = false;
 			if (!playlist) {
 				playlist = {
 					id: playlistId,
-					name: "Local Playlist",
+					name: "My Playlist",
 					description: "Created offline",
 					cover_key: null,
 					createdAt: Date.now(),
@@ -110,36 +180,13 @@
 			return;
 		}
 
-		if (tracks.length === 0) {
-			loading = true;
-		}
-
+		// 6. Custom User Server Playlist (UUID / ID)
+		if (!playlist && tracks.length === 0) loading = true;
 		try {
-			if (isLikedPlaylist) {
-				if (!isLoggedIn) {
-					error = "Please sign in to view your Liked Songs.";
-					loading = false;
-					return;
-				}
-				const likedRes = await getLikedTracks();
-				playlist = {
-					id: "liked",
-					name: "Liked Songs",
-					description: "Your personal collection of favorited tracks",
-					cover_key: null,
-					createdAt: Date.now(),
-					updatedAt: Date.now(),
-				};
-				tracks = likedRes.tracks ?? [];
-			} else {
-				const [plRes, trendRes] = await Promise.all([
-					getPlaylist(playlistId),
-					getOnlineTrending(10).catch(() => ({ tracks: [] })),
-				]);
+			const plRes = await getPlaylist(playlistId);
+			if (plRes?.playlist) {
 				playlist = plRes.playlist;
 				tracks = plRes.tracks ?? [];
-				recommendedTracks = trendRes.tracks ?? [];
-
 				if (typeof window !== "undefined") {
 					try {
 						localStorage.setItem(`mezzo_pl_tracks_${playlistId}`, JSON.stringify(tracks));
@@ -147,7 +194,7 @@
 				}
 			}
 		} catch (e: any) {
-			if (tracks.length === 0) {
+			if (!playlist) {
 				const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
 				if (isOffline) {
 					error = "You're offline. Reconnect to stream or sync this playlist.";
@@ -161,43 +208,12 @@
 	}
 
 	$effect(() => {
-		if (playlistId && (isLoggedIn || isFeatured)) {
+		if (playlistId) {
 			loadData();
-		} else if (!isLoggedIn && !isFeatured) {
-			loading = false;
 		}
 	});
 
 	const totalDuration = $derived(tracks.reduce((acc, t) => acc + (t.duration || 0), 0));
-
-	const displayedSuggestions = $derived.by(() => {
-		if (searchQuery.trim().length > 0) {
-			return searchResults;
-		}
-		return recommendedTracks;
-	});
-
-	function handleSearchInput(e: Event) {
-		const q = (e.target as HTMLInputElement).value;
-		searchQuery = q;
-		if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
-		if (!q.trim()) {
-			searchResults = [];
-			isSearching = false;
-			return;
-		}
-		isSearching = true;
-		searchDebounceTimer = setTimeout(async () => {
-			try {
-				const res = await searchOnlineMusic(q.trim(), 10);
-				searchResults = res.tracks ?? [];
-			} catch {
-				searchResults = [];
-			} finally {
-				isSearching = false;
-			}
-		}, 300);
-	}
 
 	function handlePlayAll() {
 		if (tracks.length === 0) return;
@@ -212,28 +228,16 @@
 		playTracks(tracks, rand);
 	}
 
-	async function handleAddTrack(track: Track) {
-		if (isLikedPlaylist) return;
-		addingId = track.id;
-		try {
-			await apiAddTrack(playlistId, track);
-			tracks = [...tracks, track];
-			addedTrackIds = new Set([...addedTrackIds, track.id]);
-		} catch (e: any) {
-			alert(e.message ?? "Failed to add track");
-		} finally {
-			addingId = "";
-		}
-	}
-
 	async function handleRemoveTrack(track: Track) {
 		if (isLikedPlaylist) return;
 		try {
 			await removeTrackFromPlaylist(playlistId, track.id);
 			tracks = tracks.filter((t) => t.id !== track.id);
-			const newSet = new Set(addedTrackIds);
-			newSet.delete(track.id);
-			addedTrackIds = newSet;
+			if (typeof window !== "undefined") {
+				try {
+					localStorage.setItem(`mezzo_pl_tracks_${playlistId}`, JSON.stringify(tracks));
+				} catch {}
+			}
 		} catch (e: any) {
 			alert(e.message ?? "Failed to remove track");
 		}
@@ -252,15 +256,6 @@
 		}
 	}
 
-	function scrollToSearch() {
-		const el = document.getElementById("find-songs-anchor");
-		if (el) {
-			el.scrollIntoView({ behavior: "smooth" });
-			const input = el.querySelector("input");
-			if (input) input.focus();
-		}
-	}
-
 	function isCurrentTrack(track: Track): boolean {
 		return playerCurrentTrack.value?.id === track.id;
 	}
@@ -271,12 +266,12 @@
 </svelte:head>
 
 <div class="playlist-detail-page">
-	{#if loading}
+	{#if loading && !playlist}
 		<div class="loading-state">
 			<div class="spinner"></div>
 			<p>Loading playlist...</p>
 		</div>
-	{:else if error}
+	{:else if error && !playlist}
 		<div class="error-view">
 			<p>{error}</p>
 			<a href="/playlists" class="back-link">Back to playlists</a>
@@ -289,9 +284,9 @@
 					<svg viewBox="0 0 24 24" width="3.8rem" height="3.8rem" fill="#fff">
 						<path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
 					</svg>
-				{:else if playlist.cover_key}
+				{:else if playlist.cover_key || playlist.cover_url}
 					<img
-						src={playlist.cover_key || DEFAULT_PLAYLIST_COVER}
+						src={playlist.cover_url || playlist.cover_key || DEFAULT_PLAYLIST_COVER}
 						alt={playlist.name}
 						class="hero-cover-img"
 						onerror={handlePlaylistImageError}
@@ -332,14 +327,6 @@
 					</svg>
 					Shuffle
 				</button>
-				{#if !isLikedPlaylist && !isFeatured}
-					<button class="secondary-action-btn" onclick={scrollToSearch}>
-						<svg viewBox="0 0 24 24" width="1.1rem" height="1.1rem" fill="none" stroke="currentColor" stroke-width="2">
-							<line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-						</svg>
-						Find Songs
-					</button>
-				{/if}
 			</div>
 
 			{#if !isLikedPlaylist && !isFeatured}
@@ -356,9 +343,6 @@
 		{#if tracks.length === 0}
 			<div class="empty-playlist">
 				<p>{isLikedPlaylist ? "You haven't liked any songs yet. Click the heart icon on any track to save it here!" : "This playlist is currently empty."}</p>
-				{#if !isLikedPlaylist}
-					<button class="add-cta-btn" onclick={scrollToSearch}>Find songs to add</button>
-				{/if}
 			</div>
 		{:else}
 			<div class="tracks-list">
@@ -368,83 +352,10 @@
 						index={i}
 						playing={isCurrentTrack(track) && playerPlaying.value}
 						onplay={() => playTracks(tracks, i)}
-						onremove={!isLikedPlaylist ? handleRemoveTrack : undefined}
+						onremove={!isLikedPlaylist && !isFeatured ? handleRemoveTrack : undefined}
 					/>
 				{/each}
 			</div>
-		{/if}
-
-		<!-- Spotify-style In-Page "Find Songs" Search Section (Only on custom playlists) -->
-		{#if !isLikedPlaylist && !isFeatured}
-			<section class="find-songs-section" id="find-songs-anchor">
-				<div class="find-header">
-					<div class="find-title-group">
-						<h2>Let's find something for your playlist</h2>
-						<p class="find-subtitle">Search for songs or artists to instantly add to "{playlist.name}"</p>
-					</div>
-					<div class="find-search-box">
-						<svg viewBox="0 0 24 24" width="1.15rem" height="1.15rem" fill="none" stroke="currentColor" stroke-width="2">
-							<circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-						</svg>
-						<input
-							type="search"
-							placeholder="Search for songs or artists..."
-							value={searchQuery}
-							oninput={handleSearchInput}
-						/>
-						{#if isSearching}
-							<div class="inline-spinner"></div>
-						{/if}
-					</div>
-				</div>
-
-				<div class="suggested-tracks-list">
-					{#if displayedSuggestions.length > 0}
-						{#each displayedSuggestions as track (track.id)}
-							{@const inPlaylist = tracks.some((t) => t.id === track.id) || addedTrackIds.has(track.id)}
-							<div class="suggestion-row">
-								<div class="track-left">
-									<img
-										src={coverUrl(track) || DEFAULT_ALBUM_COVER}
-										alt={track.title}
-										class="track-thumb"
-										loading="lazy"
-										onerror={handleImageError}
-									/>
-									<div class="track-info-col">
-										<span class="suggestion-title" title={track.title}>{track.title}</span>
-										<span class="suggestion-artist">{track.artist || "Unknown Artist"}</span>
-									</div>
-								</div>
-
-								<div class="track-right">
-									<span class="suggestion-duration">{formatDuration(track.duration)}</span>
-									{#if inPlaylist}
-										<button class="added-badge-btn" disabled title="Already in playlist">
-											<svg viewBox="0 0 24 24" width="0.95rem" height="0.95rem" fill="none" stroke="currentColor" stroke-width="2.5">
-												<polyline points="20 6 9 17 4 12" />
-											</svg>
-											<span>Added</span>
-										</button>
-									{:else}
-										<button
-											class="add-track-btn"
-											disabled={addingId === track.id}
-											onclick={() => handleAddTrack(track)}
-										>
-											{addingId === track.id ? "Adding..." : "+ Add"}
-										</button>
-									{/if}
-								</div>
-							</div>
-						{/each}
-					{:else if searchQuery && !isSearching}
-						<div class="no-results-box">
-							<p>No songs found for "{searchQuery}". Try searching for another artist or track.</p>
-						</div>
-					{/if}
-				</div>
-			</section>
 		{/if}
 	{:else if !isLoggedIn && !isFeatured}
 		<div class="guest-playlist-prompt">
@@ -462,7 +373,7 @@
 	.playlist-detail-page {
 		display: flex;
 		flex-direction: column;
-		gap: 2.25rem;
+		gap: 2rem;
 		padding-bottom: 5rem;
 	}
 
@@ -517,7 +428,7 @@
 			width: 192px;
 			height: 192px;
 			flex-shrink: 0;
-			background: #282828;
+			background: #242424;
 			border-radius: 0.5rem;
 			display: flex;
 			align-items: center;
@@ -717,221 +628,12 @@
 			max-width: 420px;
 			margin: 0;
 		}
-
-		.add-cta-btn {
-			background: #ffffff;
-			color: #000000;
-			border: none;
-			border-radius: 9999px;
-			padding: 0.65rem 1.5rem;
-			font-size: 0.9rem;
-			font-weight: 700;
-			cursor: pointer;
-			transition: transform 0.15s ease;
-
-			&:hover {
-				transform: scale(1.04);
-			}
-		}
 	}
 
 	.tracks-list {
 		display: flex;
 		flex-direction: column;
 		gap: 0.25rem;
-	}
-
-	/* Spotify Find Songs In-Page Section */
-	.find-songs-section {
-		margin-top: 2rem;
-		padding-top: 2rem;
-		border-top: 1px solid rgba(255, 255, 255, 0.08);
-		display: flex;
-		flex-direction: column;
-		gap: 1.5rem;
-
-		.find-header {
-			display: flex;
-			flex-direction: column;
-			gap: 1.25rem;
-
-			.find-title-group {
-				h2 {
-					font-size: 1.4rem;
-					font-weight: 800;
-					color: #ffffff;
-					margin: 0 0 0.25rem;
-				}
-
-				.find-subtitle {
-					font-size: 0.88rem;
-					color: rgba(255, 255, 255, 0.5);
-					margin: 0;
-				}
-			}
-
-			.find-search-box {
-				position: relative;
-				display: flex;
-				align-items: center;
-				max-width: 520px;
-
-				svg {
-					position: absolute;
-					left: 1rem;
-					color: rgba(255, 255, 255, 0.4);
-					pointer-events: none;
-				}
-
-				input {
-					width: 100%;
-					background: rgba(255, 255, 255, 0.07);
-					border: 1px solid rgba(255, 255, 255, 0.15);
-					border-radius: 9999px;
-					padding: 0.75rem 2.8rem 0.75rem 2.8rem;
-					color: #ffffff;
-					font-size: 0.92rem;
-					outline: none;
-					transition: border-color 0.15s;
-
-					&:focus {
-						border-color: #1ed760;
-						background: rgba(255, 255, 255, 0.1);
-					}
-
-					&::placeholder {
-						color: rgba(255, 255, 255, 0.4);
-					}
-				}
-
-				.inline-spinner {
-					position: absolute;
-					right: 1rem;
-					width: 1.1rem;
-					height: 1.1rem;
-					border: 2px solid rgba(255, 255, 255, 0.2);
-					border-top-color: #1ed760;
-					border-radius: 50%;
-					animation: spin 0.8s linear infinite;
-				}
-			}
-		}
-
-		.suggested-tracks-list {
-			display: flex;
-			flex-direction: column;
-			gap: 0.4rem;
-		}
-
-		.suggestion-row {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			padding: 0.5rem 0.85rem;
-			background: rgba(255, 255, 255, 0.02);
-			border: 1px solid rgba(255, 255, 255, 0.04);
-			border-radius: 8px;
-			transition: background 0.15s ease;
-
-			&:hover {
-				background: rgba(255, 255, 255, 0.06);
-			}
-
-			.track-left {
-				display: flex;
-				align-items: center;
-				gap: 0.85rem;
-				min-width: 0;
-				flex: 1;
-
-				.track-thumb {
-					width: 44px;
-					height: 44px;
-					border-radius: 4px;
-					object-fit: cover;
-					background: #282828;
-					flex-shrink: 0;
-				}
-
-				.track-info-col {
-					display: flex;
-					flex-direction: column;
-					gap: 0.15rem;
-					min-width: 0;
-
-					.suggestion-title {
-						color: #ffffff;
-						font-size: 0.9rem;
-						font-weight: 600;
-						white-space: nowrap;
-						overflow: hidden;
-						text-overflow: ellipsis;
-					}
-
-					.suggestion-artist {
-						color: rgba(255, 255, 255, 0.5);
-						font-size: 0.78rem;
-						white-space: nowrap;
-						overflow: hidden;
-						text-overflow: ellipsis;
-					}
-				}
-			}
-
-			.track-right {
-				display: flex;
-				align-items: center;
-				gap: 1.25rem;
-
-				.suggestion-duration {
-					color: rgba(255, 255, 255, 0.4);
-					font-size: 0.82rem;
-					font-variant-numeric: tabular-nums;
-				}
-
-				.add-track-btn {
-					background: transparent;
-					border: 1px solid rgba(255, 255, 255, 0.35);
-					border-radius: 9999px;
-					padding: 0.35rem 1rem;
-					color: #ffffff;
-					font-size: 0.82rem;
-					font-weight: 700;
-					cursor: pointer;
-					transition: all 0.15s ease;
-
-					&:hover:not(:disabled) {
-						border-color: #ffffff;
-						transform: scale(1.05);
-					}
-
-					&:disabled {
-						opacity: 0.5;
-					}
-				}
-
-				.added-badge-btn {
-					display: flex;
-					align-items: center;
-					gap: 0.3rem;
-					background: rgba(30, 215, 96, 0.15);
-					border: 1px solid rgba(30, 215, 96, 0.35);
-					border-radius: 9999px;
-					padding: 0.35rem 0.85rem;
-					color: #1ed760;
-					font-size: 0.8rem;
-					font-weight: 700;
-					cursor: default;
-				}
-			}
-		}
-
-		.no-results-box {
-			text-align: center;
-			padding: 2rem 1rem;
-			color: rgba(255, 255, 255, 0.45);
-			font-size: 0.9rem;
-		}
 	}
 
 	@keyframes spin {

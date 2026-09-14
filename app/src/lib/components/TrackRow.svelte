@@ -32,6 +32,10 @@
 	const isDownloaded = $derived(offlineStore.isTrackDownloaded(track.id));
 
 	function handlePlay() {
+		if (typeof navigator !== "undefined" && !navigator.onLine && !isDownloaded) {
+			alert(`"${track.title}" is not downloaded for offline playback. Connect to the internet or choose from your downloaded songs.`);
+			return;
+		}
 		triggerHaptic("light");
 		onplay?.(track);
 	}
@@ -115,38 +119,39 @@
 	async function handleDownload(e: MouseEvent) {
 		e.stopPropagation();
 		closeMenu();
-		const targetUrl = track.stream_url || streamUrl(track);
-		if (!targetUrl) return;
 		isDownloading = true;
 		triggerHaptic("medium");
 		try {
-			// Save offline to CacheStorage
-			await offlineStore.downloadTrack(track).catch(() => {});
+			// 1. Download to IndexedDB for offline in-app playback
+			await offlineStore.downloadTrack(track);
 
-			const res = await fetch(targetUrl);
-			if (!res.ok) throw new Error("Fetch failed");
-			const blob = await res.blob();
-			const url = URL.createObjectURL(blob);
-			const a = document.createElement("a");
-			a.href = url;
-			const safeArtist = (track.artist || "Unknown").replace(/[/\\?%*:|"<>]/g, "");
-			const safeTitle = (track.title || "Track").replace(/[/\\?%*:|"<>]/g, "");
-			a.download = `${safeArtist} - ${safeTitle}.m4a`;
-			document.body.appendChild(a);
-			a.click();
-			document.body.removeChild(a);
-			setTimeout(() => URL.revokeObjectURL(url), 2000);
-			triggerHaptic("success");
-		} catch {
-			const a = document.createElement("a");
-			a.href = targetUrl;
-			a.target = "_blank";
-			const safeArtist = (track.artist || "Unknown").replace(/[/\\?%*:|"<>]/g, "");
-			const safeTitle = (track.title || "Track").replace(/[/\\?%*:|"<>]/g, "");
-			a.download = `${safeArtist} - ${safeTitle}.m4a`;
-			document.body.appendChild(a);
-			a.click();
-			document.body.removeChild(a);
+			// 2. Obtain Blob to download to device storage
+			let blob = await offlineStore.getOfflineAudioBlob(track.id);
+			if (!blob) {
+				const targetUrl = track.stream_url || streamUrl(track);
+				if (targetUrl) {
+					const res = await fetch(targetUrl);
+					if (res.ok) {
+						blob = await res.blob();
+					}
+				}
+			}
+
+			if (blob) {
+				const url = URL.createObjectURL(blob);
+				const a = document.createElement("a");
+				a.href = url;
+				const safeArtist = (track.artist || "Unknown").replace(/[/\\?%*:|"<>]/g, "");
+				const safeTitle = (track.title || "Track").replace(/[/\\?%*:|"<>]/g, "");
+				a.download = `${safeArtist} - ${safeTitle}.m4a`;
+				document.body.appendChild(a);
+				a.click();
+				document.body.removeChild(a);
+				setTimeout(() => URL.revokeObjectURL(url), 2000);
+				triggerHaptic("success");
+			}
+		} catch (err) {
+			console.warn("Download failed:", err);
 		} finally {
 			isDownloading = false;
 		}

@@ -26,6 +26,8 @@
 		name: string;
 		description?: string | null;
 		cover_key?: string | null;
+		cover_url?: string | null;
+		trackCount?: number;
 		createdAt?: number;
 		updatedAt?: number;
 	}

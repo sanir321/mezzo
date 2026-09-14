@@ -28,15 +28,40 @@
 	let newPlaylistName = $state("");
 	let isCreating = $state(false);
 
+	function getCachedPlaylists(): Playlist[] {
+		if (typeof window === "undefined") return [];
+		try {
+			const raw = localStorage.getItem("mezzo_cached_playlists");
+			if (raw) {
+				const parsed = JSON.parse(raw);
+				if (Array.isArray(parsed)) return parsed;
+			}
+		} catch {}
+		return [];
+	}
+
+	function saveCachedPlaylists(list: Playlist[]) {
+		if (typeof window === "undefined") return;
+		try {
+			localStorage.setItem("mezzo_cached_playlists", JSON.stringify(list));
+		} catch {}
+	}
+
+	playlists = getCachedPlaylists();
+
 	const activeLanguage = $derived(userPreferences.languages[0] || "English");
 
 	async function loadPlaylists() {
-		if (!isLoggedIn) return;
 		try {
 			const res = await getPlaylists();
-			playlists = res.playlists ?? [];
+			if (Array.isArray(res.playlists)) {
+				// Merge with any local offline playlists
+				const localOnly = playlists.filter((p) => p.id.startsWith("local_"));
+				playlists = [...localOnly, ...res.playlists.filter((p) => !p.id.startsWith("local_"))];
+				saveCachedPlaylists(playlists);
+			}
 		} catch {
-			// ignore
+			// Retain cached playlists
 		}
 	}
 
@@ -47,10 +72,6 @@
 	});
 
 	function handleCreateClick() {
-		if (!isLoggedIn) {
-			authModal.open();
-			return;
-		}
 		showCreateModal = true;
 	}
 
@@ -64,26 +85,70 @@
 
 	async function handleCreatePlaylist(e: Event) {
 		e.preventDefault();
-		if (!newPlaylistName.trim() || isCreating) return;
+		const name = newPlaylistName.trim();
+		if (!name || isCreating) return;
 		isCreating = true;
 		try {
-			const { id } = await createPlaylist(newPlaylistName.trim());
-			if (id) {
+			const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
+			if (isOffline || !isLoggedIn) {
+				const localId = "local_" + Date.now();
 				const newPl: Playlist = {
-					id,
-					name: newPlaylistName.trim(),
-					description: null,
+					id: localId,
+					name,
+					description: "Created offline",
 					cover_key: null,
 					createdAt: Date.now(),
 					updatedAt: Date.now(),
 				};
 				playlists = [newPl, ...playlists];
+				saveCachedPlaylists(playlists);
+				if (typeof window !== "undefined") {
+					localStorage.setItem(`mezzo_pl_tracks_${localId}`, JSON.stringify([]));
+				}
+				newPlaylistName = "";
+				showCreateModal = false;
+				goto(`/playlists/${localId}`);
+				return;
+			}
+
+			const { id } = await createPlaylist(name);
+			if (id) {
+				const newPl: Playlist = {
+					id,
+					name,
+					description: null,
+					cover_key: null,
+					createdAt: Date.now(),
+					updatedAt: Date.now(),
+				};
+				playlists = [newPl, ...playlists.filter((p) => p.id !== id)];
+				saveCachedPlaylists(playlists);
+				if (typeof window !== "undefined") {
+					localStorage.setItem(`mezzo_pl_tracks_${id}`, JSON.stringify([]));
+				}
 				newPlaylistName = "";
 				showCreateModal = false;
 				goto(`/playlists/${id}`);
 			}
 		} catch (err: any) {
-			alert(err.message || "Failed to create playlist");
+			// Offline fallback
+			const localId = "local_" + Date.now();
+			const newPl: Playlist = {
+				id: localId,
+				name,
+				description: "Created offline",
+				cover_key: null,
+				createdAt: Date.now(),
+				updatedAt: Date.now(),
+			};
+			playlists = [newPl, ...playlists];
+			saveCachedPlaylists(playlists);
+			if (typeof window !== "undefined") {
+				localStorage.setItem(`mezzo_pl_tracks_${localId}`, JSON.stringify([]));
+			}
+			newPlaylistName = "";
+			showCreateModal = false;
+			goto(`/playlists/${localId}`);
 		} finally {
 			isCreating = false;
 		}

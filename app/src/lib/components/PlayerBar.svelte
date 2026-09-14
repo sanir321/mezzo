@@ -270,6 +270,11 @@
 				if (offlineUrl && active) {
 					finalSrc = offlineUrl;
 				}
+			} else if (typeof navigator !== "undefined" && !navigator.onLine) {
+				// We are offline and this track is not downloaded - abort loading to avoid fake playback
+				if (audioEl) audioEl.pause();
+				playerPlaying.value = false;
+				return;
 			}
 
 			// If online stream is a relative endpoint or missing direct URL, resolve direct CDN link
@@ -327,7 +332,9 @@
 				if (untrack(() => playerPlaying.value)) {
 					audioEl.muted = playerMuted.value;
 					audioEl.volume = playerMuted.value ? 0 : Math.max(0.1, playerVolume.value || 1.0);
-					audioEl.play().catch(() => {});
+					audioEl.play().catch(() => {
+						playerPlaying.value = false;
+					});
 				}
 			}
 		})();
@@ -366,9 +373,14 @@
 
 	$effect(() => {
 		if (!audioEl) return;
+		const handleAudioError = () => {
+			console.warn("Audio element error during playback");
+			playerPlaying.value = false;
+		};
 		audioEl.addEventListener("ended", handleEnded);
 		audioEl.addEventListener("timeupdate", handleTimeUpdate);
 		audioEl.addEventListener("loadedmetadata", handleLoadedMetadata);
+		audioEl.addEventListener("error", handleAudioError);
 		const unregisterSeek = registerAudioSeekHandler((t: number) => {
 			if (audioEl) {
 				audioEl.currentTime = t;
@@ -380,6 +392,7 @@
 			audioEl?.removeEventListener("ended", handleEnded);
 			audioEl?.removeEventListener("timeupdate", handleTimeUpdate);
 			audioEl?.removeEventListener("loadedmetadata", handleLoadedMetadata);
+			audioEl?.removeEventListener("error", handleAudioError);
 			unregisterSeek();
 		};
 	});
@@ -636,13 +649,16 @@
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div class="track-info" title="Expand Now Playing & Lyrics" onclick={() => (playerShowLyrics.value = true)}>
 		{#if playerCurrentTrack.value}
+			{@const currentTr = playerCurrentTrack.value}
 			<div class="cover-wrapper">
-				<img
-					src={coverUrl(playerCurrentTrack.value) || DEFAULT_ALBUM_COVER}
-					alt={playerCurrentTrack.value.title}
-					onerror={handleImageError}
-					class="cover"
-				/>
+				{#key currentTr.id}
+					<img
+						src={coverUrl(currentTr) || DEFAULT_ALBUM_COVER}
+						alt={currentTr.title}
+						onerror={handleImageError}
+						class="cover"
+					/>
+				{/key}
 			</div>
 
 			<div class="details">

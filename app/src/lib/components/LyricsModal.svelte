@@ -662,12 +662,15 @@
 					title={playerPlaying.value ? "Playing (Vinyl spinning)" : "Paused"}
 				>
 					{#if playerCurrentTrack.value}
-						<img
-							src={coverUrl(playerCurrentTrack.value) || DEFAULT_ALBUM_COVER}
-							alt={playerCurrentTrack.value.title}
-							class="cd-img cd"
-							onerror={handleImageError}
-						/>
+						{@const currentTr = playerCurrentTrack.value}
+						{#key currentTr.id}
+							<img
+								src={coverUrl(currentTr) || DEFAULT_ALBUM_COVER}
+								alt={currentTr.title}
+								class="cd-img cd"
+								onerror={handleImageError}
+							/>
+						{/key}
 					{:else}
 						<img
 							src={DEFAULT_ALBUM_COVER}

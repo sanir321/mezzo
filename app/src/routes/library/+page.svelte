@@ -44,7 +44,7 @@ import { handleImageError } from "$lib/utils/image";
 
 	let initialCached = getCachedLibrary();
 	let view = $state<View>(
-		typeof navigator !== "undefined" && !navigator.onLine && offlineStore.downloadedTracks.length > 0 && initialCached.length === 0
+		typeof navigator !== "undefined" && !navigator.onLine
 			? "downloaded"
 			: "songs"
 	);

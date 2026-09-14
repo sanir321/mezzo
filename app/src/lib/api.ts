@@ -2,6 +2,8 @@ import type { Playlist, Track } from "$lib/stores/player.svelte";
 import { apiUrl } from "$lib/config";
 import { getAuthToken } from "$lib/auth-token";
 
+export { apiUrl };
+
 async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
   const headers = new Headers(init?.headers);
   const token = getAuthToken();
