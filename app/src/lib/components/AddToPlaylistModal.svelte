@@ -10,8 +10,29 @@
 
 	let { open = $bindable(false), track = null, onclose }: Props = $props();
 
-	let playlists = $state<Playlist[]>([]);
-	let loading = $state(true);
+	const STORAGE_KEY_USER_PLAYLISTS = "mezzo_cached_playlists";
+
+	function getCachedPlaylists(): Playlist[] {
+		if (typeof window === "undefined") return [];
+		try {
+			const raw = localStorage.getItem(STORAGE_KEY_USER_PLAYLISTS);
+			if (raw) {
+				const parsed = JSON.parse(raw);
+				if (Array.isArray(parsed)) return parsed;
+			}
+		} catch {}
+		return [];
+	}
+
+	function saveCachedPlaylists(list: Playlist[]) {
+		if (typeof window === "undefined") return;
+		try {
+			localStorage.setItem(STORAGE_KEY_USER_PLAYLISTS, JSON.stringify(list));
+		} catch {}
+	}
+
+	let playlists = $state<Playlist[]>(getCachedPlaylists());
+	let loading = $state(false);
 	let newName = $state("");
 	let showCreate = $state(false);
 	let busyId = $state("");
@@ -19,13 +40,24 @@
 	let errorMsg = $state("");
 
 	async function load() {
-		loading = true;
 		errorMsg = "";
+		if (playlists.length === 0) {
+			loading = true;
+		}
 		try {
 			const res = await getPlaylists();
-			playlists = res.playlists ?? [];
+			if (Array.isArray(res.playlists)) {
+				playlists = res.playlists;
+				saveCachedPlaylists(playlists);
+			}
 		} catch (e: any) {
-			errorMsg = e.message ?? "Failed to load playlists";
+			// Don't show "Failed to fetch" if we have cached playlists or if offline
+			if (playlists.length === 0) {
+				const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
+				if (isOffline) {
+					errorMsg = "You're offline. You can create a local playlist below!";
+				}
+			}
 		} finally {
 			loading = false;
 		}
@@ -36,6 +68,7 @@
 			successMsg = "";
 			errorMsg = "";
 			showCreate = false;
+			newName = "";
 			load();
 		}
 	});
@@ -45,14 +78,44 @@
 		busyId = playlistId;
 		errorMsg = "";
 		try {
+			if (typeof navigator !== "undefined" && !navigator.onLine) {
+				const plTracksKey = `mezzo_pl_tracks_${playlistId}`;
+				const existingRaw = localStorage.getItem(plTracksKey);
+				const existingTracks: Track[] = existingRaw ? JSON.parse(existingRaw) : [];
+				if (!existingTracks.some((t) => t.id === track.id)) {
+					localStorage.setItem(plTracksKey, JSON.stringify([...existingTracks, track]));
+				}
+				successMsg = "Added to playlist (Offline)!";
+				setTimeout(() => {
+					open = false;
+					onclose?.();
+				}, 700);
+				return;
+			}
+
 			await addTrackToPlaylist(playlistId, track);
 			successMsg = "Added to playlist!";
 			setTimeout(() => {
 				open = false;
 				onclose?.();
-			}, 800);
+			}, 700);
 		} catch (e: any) {
-			errorMsg = e.message ?? "Failed to add track";
+			// Local fallback
+			try {
+				const plTracksKey = `mezzo_pl_tracks_${playlistId}`;
+				const existingRaw = localStorage.getItem(plTracksKey);
+				const existingTracks: Track[] = existingRaw ? JSON.parse(existingRaw) : [];
+				if (!existingTracks.some((t) => t.id === track.id)) {
+					localStorage.setItem(plTracksKey, JSON.stringify([...existingTracks, track]));
+				}
+				successMsg = "Added to playlist (Saved locally)!";
+				setTimeout(() => {
+					open = false;
+					onclose?.();
+				}, 700);
+			} catch {
+				errorMsg = "Unable to add track to playlist.";
+			}
 		} finally {
 			busyId = "";
 		}
@@ -60,18 +123,77 @@
 
 	async function handleCreate(e: Event) {
 		e.preventDefault();
-		if (!newName.trim() || !track) return;
+		const name = newName.trim();
+		if (!name || !track) return;
 		errorMsg = "";
 		try {
-			const { id } = await createPlaylist(newName.trim());
+			if (typeof navigator !== "undefined" && !navigator.onLine) {
+				const localId = "local_" + Date.now();
+				const newPl: Playlist = {
+					id: localId,
+					name: name,
+					description: "Created offline",
+					cover_key: null,
+					createdAt: Date.now(),
+					updatedAt: Date.now(),
+				};
+				playlists = [newPl, ...playlists];
+				saveCachedPlaylists(playlists);
+				const plTracksKey = `mezzo_pl_tracks_${localId}`;
+				localStorage.setItem(plTracksKey, JSON.stringify([track]));
+
+				successMsg = `Created playlist & added track!`;
+				setTimeout(() => {
+					open = false;
+					onclose?.();
+				}, 700);
+				return;
+			}
+
+			const { id } = await createPlaylist(name);
 			await addTrackToPlaylist(id, track);
+			// Also update local cache
+			const newPl: Playlist = {
+				id,
+				name,
+				description: "",
+				cover_key: null,
+				createdAt: Date.now(),
+				updatedAt: Date.now(),
+			};
+			playlists = [newPl, ...playlists.filter((p) => p.id !== id)];
+			saveCachedPlaylists(playlists);
+
 			successMsg = `Created playlist & added track!`;
 			setTimeout(() => {
 				open = false;
 				onclose?.();
-			}, 800);
+			}, 700);
 		} catch (e: any) {
-			errorMsg = e.message ?? "Failed to create playlist";
+			// Offline fallback if network fails
+			try {
+				const localId = "local_" + Date.now();
+				const newPl: Playlist = {
+					id: localId,
+					name: name,
+					description: "Created offline",
+					cover_key: null,
+					createdAt: Date.now(),
+					updatedAt: Date.now(),
+				};
+				playlists = [newPl, ...playlists];
+				saveCachedPlaylists(playlists);
+				const plTracksKey = `mezzo_pl_tracks_${localId}`;
+				localStorage.setItem(plTracksKey, JSON.stringify([track]));
+
+				successMsg = `Created playlist & added track (Saved locally)!`;
+				setTimeout(() => {
+					open = false;
+					onclose?.();
+				}, 700);
+			} catch {
+				errorMsg = "Failed to create playlist.";
+			}
 		}
 	}
 
@@ -176,7 +298,7 @@
 		background: rgba(0, 0, 0, 0.82);
 		backdrop-filter: blur(16px);
 		-webkit-backdrop-filter: blur(16px);
-		z-index: 10050;
+		z-index: 100070;
 		display: flex;
 		align-items: center;
 		justify-content: center;

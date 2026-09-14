@@ -2,11 +2,18 @@ import type { Playlist, Track } from "$lib/stores/player.svelte";
 import { apiUrl } from "$lib/config";
 import { getAuthToken } from "$lib/auth-token";
 
-function apiFetch(path: string, init?: RequestInit): Promise<Response> {
+async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
   const headers = new Headers(init?.headers);
   const token = getAuthToken();
   if (token) headers.set("Authorization", `Bearer ${token}`);
-  return fetch(apiUrl(path), { ...init, headers });
+  try {
+    return await fetch(apiUrl(path), { ...init, headers });
+  } catch (err: any) {
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      throw new Error("You are offline. Connect to the internet to access online features.");
+    }
+    throw err;
+  }
 }
 
 async function j<T>(res: Response): Promise<T> {

@@ -20,8 +20,29 @@
 
 	const isLoggedIn = $derived(sessionData?.data?.user != null);
 
-	let playlists = $state<Playlist[]>([]);
-	let loading = $state(true);
+	const STORAGE_KEY_USER_PLAYLISTS = "mezzo_cached_playlists";
+
+	function getCachedPlaylists(): Playlist[] {
+		if (typeof window === "undefined") return [];
+		try {
+			const raw = localStorage.getItem(STORAGE_KEY_USER_PLAYLISTS);
+			if (raw) {
+				const parsed = JSON.parse(raw);
+				if (Array.isArray(parsed)) return parsed;
+			}
+		} catch {}
+		return [];
+	}
+
+	function saveCachedPlaylists(list: Playlist[]) {
+		if (typeof window === "undefined") return;
+		try {
+			localStorage.setItem(STORAGE_KEY_USER_PLAYLISTS, JSON.stringify(list));
+		} catch {}
+	}
+
+	let playlists = $state<Playlist[]>(getCachedPlaylists());
+	let loading = $state(false);
 	let error = $state("");
 	let showCreateModal = $state(false);
 	let newName = $state("");
@@ -29,13 +50,24 @@
 	let creating = $state(false);
 
 	async function loadPlaylists() {
-		loading = true;
 		error = "";
+		if (playlists.length === 0) {
+			loading = true;
+		}
 		try {
 			const data = await getPlaylists();
 			playlists = data.playlists ?? [];
+			saveCachedPlaylists(playlists);
 		} catch (e: any) {
-			error = e.message ?? "Failed to load playlists";
+			if (playlists.length === 0) {
+				const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
+				if (isOffline) {
+					// Don't show an intrusive error if offline
+					error = "";
+				} else {
+					error = e.message ?? "Failed to load playlists";
+				}
+			}
 		} finally {
 			loading = false;
 		}
@@ -48,16 +80,67 @@
 
 	async function handleCreate(e: Event) {
 		e.preventDefault();
-		if (!newName.trim()) return;
+		const name = newName.trim();
+		if (!name) return;
 		creating = true;
+		error = "";
 		try {
-			const { id } = await apiCreatePlaylist(newName.trim(), newDescription.trim() || undefined);
+			if (typeof navigator !== "undefined" && !navigator.onLine) {
+				const localId = "local_" + Date.now();
+				const newPl: Playlist = {
+					id: localId,
+					name,
+					description: newDescription.trim() || undefined,
+					cover_key: null,
+					createdAt: Date.now(),
+					updatedAt: Date.now(),
+				};
+				playlists = [newPl, ...playlists];
+				saveCachedPlaylists(playlists);
+				newName = "";
+				newDescription = "";
+				showCreateModal = false;
+				goto(`/playlists/${localId}`);
+				return;
+			}
+
+			const { id } = await apiCreatePlaylist(name, newDescription.trim() || undefined);
+			const newPl: Playlist = {
+				id,
+				name,
+				description: newDescription.trim() || undefined,
+				cover_key: null,
+				createdAt: Date.now(),
+				updatedAt: Date.now(),
+			};
+			playlists = [newPl, ...playlists.filter((p) => p.id !== id)];
+			saveCachedPlaylists(playlists);
+
 			newName = "";
 			newDescription = "";
 			showCreateModal = false;
 			goto(`/playlists/${id}`);
 		} catch (e: any) {
-			error = e.message ?? "Failed to create playlist";
+			// Fallback locally
+			try {
+				const localId = "local_" + Date.now();
+				const newPl: Playlist = {
+					id: localId,
+					name,
+					description: newDescription.trim() || undefined,
+					cover_key: null,
+					createdAt: Date.now(),
+					updatedAt: Date.now(),
+				};
+				playlists = [newPl, ...playlists];
+				saveCachedPlaylists(playlists);
+				newName = "";
+				newDescription = "";
+				showCreateModal = false;
+				goto(`/playlists/${localId}`);
+			} catch {
+				error = "Failed to create playlist";
+			}
 		} finally {
 			creating = false;
 		}
@@ -674,7 +757,7 @@
 	.empty-state {
 		text-align: center;
 		padding: 5em 2em;
-		background: #141720;
+		background: #181818;
 		border: 1px dashed rgba(255, 255, 255, 0.1);
 		border-radius: 1.25rem;
 		display: flex;
@@ -716,9 +799,10 @@
 	.modal-backdrop {
 		position: fixed;
 		inset: 0;
-		background: rgba(0, 0, 0, 0.75);
-		backdrop-filter: blur(8px);
-		z-index: 300;
+		background: rgba(0, 0, 0, 0.82);
+		backdrop-filter: blur(16px);
+		-webkit-backdrop-filter: blur(16px);
+		z-index: 100070;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -728,7 +812,7 @@
 	.create-modal {
 		width: 100%;
 		max-width: 25rem;
-		background: #141720;
+		background: #181818;
 		border: 1px solid rgba(255, 255, 255, 0.12);
 		border-radius: 1.15rem;
 		padding: 1.75em;

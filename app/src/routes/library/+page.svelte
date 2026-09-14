@@ -29,29 +29,65 @@ import { handleImageError } from "$lib/utils/image";
 	type View = "songs" | "artists" | "albums" | "downloaded";
 	type SortKey = "date_added" | "title" | "artist" | "duration";
 
-	let view = $state<View>("songs");
+	const STORAGE_KEY_LIB_CACHE = "mezzo_library_tracks_cache";
+	function getCachedLibrary(): Track[] {
+		if (typeof window === "undefined") return [];
+		try {
+			const raw = localStorage.getItem(STORAGE_KEY_LIB_CACHE);
+			if (raw) {
+				const parsed = JSON.parse(raw);
+				if (Array.isArray(parsed)) return parsed;
+			}
+		} catch {}
+		return [];
+	}
+
+	let initialCached = getCachedLibrary();
+	let view = $state<View>(
+		typeof navigator !== "undefined" && !navigator.onLine && offlineStore.downloadedTracks.length > 0 && initialCached.length === 0
+			? "downloaded"
+			: "songs"
+	);
 	let sortKey = $state<SortKey>("date_added");
 	let sortAsc = $state(false);
 	let filterQuery = $state("");
 
-	let tracks = $state<Track[]>([]);
+	let tracks = $state<Track[]>(initialCached);
 	let trendingTracks = $state<Track[]>([]);
-	let loading = $state(true);
+	let loading = $state(false);
 	let loadError = $state("");
 
 	async function loadLibrary() {
-		loading = true;
 		loadError = "";
+		if (tracks.length === 0 && offlineStore.downloadedTracks.length === 0) {
+			loading = true;
+		}
 		try {
 			const data = await getLibrary();
 			tracks = data.tracks ?? [];
-			if (tracks.length === 0) {
+			if (typeof window !== "undefined") {
+				try {
+					localStorage.setItem(STORAGE_KEY_LIB_CACHE, JSON.stringify(tracks));
+				} catch {}
+			}
+			if (tracks.length === 0 && offlineStore.downloadedTracks.length === 0) {
 				const tr = await getOnlineTrending(10).catch(() => ({ tracks: [] }));
 				trendingTracks = tr.tracks ?? [];
 			}
 		} catch (e: any) {
-			loadError = e.message ?? "Failed to load library";
-			tracks = [];
+			const isOffline = (typeof navigator !== "undefined" && !navigator.onLine) ||
+				(e?.message && (e.message.includes("fetch") || e.message.includes("Network")));
+
+			if (tracks.length > 0 || offlineStore.downloadedTracks.length > 0) {
+				// We have cached songs or downloaded tracks - do not show a blocking error
+				if (offlineStore.downloadedTracks.length > 0 && tracks.length === 0) {
+					view = "downloaded";
+				}
+			} else if (isOffline) {
+				loadError = "You are currently offline. Connect to the internet to sync online library.";
+			} else {
+				loadError = e.message ?? "Failed to load library";
+			}
 		} finally {
 			loading = false;
 		}
@@ -61,7 +97,7 @@ import { handleImageError } from "$lib/utils/image";
 		if (isLoggedIn) {
 			if (typeof navigator !== "undefined" && !navigator.onLine) {
 				loading = false;
-				if (offlineStore.downloadedTracks.length > 0 && view === "songs") {
+				if (offlineStore.downloadedTracks.length > 0 && tracks.length === 0) {
 					view = "downloaded";
 				}
 			} else {
@@ -274,71 +310,73 @@ import { handleImageError } from "$lib/utils/image";
 				<div class="spinner"></div>
 				<p>Syncing your library...</p>
 			</div>
-		{:else if loadError}
+		{:else if loadError && view !== "downloaded"}
 			<div class="error-card">
 				<p>{loadError}</p>
 				<button class="retry-btn" onclick={loadLibrary}>Retry</button>
 			</div>
-		{:else if tracks.length === 0}
-			<!-- Clean Empty Library State -->
-			<div class="empty-state">
-				<div class="empty-icon-circle">
-					<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
-						<path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
-					</svg>
-				</div>
-				<h2>Your library is empty</h2>
-				<p>Tracks and playlists you save will show up here.</p>
-				<div class="empty-cta-group">
-					<a href="/search" class="primary-btn explore-btn">
-						Find songs
-					</a>
-				</div>
-			</div>
-
-			{#if trendingTracks.length > 0}
-				<div class="trending-section">
-					<div class="section-title-row">
-						<div>
-							<h3>Trending Worldwide</h3>
-							<p class="sub-label">Popular tracks you can add to your collection</p>
-						</div>
-						<button class="primary-btn play-all-btn" onclick={() => playTracks(trendingTracks, 0)}>
-							<svg viewBox="0 0 24 24" width="1rem" height="1rem" fill="currentColor">
-								<polygon points="5 3 19 12 5 21 5 3" />
-							</svg>
-							Play all
-						</button>
+		{:else if view === "songs"}
+			{#if tracks.length === 0}
+				<!-- Clean Empty Library State -->
+				<div class="empty-state">
+					<div class="empty-icon-circle">
+						<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+							<path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
+						</svg>
 					</div>
+					<h2>Your library is empty</h2>
+					<p>Tracks and playlists you save will show up here.</p>
+					<div class="empty-cta-group">
+						<a href="/search" class="primary-btn explore-btn">
+							Find songs
+						</a>
+					</div>
+				</div>
 
+				{#if trendingTracks.length > 0}
+					<div class="trending-section">
+						<div class="section-title-row">
+							<div>
+								<h3>Trending Worldwide</h3>
+								<p class="sub-label">Popular tracks you can add to your collection</p>
+							</div>
+							<button class="primary-btn play-all-btn" onclick={() => playTracks(trendingTracks, 0)}>
+								<svg viewBox="0 0 24 24" width="1rem" height="1rem" fill="currentColor">
+									<polygon points="5 3 19 12 5 21 5 3" />
+								</svg>
+								Play all
+							</button>
+						</div>
+
+						<div class="tracks-container">
+							{#each trendingTracks as track, i (track.id)}
+								<TrackRow
+									{track}
+									index={i}
+									playing={playerCurrentTrack.value?.id === track.id && playerPlaying.value}
+									onplay={() => playTracks(trendingTracks, i)}
+								/>
+							{/each}
+						</div>
+					</div>
+				{/if}
+			{:else}
+				<!-- Songs list view -->
+				{#if filteredTracks.length === 0}
+					<p class="no-results">No songs matching "{filterQuery}"</p>
+				{:else}
 					<div class="tracks-container">
-						{#each trendingTracks as track, i (track.id)}
+						{#each filteredTracks as track, i (track.id)}
 							<TrackRow
 								{track}
 								index={i}
 								playing={playerCurrentTrack.value?.id === track.id && playerPlaying.value}
-								onplay={() => playTracks(trendingTracks, i)}
+								onplay={() => playTracks(filteredTracks, i)}
+								ondelete={handleDeleteTrack}
 							/>
 						{/each}
 					</div>
-				</div>
-			{/if}
-		{:else if view === "songs"}
-			<!-- Songs list view -->
-			{#if filteredTracks.length === 0}
-				<p class="no-results">No songs matching "{filterQuery}"</p>
-			{:else}
-				<div class="tracks-container">
-					{#each filteredTracks as track, i (track.id)}
-						<TrackRow
-							{track}
-							index={i}
-							playing={playerCurrentTrack.value?.id === track.id && playerPlaying.value}
-							onplay={() => playTracks(filteredTracks, i)}
-							ondelete={handleDeleteTrack}
-						/>
-					{/each}
-				</div>
+				{/if}
 			{/if}
 		{:else if view === "artists"}
 			<!-- Artists grid view -->

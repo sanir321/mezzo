@@ -68,8 +68,52 @@
 
 	async function loadData() {
 		if (!playlistId) return;
-		loading = true;
 		error = "";
+
+		// Check local cache first
+		if (typeof window !== "undefined") {
+			try {
+				const plTracksKey = `mezzo_pl_tracks_${playlistId}`;
+				const localTracksRaw = localStorage.getItem(plTracksKey);
+				if (localTracksRaw) {
+					const parsed = JSON.parse(localTracksRaw);
+					if (Array.isArray(parsed) && parsed.length > 0) {
+						tracks = parsed;
+					}
+				}
+				// Also check cached playlists for metadata
+				const plListRaw = localStorage.getItem("mezzo_cached_playlists");
+				if (plListRaw) {
+					const parsedList = JSON.parse(plListRaw);
+					if (Array.isArray(parsedList)) {
+						const found = parsedList.find((p: Playlist) => p.id === playlistId);
+						if (found) {
+							playlist = found;
+						}
+					}
+				}
+			} catch {}
+		}
+
+		if (playlistId.startsWith("local_")) {
+			loading = false;
+			if (!playlist) {
+				playlist = {
+					id: playlistId,
+					name: "Local Playlist",
+					description: "Created offline",
+					cover_key: null,
+					createdAt: Date.now(),
+					updatedAt: Date.now(),
+				};
+			}
+			return;
+		}
+
+		if (tracks.length === 0) {
+			loading = true;
+		}
+
 		try {
 			if (isLikedPlaylist) {
 				if (!isLoggedIn) {
@@ -95,9 +139,22 @@
 				playlist = plRes.playlist;
 				tracks = plRes.tracks ?? [];
 				recommendedTracks = trendRes.tracks ?? [];
+
+				if (typeof window !== "undefined") {
+					try {
+						localStorage.setItem(`mezzo_pl_tracks_${playlistId}`, JSON.stringify(tracks));
+					} catch {}
+				}
 			}
 		} catch (e: any) {
-			error = e.message ?? "Failed to load playlist";
+			if (tracks.length === 0) {
+				const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
+				if (isOffline) {
+					error = "You're offline. Reconnect to stream or sync this playlist.";
+				} else {
+					error = e.message ?? "Failed to load playlist";
+				}
+			}
 		} finally {
 			loading = false;
 		}
