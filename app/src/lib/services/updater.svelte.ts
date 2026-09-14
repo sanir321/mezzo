@@ -1,7 +1,7 @@
 /**
  * In-App Version & Auto-Update Service for Mezzo
  */
-export const CURRENT_APP_VERSION = "1.0.2";
+export const CURRENT_APP_VERSION = "1.0.3";
 const GITHUB_REPO = "sanir321/mezzo";
 const FALLBACK_APK_URL = "https://mezzo-music.pages.dev/Mezzo-1.0.apk";
 
