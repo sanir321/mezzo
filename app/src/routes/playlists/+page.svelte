@@ -59,14 +59,9 @@
 			playlists = data.playlists ?? [];
 			saveCachedPlaylists(playlists);
 		} catch (e: any) {
-			if (playlists.length === 0) {
-				const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
-				if (isOffline) {
-					// Don't show an intrusive error if offline
-					error = "";
-				} else {
-					error = e.message ?? "Failed to load playlists";
-				}
+			const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
+			if (playlists.length === 0 && !isOffline) {
+				error = e.message ?? "Failed to load playlists";
 			}
 		} finally {
 			loading = false;
@@ -149,11 +144,17 @@
 	async function handleDelete(e: MouseEvent, id: string, name: string) {
 		e.stopPropagation();
 		if (!confirm(`Delete playlist "${name}"?`)) return;
+		playlists = playlists.filter((p) => p.id !== id);
+		saveCachedPlaylists(playlists);
+		if (typeof window !== "undefined") {
+			try {
+				localStorage.removeItem(`mezzo_pl_tracks_${id}`);
+			} catch {}
+		}
 		try {
 			await apiDeletePlaylist(id);
-			playlists = playlists.filter((p) => p.id !== id);
 		} catch (e: any) {
-			alert(e.message ?? "Failed to delete playlist");
+			console.warn("Delete remote playlist error:", e);
 		}
 	}
 
@@ -285,12 +286,12 @@
 				</div>
 				<button class="primary-btn" onclick={() => authModal.open()}>Sign In to Mezzo</button>
 			</div>
-		{:else if loading}
+		{:else if loading && playlists.length === 0}
 			<div class="status-box">
 				<div class="spinner"></div>
 				<p>Loading your playlists...</p>
 			</div>
-		{:else if error}
+		{:else if error && playlists.length === 0}
 			<div class="error-banner">{error}</div>
 		{:else if playlists.length === 0 && likedStore.tracks.length === 0}
 			<div class="empty-state">

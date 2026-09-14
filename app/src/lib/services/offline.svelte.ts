@@ -133,13 +133,24 @@ class OfflineStore {
       if (!audioRes.ok) throw new Error(`Audio download failed: HTTP ${audioRes.status}`);
       const audioBlob = await audioRes.blob();
 
-      // 3. Fetch the cover artwork as Blob (optional, non-fatal)
+      // 3. Fetch the cover artwork as Blob and convert to Base64 Data URL
       let coverBlob: Blob | null = null;
+      const downloadTrackObj: Track = { ...track };
       if (track.cover_url && track.cover_url.startsWith("http")) {
         try {
           const coverRes = await fetch(track.cover_url);
           if (coverRes.ok) {
             coverBlob = await coverRes.blob();
+            const reader = new FileReader();
+            const dataUrlPromise = new Promise<string>((resolve) => {
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.readAsDataURL(coverBlob!);
+            });
+            const dataUrl = await dataUrlPromise;
+            if (dataUrl) {
+              downloadTrackObj.cover_url = dataUrl;
+              (downloadTrackObj as any).offline_cover = dataUrl;
+            }
           }
         } catch {}
       }
@@ -155,12 +166,12 @@ class OfflineStore {
         if (coverBlob) {
           tx.objectStore(STORE_COVERS).put(coverBlob, track.id);
         }
-        tx.objectStore(STORE_TRACKS).put(track);
+        tx.objectStore(STORE_TRACKS).put(downloadTrackObj);
       });
 
       // 5. Update in-memory and local storage state
       this.downloadedTracks = [
-        track,
+        downloadTrackObj,
         ...this.downloadedTracks.filter((t) => t.id !== track.id),
       ];
       this.saveMetadata();

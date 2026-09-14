@@ -247,12 +247,27 @@
 		if (isLikedPlaylist) return;
 		if (!playlist) return;
 		if (confirm(`Are you sure you want to delete playlist "${playlist.name}"?`)) {
+			if (typeof window !== "undefined") {
+				try {
+					localStorage.removeItem(`mezzo_pl_tracks_${playlistId}`);
+					const plListRaw = localStorage.getItem("mezzo_cached_playlists");
+					if (plListRaw) {
+						const parsedList = JSON.parse(plListRaw);
+						if (Array.isArray(parsedList)) {
+							localStorage.setItem(
+								"mezzo_cached_playlists",
+								JSON.stringify(parsedList.filter((p: Playlist) => p.id !== playlistId))
+							);
+						}
+					}
+				} catch {}
+			}
 			try {
 				await apiDeletePlaylist(playlistId);
-				goto("/playlists");
 			} catch (e: any) {
-				alert(e.message ?? "Failed to delete playlist");
+				console.warn("Delete playlist remote error:", e);
 			}
+			goto("/playlists");
 		}
 	}
 

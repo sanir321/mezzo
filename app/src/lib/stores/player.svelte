@@ -55,15 +55,43 @@ export function streamUrl(idOrTrack: string | Track): string {
 
 	export function coverUrl(idOrTrack: string | Track): string {
 		if (typeof idOrTrack !== "string") {
+			if ((idOrTrack as any).offline_cover) return (idOrTrack as any).offline_cover;
+			if (idOrTrack.cover_url && (idOrTrack.cover_url.startsWith("data:") || idOrTrack.cover_url.startsWith("blob:"))) {
+				return idOrTrack.cover_url;
+			}
+			if (typeof window !== "undefined" && idOrTrack.id) {
+				try {
+					const offlineRaw = localStorage.getItem("mezzo_offline_tracks_meta");
+					if (offlineRaw) {
+						const offlineList = JSON.parse(offlineRaw);
+						const match = Array.isArray(offlineList) ? offlineList.find((t: any) => t.id === idOrTrack.id) : null;
+						if (match && (match.offline_cover || match.cover_url?.startsWith("data:"))) {
+							return match.offline_cover || match.cover_url;
+						}
+					}
+				} catch {}
+			}
 			if (idOrTrack.cover_url) return idOrTrack.cover_url;
 			if ((idOrTrack as any).cover_key?.startsWith("http")) return (idOrTrack as any).cover_key;
 			return apiUrl(`/api/tracks/${idOrTrack.id}/cover`);
 		}
-		if (idOrTrack.startsWith("http://") || idOrTrack.startsWith("https://")) {
+		if (idOrTrack.startsWith("data:") || idOrTrack.startsWith("blob:") || idOrTrack.startsWith("http://") || idOrTrack.startsWith("https://")) {
 			return idOrTrack;
 		}
 		if (idOrTrack.startsWith("/")) {
 			return apiUrl(idOrTrack);
+		}
+		if (typeof window !== "undefined") {
+			try {
+				const offlineRaw = localStorage.getItem("mezzo_offline_tracks_meta");
+				if (offlineRaw) {
+					const offlineList = JSON.parse(offlineRaw);
+					const match = Array.isArray(offlineList) ? offlineList.find((t: any) => t.id === idOrTrack) : null;
+					if (match && (match.offline_cover || match.cover_url?.startsWith("data:"))) {
+						return match.offline_cover || match.cover_url;
+					}
+				}
+			} catch {}
 		}
 		return apiUrl(`/api/tracks/${idOrTrack}/cover`);
 	}

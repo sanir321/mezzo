@@ -5,7 +5,6 @@ import {
 	playTracks,
 	playerCurrentTrack,
 	playerPlaying,
-	formatBytes,
 	coverUrl,
 } from "$lib/stores/player.svelte";
 import type { Track } from "$lib/stores/player.svelte";
@@ -112,7 +111,6 @@ import { handleImageError } from "$lib/utils/image";
 	});
 
 	// Derived library statistics
-	const totalSize = $derived(tracks.reduce((acc, t) => acc + (t.size || 0), 0));
 	const totalDuration = $derived(tracks.reduce((acc, t) => acc + (t.duration || 0), 0));
 
 	const artistsList = $derived.by(() => {
@@ -235,9 +233,6 @@ import { handleImageError } from "$lib/utils/image";
 						<span class="stat-pill"><strong>{albumsList.length}</strong> albums</span>
 						{#if totalDuration > 0}
 							<span class="stat-pill"><strong>{(totalDuration / 3600).toFixed(1)}</strong> hrs</span>
-						{/if}
-						{#if totalSize > 0}
-							<span class="stat-pill">{formatBytes(totalSize)}</span>
 						{/if}
 					</div>
 				{/if}
