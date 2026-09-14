@@ -21,7 +21,7 @@
 		SearchPlaylistOnline,
 		SearchAlbumOnline,
 	} from "$lib/api";
-	import { getArtistMeta, POPULAR_ARTISTS } from "$lib/stores/preferences.svelte";
+	import { getArtistMeta, POPULAR_ARTISTS, userPreferences } from "$lib/stores/preferences.svelte";
 	import { FEATURED_PLAYLISTS } from "$lib/featured-playlists";
 	import { DEFAULT_ALBUM_COVER, DEFAULT_PLAYLIST_COVER, handleImageError, handlePlaylistImageError } from "$lib/utils/image";
 
@@ -395,31 +395,62 @@
 		);
 	});
 
-	const BROWSE_CATEGORIES = [
-		{ name: "Bollywood Hits", color: "#e91429", query: "bollywood hits" },
-		{ name: "Tamil Mass & Melody", color: "#e11d48", query: "tamil hits" },
-		{ name: "Telugu Beats", color: "#d946ef", query: "telugu hits" },
-		{ name: "Punjabi Hits", color: "#f97316", query: "punjabi hits" },
-		{ name: "Pop Essentials", color: "#8c1932", query: "pop hits" },
-		{ name: "Hip-Hop / Rap", color: "#bc5900", query: "hip hop hits" },
-		{ name: "Lo-Fi & Chill", color: "#148a08", query: "lofi chill beats" },
-		{ name: "Electronic & Dance", color: "#1e3264", query: "electronic dance" },
-		{ name: "Indie / Acoustic", color: "#477d95", query: "indie hits" },
-		{ name: "Kannada Top 20", color: "#f59e0b", query: "kannada hits" },
-		{ name: "Malayalam Magic", color: "#06b6d4", query: "malayalam hits" },
-		{ name: "Rock Classics", color: "#535353", query: "rock classics" },
+	const ALL_BROWSE_CATEGORIES = [
+		{ name: "Pop Essentials", color: "#8c1932", query: "pop hits", lang: "English" },
+		{ name: "Hip-Hop / Rap", color: "#bc5900", query: "hip hop hits", lang: "English" },
+		{ name: "Lo-Fi & Chill", color: "#148a08", query: "lofi chill beats", lang: "English" },
+		{ name: "Electronic & Dance", color: "#1e3264", query: "electronic dance", lang: "English" },
+		{ name: "Indie / Acoustic", color: "#477d95", query: "indie hits", lang: "English" },
+		{ name: "Rock Classics", color: "#535353", query: "rock classics", lang: "English" },
+		{ name: "Bollywood Hits", color: "#e91429", query: "bollywood hits", lang: "Hindi" },
+		{ name: "Punjabi Hits", color: "#f97316", query: "punjabi hits", lang: "Punjabi" },
+		{ name: "Nepali Hits", color: "#06b6d4", query: "nepali hits", lang: "Nepali" },
+		{ name: "Tamil Mass & Melody", color: "#e11d48", query: "tamil hits", lang: "Tamil" },
+		{ name: "Telugu Beats", color: "#d946ef", query: "telugu hits", lang: "Telugu" },
+		{ name: "Malayalam Magic", color: "#0d9488", query: "malayalam hits", lang: "Malayalam" },
+		{ name: "Kannada Top 20", color: "#f59e0b", query: "kannada hits", lang: "Kannada" },
+		{ name: "Latin Pop", color: "#ec4899", query: "latin pop hits", lang: "Spanish" },
+		{ name: "K-Pop Top Hits", color: "#8b5cf6", query: "kpop hits", lang: "Korean" },
 	];
 
-	const QUICK_SEARCH_CHIPS = [
-		"Anirudh",
-		"A.R. Rahman",
-		"Sid Sriram",
-		"The Weeknd",
-		"Arijit Singh",
-		"Taylor Swift",
-		"Lo-Fi Chill",
-		"Bollywood",
-	];
+	const BROWSE_CATEGORIES = $derived.by(() => {
+		const userLangs = userPreferences.languages.map((l) => l.toLowerCase());
+		if (userLangs.length === 0) return ALL_BROWSE_CATEGORIES;
+		return [...ALL_BROWSE_CATEGORIES].sort((a, b) => {
+			const aMatch = a.lang ? userLangs.includes(a.lang.toLowerCase()) : false;
+			const bMatch = b.lang ? userLangs.includes(b.lang.toLowerCase()) : false;
+			if (aMatch && !bMatch) return -1;
+			if (!aMatch && bMatch) return 1;
+			return 0;
+		});
+	});
+
+	const QUICK_SEARCH_CHIPS = $derived.by(() => {
+		const userArtists = userPreferences.favoriteArtists;
+		if (userArtists.length > 0) {
+			const extra = ["Top Hits", "Lo-Fi Chill", "Pop Hits"];
+			return [...userArtists.slice(0, 5), ...extra].slice(0, 8);
+		}
+		const userLangs = userPreferences.languages.map((l) => l.toLowerCase());
+		if (userLangs.length > 0) {
+			const matchedArtists = POPULAR_ARTISTS.filter((a) =>
+				a.languages.some((l) => userLangs.includes(l.toLowerCase()))
+			).map((a) => a.name);
+			if (matchedArtists.length > 0) {
+				return [...matchedArtists.slice(0, 5), "Top Hits", "Lo-Fi Chill"].slice(0, 8);
+			}
+		}
+		return [
+			"The Weeknd",
+			"Taylor Swift",
+			"Drake",
+			"Billie Eilish",
+			"Post Malone",
+			"Lo-Fi Chill",
+			"Pop Hits",
+			"Trending",
+		];
+	});
 
 	function handlePlaylistClick(pl: { id: string; query?: string; isUser?: boolean }) {
 		goto(`/playlists/${pl.id}`);

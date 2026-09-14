@@ -90,8 +90,8 @@
 		if (matchedFromLangs.length > 0) {
 			return matchedFromLangs.slice(0, 4);
 		}
-		// 3. Diverse global and multi-genre spread
-		return ["Arijit Singh", "The Weeknd", "Diljit Dosanjh", "Taylor Swift"];
+		// 3. Diverse global and multi-genre spread (neutral global defaults)
+		return ["The Weeknd", "Taylor Swift", "Drake", "Billie Eilish"];
 	});
 
 	const quickMixTiles = $derived.by(() => {
@@ -219,7 +219,7 @@
 			if (langQueries.length > 0) {
 				genresToFetch = langQueries.slice(0, 3);
 			} else {
-				genresToFetch = ["Bollywood Top Hits", "Global Pop Hits", "Punjabi Top Hits"];
+				genresToFetch = ["Global Pop Hits", "Top Billboard Hits", "Dance Pop Hits"];
 			}
 
 			const genrePromises = genresToFetch.map(async (g) => {

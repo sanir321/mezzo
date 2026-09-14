@@ -192,6 +192,162 @@ export const LANGUAGE_SEARCH_TERMS: Record<string, string> = {
 };
 
 export const POPULAR_ARTISTS: PopularArtist[] = [
+  // English / Global
+  {
+    name: "The Weeknd",
+    genre: "Pop / R&B",
+    languages: ["English"],
+    color: "#e11d48",
+    gradient: "linear-gradient(135deg, #e11d48 0%, #4c0519 100%)",
+    image:
+      "https://resources.tidal.com/images/5598dc62/acf6/49f1/b468/192ad3555278/750x750.jpg",
+    monthlyListeners: "108,842,910",
+    bio: "Canadian singer-songwriter known for dark lyricism, cinematic disco, and dominating global charts.",
+  },
+  {
+    name: "Taylor Swift",
+    genre: "Pop / Singer-Songwriter",
+    languages: ["English"],
+    color: "#ec4899",
+    gradient: "linear-gradient(135deg, #ec4899 0%, #831843 100%)",
+    image:
+      "https://resources.tidal.com/images/acce3554/c0dd/428b/b39a/18a06897a7c3/750x750.jpg",
+    monthlyListeners: "101,412,044",
+    bio: "Global pop phenomenon and songwriter with record-breaking worldwide stadium tours and album streams.",
+  },
+  {
+    name: "Drake",
+    genre: "Hip-Hop / Rap",
+    languages: ["English"],
+    color: "#f59e0b",
+    gradient: "linear-gradient(135deg, #f59e0b 0%, #78350f 100%)",
+    image:
+      "https://resources.tidal.com/images/3812d980/630e/4948/a72e/f21a546ec2e3/750x750.jpg",
+    monthlyListeners: "82,520,318",
+    bio: "Chart-topping hip-hop icon credited with popularizing the melodic rap sound across the globe.",
+  },
+  {
+    name: "Billie Eilish",
+    genre: "Alt Pop",
+    languages: ["English"],
+    color: "#10b981",
+    gradient: "linear-gradient(135deg, #10b981 0%, #064e3b 100%)",
+    image:
+      "https://resources.tidal.com/images/b2a74265/ad7f/4e14/b170/cc31e0ed8a4e/750x750.jpg",
+    monthlyListeners: "91,140,550",
+    bio: "Multi-Grammy and Oscar-winning pop sensation celebrated for introspective lyricism and unique sound.",
+  },
+  {
+    name: "Post Malone",
+    genre: "Hip-Hop / Pop",
+    languages: ["English"],
+    color: "#14b8a6",
+    gradient: "linear-gradient(135deg, #14b8a6 0%, #134e4a 100%)",
+    image:
+      "https://resources.tidal.com/images/039dedb4/2e50/41df/ae8f/54ad371a31f3/750x750.jpg",
+    monthlyListeners: "78,120,500",
+    bio: "Multi-genre artist seamlessly blending hip-hop, pop, rock, and heartfelt country hooks.",
+  },
+  {
+    name: "Dua Lipa",
+    genre: "Dance Pop",
+    languages: ["English"],
+    color: "#d946ef",
+    gradient: "linear-gradient(135deg, #d946ef 0%, #701a75 100%)",
+    image:
+      "https://resources.tidal.com/images/28047130/6ada/4955/b3b9/65bed4508618/750x750.jpg",
+    monthlyListeners: "71,900,430",
+    bio: "British pop heavyweight known for disco-infused dance pop hits and international anthems.",
+  },
+  {
+    name: "Coldplay",
+    genre: "Alt Rock / Stadium Pop",
+    languages: ["English"],
+    color: "#3b82f6",
+    gradient: "linear-gradient(135deg, #3b82f6 0%, #172554 100%)",
+    image:
+      "https://resources.tidal.com/images/b4579672/5b91/4679/a27a/288f097a4da5/750x750.jpg",
+    monthlyListeners: "86,300,000",
+    bio: "British rock legends known for euphoric stadium anthems like Yellow, Fix You, and Viva La Vida.",
+  },
+  {
+    name: "Kendrick Lamar",
+    genre: "Hip-Hop",
+    languages: ["English"],
+    color: "#64748b",
+    gradient: "linear-gradient(135deg, #64748b 0%, #0f172a 100%)",
+    image:
+      "https://resources.tidal.com/images/84d81b7a/a12e/4a3e/bda4/d0527cb1c8cf/750x750.jpg",
+    monthlyListeners: "68,300,100",
+    bio: "Pulitzer Prize-winning hip-hop artist acclaimed for narrative depth and cultural impact.",
+  },
+  {
+    name: "Travis Scott",
+    genre: "Trap / Hip-Hop",
+    languages: ["English"],
+    color: "#ca8a04",
+    gradient: "linear-gradient(135deg, #ca8a04 0%, #422006 100%)",
+    image:
+      "https://resources.tidal.com/images/da110c26/386a/4023/83cf/a739baee2e79/750x750.jpg",
+    monthlyListeners: "69,800,900",
+    bio: "Houston rapper and visionary producer renowned for atmospheric psychedelic trap soundscapes.",
+  },
+  {
+    name: "Ariana Grande",
+    genre: "Pop / R&B",
+    languages: ["English"],
+    color: "#f43f5e",
+    gradient: "linear-gradient(135deg, #f43f5e 0%, #881337 100%)",
+    image:
+      "https://resources.tidal.com/images/9b18dc21/95ea/4dd9/9c5b/46ef012ec00d/750x750.jpg",
+    monthlyListeners: "79,450,000",
+    bio: "Powerhouse pop vocalist with a four-octave vocal range and numerous multi-platinum releases.",
+  },
+  {
+    name: "Ed Sheeran",
+    genre: "Pop / Acoustic",
+    languages: ["English"],
+    color: "#eab308",
+    gradient: "linear-gradient(135deg, #eab308 0%, #713f12 100%)",
+    image:
+      "https://resources.tidal.com/images/05d72ae4/319f/4237/821f/1d7af9ec8acf/750x750.jpg",
+    monthlyListeners: "74,800,000",
+    bio: "English singer-songwriter with ubiquitous acoustic-pop anthems topping global streaming records.",
+  },
+  {
+    name: "Bruno Mars",
+    genre: "Funk / Pop",
+    languages: ["English"],
+    color: "#d97706",
+    gradient: "linear-gradient(135deg, #d97706 0%, #78350f 100%)",
+    image:
+      "https://resources.tidal.com/images/00b6904f/7ef7/4f79/8c53/2cb170d23c32/750x750.jpg",
+    monthlyListeners: "84,600,000",
+    bio: "Multiple Grammy Award winner celebrated for vintage soul, infectious funk grooves, and pop mastery.",
+  },
+  {
+    name: "BTS",
+    genre: "K-Pop",
+    languages: ["Korean", "English"],
+    color: "#c084fc",
+    gradient: "linear-gradient(135deg, #c084fc 0%, #581c87 100%)",
+    image:
+      "https://resources.tidal.com/images/8d1918b7/1abc/416e/bccf/e3d8a95697fc/750x750.jpg",
+    monthlyListeners: "33,800,000",
+    bio: "South Korean boy band breaking international milestones and leading the global Hallyu wave.",
+  },
+  {
+    name: "Bad Bunny",
+    genre: "Latin / Reggaeton",
+    languages: ["Spanish"],
+    color: "#f97316",
+    gradient: "linear-gradient(135deg, #f97316 0%, #7c2d12 100%)",
+    image:
+      "https://resources.tidal.com/images/860038f2/c3e1/4df6/a62e/ead97285672e/750x750.jpg",
+    monthlyListeners: "76,320,110",
+    bio: "Puerto Rican superstar shaping contemporary Latin trap, reggaeton, and global mainstream culture.",
+  },
+
   // Hindi / Bollywood
   {
     name: "Arijit Singh",
@@ -487,164 +643,6 @@ export const POPULAR_ARTISTS: PopularArtist[] = [
       "https://resources.tidal.com/images/fbe6520b/7a3b/424f/b929/8da8c09400a6/750x750.jpg",
     monthlyListeners: "9,200,000",
     bio: "The Nightingale of South India with six National Film Awards and timeless melodies.",
-  },
-
-  // English / Global
-  {
-    name: "The Weeknd",
-    genre: "Pop / R&B",
-    languages: ["English"],
-    color: "#e11d48",
-    gradient: "linear-gradient(135deg, #e11d48 0%, #4c0519 100%)",
-    image:
-      "https://resources.tidal.com/images/5598dc62/acf6/49f1/b468/192ad3555278/750x750.jpg",
-    monthlyListeners: "108,842,910",
-    bio: "Canadian singer-songwriter known for dark lyricism, cinematic disco, and dominating global charts.",
-  },
-  {
-    name: "Taylor Swift",
-    genre: "Pop / Singer-Songwriter",
-    languages: ["English"],
-    color: "#ec4899",
-    gradient: "linear-gradient(135deg, #ec4899 0%, #831843 100%)",
-    image:
-      "https://resources.tidal.com/images/acce3554/c0dd/428b/b39a/18a06897a7c3/750x750.jpg",
-    monthlyListeners: "101,412,044",
-    bio: "Global pop phenomenon and songwriter with record-breaking worldwide stadium tours and album streams.",
-  },
-  {
-    name: "Drake",
-    genre: "Hip-Hop / Rap",
-    languages: ["English"],
-    color: "#f59e0b",
-    gradient: "linear-gradient(135deg, #f59e0b 0%, #78350f 100%)",
-    image:
-      "https://resources.tidal.com/images/3812d980/630e/4948/a72e/f21a546ec2e3/750x750.jpg",
-    monthlyListeners: "82,520,318",
-    bio: "Chart-topping hip-hop icon credited with popularizing the melodic rap sound across the globe.",
-  },
-  {
-    name: "Billie Eilish",
-    genre: "Alt Pop",
-    languages: ["English"],
-    color: "#10b981",
-    gradient: "linear-gradient(135deg, #10b981 0%, #064e3b 100%)",
-    image:
-      "https://resources.tidal.com/images/b2a74265/ad7f/4e14/b170/cc31e0ed8a4e/750x750.jpg",
-    monthlyListeners: "91,140,550",
-    bio: "Multi-Grammy and Oscar-winning pop sensation celebrated for introspective lyricism and unique sound.",
-  },
-  {
-    name: "Post Malone",
-    genre: "Hip-Hop / Pop",
-    languages: ["English"],
-    color: "#14b8a6",
-    gradient: "linear-gradient(135deg, #14b8a6 0%, #134e4a 100%)",
-    image:
-      "https://resources.tidal.com/images/039dedb4/2e50/41df/ae8f/54ad371a31f3/750x750.jpg",
-    monthlyListeners: "78,120,500",
-    bio: "Multi-genre artist seamlessly blending hip-hop, pop, rock, and heartfelt country hooks.",
-  },
-  {
-    name: "Dua Lipa",
-    genre: "Dance Pop",
-    languages: ["English"],
-    color: "#d946ef",
-    gradient: "linear-gradient(135deg, #d946ef 0%, #701a75 100%)",
-    image:
-      "https://resources.tidal.com/images/28047130/6ada/4955/b3b9/65bed4508618/750x750.jpg",
-    monthlyListeners: "71,900,430",
-    bio: "British pop heavyweight known for disco-infused dance pop hits and international anthems.",
-  },
-  {
-    name: "Coldplay",
-    genre: "Alt Rock / Stadium Pop",
-    languages: ["English"],
-    color: "#3b82f6",
-    gradient: "linear-gradient(135deg, #3b82f6 0%, #172554 100%)",
-    image:
-      "https://resources.tidal.com/images/b4579672/5b91/4679/a27a/288f097a4da5/750x750.jpg",
-    monthlyListeners: "86,300,000",
-    bio: "British rock legends known for euphoric stadium anthems like Yellow, Fix You, and Viva La Vida.",
-  },
-  {
-    name: "Kendrick Lamar",
-    genre: "Hip-Hop",
-    languages: ["English"],
-    color: "#64748b",
-    gradient: "linear-gradient(135deg, #64748b 0%, #0f172a 100%)",
-    image:
-      "https://resources.tidal.com/images/84d81b7a/a12e/4a3e/bda4/d0527cb1c8cf/750x750.jpg",
-    monthlyListeners: "68,300,100",
-    bio: "Pulitzer Prize-winning hip-hop artist acclaimed for narrative depth and cultural impact.",
-  },
-  {
-    name: "Travis Scott",
-    genre: "Trap / Hip-Hop",
-    languages: ["English"],
-    color: "#ca8a04",
-    gradient: "linear-gradient(135deg, #ca8a04 0%, #422006 100%)",
-    image:
-      "https://resources.tidal.com/images/da110c26/386a/4023/83cf/a739baee2e79/750x750.jpg",
-    monthlyListeners: "69,800,900",
-    bio: "Houston rapper and visionary producer renowned for atmospheric psychedelic trap soundscapes.",
-  },
-  {
-    name: "Ariana Grande",
-    genre: "Pop / R&B",
-    languages: ["English"],
-    color: "#f43f5e",
-    gradient: "linear-gradient(135deg, #f43f5e 0%, #881337 100%)",
-    image:
-      "https://resources.tidal.com/images/9b18dc21/95ea/4dd9/9c5b/46ef012ec00d/750x750.jpg",
-    monthlyListeners: "79,450,000",
-    bio: "Powerhouse pop vocalist with a four-octave vocal range and numerous multi-platinum releases.",
-  },
-  {
-    name: "Ed Sheeran",
-    genre: "Pop / Acoustic",
-    languages: ["English"],
-    color: "#eab308",
-    gradient: "linear-gradient(135deg, #eab308 0%, #713f12 100%)",
-    image:
-      "https://resources.tidal.com/images/05d72ae4/319f/4237/821f/1d7af9ec8acf/750x750.jpg",
-    monthlyListeners: "74,800,000",
-    bio: "English singer-songwriter with ubiquitous acoustic-pop anthems topping global streaming records.",
-  },
-  {
-    name: "Bruno Mars",
-    genre: "Funk / Pop",
-    languages: ["English"],
-    color: "#d97706",
-    gradient: "linear-gradient(135deg, #d97706 0%, #78350f 100%)",
-    image:
-      "https://resources.tidal.com/images/00b6904f/7ef7/4f79/8c53/2cb170d23c32/750x750.jpg",
-    monthlyListeners: "84,600,000",
-    bio: "Multiple Grammy Award winner celebrated for vintage soul, infectious funk grooves, and pop mastery.",
-  },
-
-  // K-Pop & Spanish
-  {
-    name: "BTS",
-    genre: "K-Pop",
-    languages: ["Korean", "English"],
-    color: "#c084fc",
-    gradient: "linear-gradient(135deg, #c084fc 0%, #581c87 100%)",
-    image:
-      "https://resources.tidal.com/images/8d1918b7/1abc/416e/bccf/e3d8a95697fc/750x750.jpg",
-    monthlyListeners: "33,800,000",
-    bio: "South Korean boy band breaking international milestones and leading the global Hallyu wave.",
-  },
-  {
-    name: "Bad Bunny",
-    genre: "Latin / Reggaeton",
-    languages: ["Spanish"],
-    color: "#f97316",
-    gradient: "linear-gradient(135deg, #f97316 0%, #7c2d12 100%)",
-    image:
-      "https://resources.tidal.com/images/860038f2/c3e1/4df6/a62e/ead97285672e/750x750.jpg",
-    monthlyListeners: "76,320,110",
-    bio: "Puerto Rican superstar shaping contemporary Latin trap, reggaeton, and global mainstream culture.",
   },
 ];
 

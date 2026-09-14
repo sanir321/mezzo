@@ -27,7 +27,17 @@
 	// Curated artists matching local text query
 	const filteredCuratedArtists = $derived.by(() => {
 		const q = artistFilter.trim().toLowerCase();
-		if (!q) return POPULAR_ARTISTS;
+		if (!q) {
+			const userLangs = userPreferences.languages.map((l) => l.toLowerCase());
+			if (userLangs.length === 0) return POPULAR_ARTISTS;
+			return [...POPULAR_ARTISTS].sort((a, b) => {
+				const aMatch = a.languages.some((l) => userLangs.includes(l.toLowerCase()));
+				const bMatch = b.languages.some((l) => userLangs.includes(l.toLowerCase()));
+				if (aMatch && !bMatch) return -1;
+				if (!aMatch && bMatch) return 1;
+				return 0;
+			});
+		}
 		return POPULAR_ARTISTS.filter(
 			(a) =>
 				a.name.toLowerCase().includes(q) ||
