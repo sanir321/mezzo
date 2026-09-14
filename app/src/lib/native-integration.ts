@@ -71,18 +71,13 @@ async function setupBackButton() {
 			}
 
 			// 3. Top-level screen (e.g. Home):
-			// Minimize the app so background audio playback continues seamlessly without killing the process
+			// Always minimize the app so background audio playback continues seamlessly without killing the process
 			try {
 				if (typeof (App as any).minimizeApp === "function") {
 					await (App as any).minimizeApp();
 					return;
 				}
 			} catch {}
-
-			// Fallback: If not playing, exit; otherwise keep audio playing
-			if (!playerPlaying.value) {
-				await App.exitApp();
-			}
 		});
 	} catch {
 		// back integration unavailable; WebView default (history) applies
