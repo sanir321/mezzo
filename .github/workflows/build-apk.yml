@@ -6,6 +6,10 @@ on:
     branches: [main]
     paths:
       - "app/**"
+      - ".github/workflows/build-apk.yml"
+
+permissions:
+  contents: write
 
 jobs:
   build-apk:
@@ -69,9 +73,27 @@ jobs:
         working-directory: app/android
         run: ./gradlew assembleRelease --no-daemon
 
+      - name: Stage APK for release
+        run: |
+          mkdir -p ../dist-apk
+          cp android/app/build/outputs/apk/release/*.apk ../dist-apk/Mezzo-1.0.apk || cp android/app/build/outputs/apk/release/*-release.apk ../dist-apk/Mezzo-1.0.apk || true
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: mezzo-apk
-          path: app/android/app/build/outputs/apk/release/*.apk
+          path: dist-apk/Mezzo-1.0.apk
           if-no-files-found: error
+
+      - name: Publish GitHub Release APK
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          tag_name: v1.0.0
+          name: "Mezzo Android Release v1.0.0"
+          body: "Official Mezzo Lossless Audio Streaming App for Android (.apk)"
+          draft: false
+          prerelease: false
+          files: dist-apk/Mezzo-1.0.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
